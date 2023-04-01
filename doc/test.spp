@@ -1,0 +1,93 @@
+
+# types
+# int, real, bool, string, array, tuple, byte, callable
+
+# operator overloads for anything
+
+# support for nested funcs, fcf, closures
+
+# ffi to C and back support
+
+# argument promotion (either parallel or not)
+
+# class can support fields and inheritcance
+
+# nilable types
+
+# standard lib
+# io, vector, list, regex, etc
+# can be implemented in source languge, or as extern funcs linked as C using ffi
+
+# everything is done via move semantics, a copy can be done explciitly
+# an assignment moves the value, always
+
+# ref type refers to the object, get a ref from anything with &
+# NO GLOBALS
+
+extern foo(a, b);
+extern foo(a: int, b: (int, int));
+
+func foo(arr: [int]): int {
+    return arr.size();
+}
+
+func foo(a: ref int): nil {
+    a = 8;
+}
+
+# everything is as method that implicitly gets a this
+# can also defined methods outside 
+# no nesting classes, yet
+class A {
+    var field1;
+
+    init(field1) {
+
+    }
+    func foo() {}
+}
+func A.foo() {
+
+}
+
+# can write
+# 10.toFloat()
+func int.toFloat() {
+    return 8;
+}
+
+# can define operators as such
+operator *(lhs: A, rhs: A) {
+
+}
+operator *=(lhs: ref A, rhs: A) {
+
+}
+
+# main func, args and ret can be excluded
+func main(args: [string]): int {
+    var a: int = 10;
+    var a = 10;
+
+    var a_: ref int = &a;
+
+    var x: string? = nil;
+    nil!.size(); # force unwrap
+    if var y = x {
+        # conditional unwrap
+    }
+
+    while i < j {
+        # do stuff
+    }
+    for var a in arr {
+
+    }
+
+    # parens are optional
+    # use types
+    var foo: (args)->(res) = foo;
+    var foo: (int) -> string = (a: int): string {
+
+    }
+}

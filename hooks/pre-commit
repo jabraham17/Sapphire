@@ -1,0 +1,57 @@
+#!/usr/bin/sh
+
+# hook to check that files are formatted before being committed
+# install with `ln -s -f ../../hooks/pre-commit .git/hooks/pre-commit`
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# Redirect output to stderr.
+exec 1>&2
+
+SAPPHIRE_HOME=$(git rev-parse --show-toplevel)
+export CF=clang-format
+# FIXME: required until LLVM 16 when fix for .inc hits the release
+export CF=$SAPPHIRE_HOME/../llvm/llvm-project/build/bin/clang-format
+export STYLE=$SAPPHIRE_HOME/.clang-format
+
+check_format() {
+    file=$1
+    diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
+}
+
+check_format_python() {
+    file=$1
+    python3 -m black --check $file >/dev/null 2>&1
+}
+
+# exclude delete files
+git diff --cached --name-only --diff-filter=d \
+-- "src/*.c" "src/*.cpp" "src/*.cc" "src/*.h" "src/*.hpp" "src/*.inc" | \
+    while read file
+    do
+        check_format $file
+        if [ $? -ne 0 ]; then
+            echo "Error: Cannot commit '$file': has not passed the formatting checks"
+            echo "Run scripts/format.sh to resolve this"
+	        exit 1
+        fi
+    done || exit $?
+
+git diff --cached --name-only --diff-filter=d \
+-- "*.py" | \
+    while read file
+    do
+        check_format $file
+        if [ $? -eq 0 ]; then
+            echo "Error: Cannot commit '$file': has not passed the formatting checks"
+            echo "Run scripts/format.sh to resolve this"
+	        exit 1
+        fi
+    done || exit $?
+
