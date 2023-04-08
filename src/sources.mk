@@ -19,6 +19,9 @@ DEPENDS=$(patsubst %,%.d,$(DEP_OBJECTS))
 OBJECTS:=$(addprefix $(OBJ_PATH),$(OBJECTS))
 DEPENDS:=$(addprefix $(OBJ_PATH),$(DEPENDS))
 
+# other objects depend on bison/flex objects
+$(patsubst %,$(OBJ_PATH)%,$(DEP_OBJECTS)): $(patsubst %,$(OBJ_PATH)%,$(YL_OBJECTS))
+
 override INCLUDE+= -I$(ROOT_PROJECT_DIRECTORY)src
 override INCLUDE+= -I$(OBJ_PATH)
 override INCLUDE+= -I$(GEN_DIRECTORY)
@@ -52,5 +55,19 @@ $(OBJ_PATH)%.asm.o: $(SRC_PATH)%.asm Makefile
 	$(AT)mkdir -p $(dir $@)
 	$(AS) -felf $(CONSTANTS) $< -o $@ -MD $(patsubst $(SRC_PATH)%.asm,$(OBJ_PATH)%.d,$<)
 
+
+_make_generated_c_source = $(patsubst %,$(GEN_DIRECTORY)%.cpp,$(shell sed s%$(ROOT_PROJECT_DIRECTORY)%% <<< $1))
+
+$(OBJ_PATH)%.l.o: $(SRC_PATH)%.l $(OBJ_PATH)%.yy.o Makefile
+	$(AT)mkdir -p $(dir $@)
+	$(AT)mkdir -p $(dir $(call _make_generated_c_source,$<))
+	$(LEX) $(LFLAGS) -o $(call _make_generated_c_source,$<) $<
+	$(CXX) $(CXXFLAGS) -c -x c++ $(call _make_generated_c_source,$<) -x none -o $@ $(INCLUDE) -I$(dir $(call _make_generated_c_source,$<))
+
+$(OBJ_PATH)%.yy.o: $(SRC_PATH)%.yy Makefile
+	$(AT)mkdir -p $(dir $@)
+	$(AT)mkdir -p $(dir $(call _make_generated_c_source,$<))
+	$(YACC) $(YFLAGS) -o $(call _make_generated_c_source,$<) $< -d
+	$(CXX) $(CXXFLAGS) -c -x c++ $(call _make_generated_c_source,$<) -x none -o $@ $(INCLUDE)
 
 -include $(DEPENDS)
