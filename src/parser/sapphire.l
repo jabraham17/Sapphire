@@ -40,14 +40,16 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 "for"      { return FOR; }
 "while"    { return WHILE; }
 "in"       { return IN; }
+"return"   { return RETURN; }
 "new"      { return NEW; }
 "nil"      { return NIL; }
 "ref"      { return REF; }
 "operator" { return OPERATOR; }
 
     /* reserved words */
-"init"   {return INIT; }
-"deinit" {return DEINIT; }
+"init"   { return INIT; }
+"deinit" { return DEINIT; }
+"this"   { return THIS; }
 
     /* operators */
 "+"  { return PLUS; }

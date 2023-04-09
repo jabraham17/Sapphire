@@ -27,13 +27,15 @@
 extern foo(a, b);
 extern foo(a: int, b: (int, int));
 
-func foo(arr: [int]): int {
+func foo(arr: [int]) {
     return arr.size();
 }
 
 func foo(a: ref int): nil {
     a = 8;
 }
+
+extern print(x: string): nil;
 
 # everything is as method that implicitly gets a this
 # can also defined methods outside 
@@ -42,9 +44,12 @@ class A {
     var field1;
 
     init(field1) {
-
+        
     }
     func foo() {}
+    deinit { // parens here causes a seg fault? fix
+
+    }
 }
 func A.foo() {
 
@@ -52,17 +57,17 @@ func A.foo() {
 
 # can write
 # 10.toFloat()
-func int.toFloat() {
-    return 8;
-}
+//func int.toFloat() {
+//    return 8;
+//}
 
 # can define operators as such
 operator *(lhs: A, rhs: A) {
 
 }
-operator *=(lhs: ref A, rhs: A) {
-
-}
+//operator *=(lhs: ref A, rhs: A) {
+//
+//}
 
 # main func, args and ret can be excluded
 func main(args: [string]): int {
@@ -72,22 +77,68 @@ func main(args: [string]): int {
     var a_: ref int = &a;
 
     var x: string? = nil;
-    nil!.size(); # force unwrap
-    if var y = x {
+    x!.size(); # force unwrap
+ /*   if var y = x {
         # conditional unwrap
     }
+*/
 
-    while i < j {
-        # do stuff
+    var a = new (7, 10);
+    var b: [int];
+
+
+    // this will be reported as an error
+    //var a: ;
+
+    while h != k {
+
     }
+
+    if i < k {
+
+    }
+
+
+    if a {
+
+    }
+    else {
+
+    }
+
+
+    if a {
+
+    }
+    else if 1 {
+
+    }
+
+
+    if b {
+
+    }
+    else if 7 {
+
+    }
+    else {
+
+    }
+
     for var a in arr {
 
     }
 
     # parens are optional
     # use types
-    var foo: (args)->(res) = foo;
-    var foo: (int) -> string = (a: int): string {
+    /*func foo: ((int, int) -> int) = (a: real): string {
 
+    }*/
+    // THESE SHOULD NOT BE ERRORS
+/*    func foo: ((string) -> nil) = (arg: string): nil {
+        print(arg);
     }
+    func foo: ((int) -> string) = (a: int): string {
+
+    }*/
 }

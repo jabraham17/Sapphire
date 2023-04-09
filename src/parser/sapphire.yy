@@ -2,15 +2,17 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+    #include <iostream>
     // stuff from flex that bison needs to know about:
     extern int yylex(void);
     extern FILE *yyin;
     extern int line_num;
 
     #include "ast/ast.h"
+    #include "parser/parser.h"
     using namespace ast;
 
-    void yyerror([[maybe_unused]] ASTNode*& ast, const char *s);
+    void yyerror(parser::Context* context, const char *s);
 %}
 
 %code requires {
@@ -22,7 +24,6 @@
 
   ast::ASTNode* node;
   ast::Expression* expr;
-  ast::Definition* def;
   ast::FunctionPrototype* funcPrototype;
   ast::Type* type;
   ast::Statement* stmt;
@@ -31,16 +32,11 @@
   ast::Scope* scope;
   ast::Symbol* symbol;
 
-  ast::NodeList<ast::ASTNode>* nodeList;
-  ast::NodeList<ast::Expression>* exprList;
-  ast::NodeList<ast::Definition>* defList;
-  ast::NodeList<ast::Statement>* stmtList;
-  ast::NodeList<ast::Type>* typeList;
-  ast::NodeList<ast::Parameter>* paramList;
+  ast::NodeList* nodeList;
 }
 
-%token FUNC VAR CLASS EXTERN IF THEN ELSE FOR WHILE IN NIL REF OPERATOR NEW
-%token INIT DEINIT
+%token FUNC VAR CLASS EXTERN IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
+%token INIT DEINIT THIS
 %token ARROW COLON COMMA SEMICOLON
 %token BOOL BYTE INT UINT REAL STRING
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
@@ -65,46 +61,39 @@
 %token ERROR
 
 
-
-%type <nodeList> class_statement_list
-%type <node> file class_statement
-%type <defList> definition_list
-%type <def> definition function_definition extern_definition operator_definition class_definition init_definition
+%type <nodeList> class_statement_list definition_list statement_list expression_list optional_expression_list type_list parameter_list parameter_list_
+%type <node> file class_statement definition function_definition extern_definition operator_definition class_definition init_definition
 %type <funcPrototype> function_prototype function_prototype_
 %type <scope> curly_statement_list
-%type <stmtList> statement_list 
-%type <stmt> statement statement_semi if_statement while_statement for_statement
-%type <exprList> expression_list optional_expression_list
+%type <stmt> statement control_flow_statement statement_ if_statement while_statement for_statement return_statement
 %type <expr> expression number if_condition closure_definition def_expression def_expression_with_value
-%type <typeList> type_list
 %type <type> type_specifier type type_ref_ type_nilable_ type_base_ return_type array_type tuple_type callable_type callable_return_type class_type
-%type <paramList> parameter_list parameter_list_
 %type <param> parameter
 %type <op> overloadable_op
 %type <lexeme> name
 %type <symbol> symbol
 
 
-
 %glr-parser
+%define parse.error verbose
 
-%parse-param { ast::ASTNode*& ast }
+%parse-param { parser::Context* context }
 
 
 %start file
 %%
 
 file:
-    definition_list { ast = $1; }
+    definition_list { context->ast = $1; }
     ;
 definition_list:
     definition { 
-        $$ = new NodeList<Definition>();
-        $$->addElement($1);
+        $$ = new NodeList();
+        $$->addFront($1);
     }
     | definition definition_list {
         $$ = $2;
-        $$->addElement($1);
+        $$->addFront($1);
     }
     ;
 definition:
@@ -132,16 +121,16 @@ function_prototype_:
     ;
 parameter_list:
     LPAREN parameter_list_ RPAREN { $$ = $2; }
-    | LPAREN RPAREN               { $$ = new NodeList<Parameter>(); }
+    | LPAREN RPAREN               { $$ = new NodeList(); }
     ;
 parameter_list_:
     parameter {
-        $$ = new NodeList<Parameter>();
-        $$->addElement($1);
+        $$ = new NodeList();
+        $$->addFront($1);
     }
     | parameter COMMA parameter_list_ {
         $$ = $3;
-        $$->addElement($1);
+        $$->addFront($1);
     }
     ;
 
@@ -156,21 +145,28 @@ symbol:
     name { $$ = new Symbol($1); }
     ;
 type_specifier:
-    %empty       { $$ = Type::getNilType(); }
+    %empty       { $$ = Type::getUnknownType(); }
     | COLON type { $$ = $2; }
     ;
 type_list:
     type {
-        $$ = new NodeList<Type>();
-        $$->addElement($1);
+        $$ = new NodeList();
+        if($1) $$->addFront($1);
     }
     | type COMMA type_list {
         $$ = $3;
-        $$->addElement($1);
+        if($1) $$->addFront($1);
     }
     ;
 type:
-    type_ref_ { $$ = $1; }
+    type_ref_ { 
+        $$ = $1;
+        $$->setUserSpecified();
+    }
+    | error {
+        context->addError("  malformed type");
+        $$ = nullptr;
+    }
     ;
 type_ref_:
     type_nilable_ { $$ = $1; }
@@ -204,11 +200,11 @@ tuple_type:
     LPAREN type_list RPAREN { $$ = new TupleType($2); }
     ;
 callable_type:
-    LPAREN LPAREN type_list RPAREN ARROW callable_return_type RPAREN {
+    LPAREN LPAREN type_list RPAREN ARROW callable_return_type RPAREN %dprec 1 {
         $$ = new CallableType($3, $6);
     }
-    | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN { 
-        $$ = new CallableType(new NodeList<Type>(), $5);
+    | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 { 
+        $$ = new CallableType(new NodeList(), $5);
     }
     ;
 callable_return_type:
@@ -216,35 +212,41 @@ callable_return_type:
     | NIL { $$ = Type::getNilType(); }
     ;
 class_type:
-    symbol { $$ = new ClassType($1); }
+    name { $$ = new ClassType($1); }
     ;
 
 
 statement_list:
-    statement_semi {
-        $$ = new NodeList<Statement>();
-        $$->addElement($1);
+    statement {
+        $$ = new NodeList();
+        if($1) $$->addFront($1);
     }
-    | statement_semi statement_list {
+    | statement statement_list {
         $$ = $2;
-        $$->addElement($1);
+        if($1) $$->addFront($1);
     }
     ;
 
-statement_semi:
-    statement SEMICOLON { $$ = $1; }
-    ;
 statement:
-    def_expression                   { $$ = toStatementNode($1); }
-    | def_expression_with_value      { $$ = toStatementNode($1); }
-    | closure_definition             { $$ = toStatementNode($1); }
-    | if_statement                   { $$ = $1; }
-    | while_statement                { $$ = $1; }
-    | for_statement                  { $$ = $1; }
-    | expression                     { $$ = toStatementNode($1); }
+    statement_  SEMICOLON    { $$ = $1; }
+    | control_flow_statement { $$ = $1; }
+    | closure_definition        { $$ = toStatementNode($1); }
+    ;
+
+control_flow_statement: 
+    if_statement   { $$ = $1; }
+    | while_statement { $$ = $1; }
+    | for_statement   { $$ = $1; }
+    ;
+statement_:
+    def_expression              { $$ = new ExpressionStatement($1); }
+    | def_expression_with_value { $$ = new ExpressionStatement($1); }
+    | return_statement          { $$ = $1; }
+    | expression                { $$ = new ExpressionStatement($1); }
     ;
 curly_statement_list:
     LCURLY statement_list RCURLY { $$ = new Scope($2); }
+    | LCURLY RCURLY              { $$ = new Scope(new NodeList()); }
     ;
 
 
@@ -275,33 +277,49 @@ for_statement:
         $$ = new ForStatement(toDefExpressionNode($2), $4, $5);
     }
     ;
+return_statement:
+    RETURN expression { $$ = new ReturnStatement($2); }
+    ;
 
 
 def_expression:
     VAR symbol type_specifier { 
         $$ = new DefExpression($3, $2);
     }
+    | error {
+        context->addError("  malformed def");
+        $$ = nullptr;
+    }
     ;
 def_expression_with_value:
     def_expression EQUALS expression {
         $$ = $1;
-        toDefExpressionNode($$)->setValue($3);
+        auto v = toDefExpressionNode($$);
+        if(v) v->setValue($3);
+        else context->addError("  invalid def expression");
     }
     ;
 
 closure_definition:
     FUNC symbol type_specifier EQUALS parameter_list return_type curly_statement_list {
         auto closure_type = Closure::determineClosureType($3, *$5, $6);
-        auto closure = new Closure(closure_type, $5, $7);
-        $$ = new DefExpression($2, closure);
+        if(closure_type != nullptr) {
+            auto closure = new Closure(closure_type, $5, $7);
+            $$ = new DefExpression($2, closure);
+        }
+        else {
+            yyerror(context, "invalid closure type");
+            $$ = nullptr;
+        }
     }
     ;
         
 expression:
     symbol                     { $$ = new UseExpression($1); }
+    | THIS                     { $$ = new UseExpression(new Symbol("this")); }
     | number                   { $$ = $1; }
     | STRING_LITERAL           { $$ = new StringExpression($1); }
-    | NIL                      { $$ = new Nil(); }
+    | NIL                      { $$ = new Nil(true); }
     | LPAREN expression RPAREN { $$ = $2; }
     | expression EQUALS expression { 
         $$ = new CallExpression(OperatorType::ASSIGNMENT, $1, $3);
@@ -390,10 +408,10 @@ expression:
     | expression LSQUARE expression RSQUARE {
         $$ = new CallExpression(OperatorType::SUBSCRIPT, $1, $3);
     }
-    | NEW symbol LPAREN optional_expression_list RPAREN {
+    | NEW class_type LPAREN optional_expression_list RPAREN {
         $$ = new CallExpression(
             OperatorType::NEW_CLASS,
-            new UseExpression($2),
+            $2,
             $4);
     }
     | NEW LSQUARE type_specifier COMMA expression RSQUARE {
@@ -409,36 +427,36 @@ expression:
 number:
     INTEGER_LITERAL {
         auto v = std::strtoll($1, nullptr, 10);
-        $$ = new NumberExpression<long long>(v);
+        $$ = new IntExpression(v);
     }
     | HEX_LITERAL {
         // skip '0x'
         auto v = std::strtoull($1 + 2, nullptr, 10);
-        $$ = new NumberExpression<unsigned long long>(v);
+        $$ = new UIntExpression(v);
     }
     | BINARY_LITERAL {
         // skip '0b'
         auto v = std::strtoull($1 + 2, nullptr, 10);
-        $$ = new NumberExpression<unsigned long long>(v);
+        $$ = new UIntExpression(v);
     }
     | REAL_LITERAL {
         auto v = std::strtod($1, nullptr);
-        $$ = new NumberExpression<double>(v);
+        $$ = new RealExpression(v);
     }
     ;
     
 optional_expression_list:
     expression_list { $$ = $1; }
-    | %empty { $$ = new NodeList<Expression>(); }
+    | %empty { $$ = new NodeList(); }
     ;
 expression_list:
     expression {
-        $$ = new NodeList<Expression>();
-        $$->addElement($1);
+        $$ = new NodeList();
+        $$->addFront($1);
     }
     | expression COMMA expression_list {
         $$ = $3;
-        $$->addElement($1);
+        $$->addFront($1);
     }
     ;
 
@@ -448,25 +466,25 @@ extern_definition:
 
 
 class_definition:
-    CLASS symbol LCURLY class_statement_list RCURLY {
-        $$ = ClassDefinition::buildClass($2, $4);
+    CLASS class_type LCURLY class_statement_list RCURLY {
+        $$ = ClassDefinition::buildClass(toClassTypeNode($2), $4);
     }
     ;
 class_statement_list:
     class_statement {
-        $$ = new NodeList<ASTNode>();
-        $$->addElement($1);
+        $$ = new NodeList();
+        $$->addFront($1);
     }
     | class_statement class_statement_list {
         $$ = $2;
-        $$->addElement($1);
+        $$->addFront($1);
     }
     ;
 class_statement:
-    def_expression              { $$ = $1; }
-    | def_expression_with_value { $$ = $1; }
-    | function_definition       { $$ = $1; }
-    | init_definition           { $$ = $1; }
+    def_expression SEMICOLON              { $$ = $1; }
+    | def_expression_with_value SEMICOLON { $$ = $1; }
+    | function_definition                 { $$ = $1; }
+    | init_definition                     { $$ = $1; }
     ;
 init_definition:
     INIT parameter_list curly_statement_list {
@@ -474,6 +492,10 @@ init_definition:
     }
     | DEINIT curly_statement_list {
         $$ = new InitDefinition($2);
+    }
+    | error {
+        context->addError("  malformed init");
+        $$ = nullptr;
     }
     ;
 
@@ -513,16 +535,23 @@ name:
 
 %%
 
-void yyerror([[maybe_unused]] ASTNode*& ast, const char *s) {
-    fprintf(stderr, "Parse error!  Message: %s on %d\n", s, line_num);
-    // might as well halt now:
-    exit(-1);
+void yyerror(parser::Context* context, const char *s) {
+    context->addError(std::string(s) + " on line " + std::to_string(line_num));
 }
 
+namespace parser {
 ASTNode* parse(FILE* fp) {
     yyin = fp;
-    ASTNode* root;
-    yyparse(root);
-    return root;
+    Context context;
+    yyparse(&context);
+    if(context.hasErrors()) {
+        std::cerr << "Errors occured while parsing" << std::endl;
+        for(auto e: context.errors()) {
+            std::cerr << "  " << e << std::endl; 
+        }
+        return nullptr;
+    }
+    return context.ast;
 }
 
+}

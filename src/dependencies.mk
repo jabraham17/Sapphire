@@ -2,7 +2,7 @@
 common=
 ast=
 parser=
-sapphire=parser ast
+sapphire=parser ast common
 
 define make_depen
 $(eval $1: $($1))

@@ -62,32 +62,36 @@ endef
 map = $(foreach a,$(2),$(call $(1),$(a)))
 $(call map,generate_verbose_call,CC CXX LD AR RANLIB YACC LEX PYTHON3)
 
-COMPILE_FLAGS=
-LINK_FLAGS=
-COMPILE_FLAGS+= -Wno-comment
-COMPILE_FLAGS+= -flto
-LINK_FLAGS+= -flto
+COMPILE_FLAGS_=
+LINK_FLAGS_=
+COMPILE_FLAGS_+= -Wno-comment
+COMPILE_FLAGS_+= -flto
+LINK_FLAGS_+= -flto
 
 ifeq ($(DEBUG),1)
-COMPILE_FLAGS+= -DDEBUG=1 -g -O0 -fstandalone-debug
-LINK_FLAGS+= -g
+COMPILE_FLAGS_+= -DDEBUG=1 -g -O0 -fstandalone-debug
+LINK_FLAGS_+= -g
 else
 # #warnings are for developers
-COMPILE_FLAGS+= -O3 -Wno-\#warnings
+COMPILE_FLAGS_+= -O3 -Wno-\#warnings
 endif
 
-COMPILE_FLAGS+= -masm=intel
-COMPILE_FLAGS+= -Wall -Wextra
+COMPILE_FLAGS_+= -masm=intel
+COMPILE_FLAGS_+= -Wall -Wextra
 
 ifdef LINKER
-LINK_FLAGS+= -fuse-ld=$(LINKER)
+LINK_FLAGS_+= -fuse-ld=$(LINKER)
 endif
 
+# from user
+COMPILE_FLAGS_+= $(COMPILE_FLAGS)
+LINK_FLAGS_+= $(LINK_FLAGS)
 
-override CFLAGS+= $(COMPILE_FLAGS) -std=c17 -D_XOPEN_SOURCE=700
-override CXXFLAGS+= $(COMPILE_FLAGS) -std=c++17
+
+override CFLAGS+= $(COMPILE_FLAGS_) -std=c17 -D_XOPEN_SOURCE=700
+override CXXFLAGS+= $(COMPILE_FLAGS_) -std=c++17
 override ASFLAGS+=
-override LDFLAGS+= $(LINK_FLAGS)
+override LDFLAGS+= $(LINK_FLAGS_)
 override INCLUDE+=
 override YFLAGS+= -Wall
 override LFLAGS+=

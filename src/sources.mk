@@ -20,7 +20,7 @@ OBJECTS:=$(addprefix $(OBJ_PATH),$(OBJECTS))
 DEPENDS:=$(addprefix $(OBJ_PATH),$(DEPENDS))
 
 # other objects depend on bison/flex objects
-$(patsubst %,$(OBJ_PATH)%,$(DEP_OBJECTS)): $(patsubst %,$(OBJ_PATH)%,$(YL_OBJECTS))
+# $(patsubst %,$(OBJ_PATH)%,$(DEP_OBJECTS)): $(patsubst %,$(OBJ_PATH)%,$(YL_OBJECTS))
 
 override INCLUDE+= -I$(ROOT_PROJECT_DIRECTORY)src
 override INCLUDE+= -I$(OBJ_PATH)
