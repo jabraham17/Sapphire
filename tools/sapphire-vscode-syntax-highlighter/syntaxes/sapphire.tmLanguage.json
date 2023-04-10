@@ -1,25 +1,133 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "sapphire",
   "scopeName": "source.spp",
+  "fileTypes": ["spp"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#literals" },
+    { "include": "#operators" },
+    { "include": "#types" },
+    { "include": "#punctuation" }
+  ],
   "repository": {
-    "expression": {
-      "patterns": [{ "include": "#letter" }, { "include": "#paren-expression" }]
+    "keywords": {
+      "patterns": [
+        {
+          "match": "\\b((var)|(func)|(extern)|(operator)|(class))\\b",
+          "name": "storage.type.spp"
+        },
+        {
+          "match": "\\b((for)|(in)|(if)|(else)|(then)|(while)|(return)|(init)|(deinit))\\b",
+          "name": "keyword.control.spp"
+        },
+        {
+          "match": "\\b(new)\\b",
+          "name": "keyword.operator.spp"
+        },
+        {
+          "match": "\\b(this)\\b",
+          "name": "variable.language.this.spp"
+        }
+      ]
     },
-    "letter": {
-      "match": "a|b|c",
-      "name": "keyword.letter"
+    "literals": {
+      "patterns": [
+        {
+          "match": "\".*\"",
+          "name": "string.quoted.double.spp"
+        },
+        {
+          "match": "\\b([0-9]+)\\b",
+          "name": "constant.numeric.spp"
+        },
+        {
+          "match": "\\b(0x[0-9a-fA-F]+)\\b",
+          "name": "constant.numeric.spp"
+        },
+        {
+          "match": "\\b(0b[0-1]+)\\b",
+          "name": "constant.numeric.spp"
+        },
+        {
+          "match": "\\b([0-9]*.[0-9]+)\\b",
+          "name": "constant.numeric.spp"
+        },
+        {
+          "match": "\\b(nil)\\b",
+          "name": "constant.language.spp"
+        }
+      ]
     },
-    "paren-expression": {
-      "begin": "\\(",
-      "end": "\\)",
-      "beginCaptures": {
-        "0": { "name": "punctuation.paren.open" }
-      },
-      "endCaptures": {
-        "0": { "name": "punctuation.paren.close" }
-      },
-      "name": "expression.group",
-      "patterns": [{ "include": "#expression" }]
+    "operators": {
+      "patterns": [
+        {
+          "match": "((\\+)|(\\-)|(\\*)|(/)|(%)|(<<)|(>>)|(==)|(=)|(\\!=)|(\\!)|(<)|(<=)|(>)|(>=)|(\\&)|(\\|)|(~)|(\\&\\&)|(\\|\\|)|(\\?))",
+          "name": "keyword.operator.spp"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "match": "\\b((int)|(string)|(uint)|(bool)|(byte)|(real))\\b",
+          "name": "entity.name.type.spp"
+        },
+        {
+          "match": "\\b(ref)\\b",
+          "name": "storage.modifier.spp"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "match": ";",
+          "name": "punctuation.terminator.spp"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.delimiter.comma.spp"
+        },
+        {
+          "name": "->",
+          "name": "punctuation.separator.dot-access.spp"
+        },
+        { "name": ".", "name": "punctuation.separator.dot-access.spp" },
+        { "name": ":", "name": "punctuation.separator.colon.spp" }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "begin": "/\\*",
+          "captures": {
+            "0": {
+              "name": "punctuation.definition.comment.spp"
+            }
+          },
+          "end": "\\*/",
+          "name": "comment.block.spp"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.comment.spp"
+            }
+          },
+          "match": "(//).*$\\n?",
+          "name": "comment.line.double-slash.spp"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.comment.spp"
+            }
+          },
+          "match": "(#).*$\\n?",
+          "name": "comment.line.number-sign.spp"
+        }
+      ]
     }
   }
 }

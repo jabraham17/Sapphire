@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "jabraham17",
   "engines": {
-    "vscode": "^1.5.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Programming Languages"
@@ -26,7 +26,7 @@
     "grammars": [
       {
         "language": "sapphire",
-        "scopeName": "source.sapphire",
+        "scopeName": "source.spp",
         "path": "./syntaxes/sapphire.tmLanguage.json"
       }
     ]
