@@ -25,7 +25,7 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 %option nomain
 
 %x COMMENTS
-%x STRING
+%x STRING_PARSE
 
 %%
 
@@ -89,7 +89,7 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 "int"    { return INT; }
 "uint"   { return UINT; }
 "real"   { return REAL; }
-"STRING" {return STRING; }
+"string" {return STRING; }
 
 
     /* grouping */
@@ -123,20 +123,21 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
     return REAL_LITERAL;
 }
     /* string needs custom state to handle escapes */
-["] { BEGIN(STRING); }
-<STRING>[\\]["] {}
-<STRING>["] {
+["] { BEGIN(STRING_PARSE); }
+<STRING_PARSE>[\\]["] {}
+<STRING_PARSE>["] {
     BEGIN(INITIAL);
     yylval.lexeme = strdup(yytext);
     return STRING_LITERAL;
 }
+<STRING_PARSE>. {}
 
 
     /* comments */
 "//".* {}
 "#".* {}
 [\/][*] { BEGIN(COMMENTS); }
-<COMMENTS>[*][\/] { BEGIN(INITIAL);}
+<COMMENTS>[*][\/] { BEGIN(INITIAL); }
 <COMMENTS>. {}
 
     /* whitespace */

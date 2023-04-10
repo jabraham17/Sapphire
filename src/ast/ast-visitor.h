@@ -15,7 +15,7 @@ class ASTVisitor {
 public:
   ASTVisitor() = default;
   virtual ~ASTVisitor() = default;
-#define ast_funcs(type)                                                        \
+#define ast_node_def(type)                                                     \
 protected:                                                                     \
   virtual void visit##type##Impl(type*) {}                                     \
                                                                                \
@@ -27,8 +27,7 @@ public:                                                                        \
     }                                                                          \
     visit##type##Impl(a);                                                      \
   }
-  ast_node_list(ast_funcs)
-#undef ast_funcs
+#include "ast-node.inc"
 };
 
 } // namespace ast

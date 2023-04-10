@@ -80,35 +80,11 @@ public:
 
 private:
 protected:
-  virtual void visitNodeListImpl(NodeList* arg) override;
-  virtual void visitParameterImpl(Parameter* arg) override;
-  virtual void visitFunctionPrototypeImpl(FunctionPrototype* arg) override;
-  virtual void visitFunctionDefinitionImpl(FunctionDefinition* arg) override;
-  virtual void visitExternDefinitionImpl(ExternDefinition* arg) override;
-  virtual void visitInitDefinitionImpl(InitDefinition* arg) override;
-  virtual void visitScopeImpl(Scope* arg) override;
-  virtual void visitExpressionStatementImpl(ExpressionStatement* arg) override;
-  virtual void visitDefExpressionImpl(DefExpression* arg) override;
-  virtual void visitClassDefinitionImpl(ClassDefinition* arg) override;
-  virtual void visitOperatorDefinitionImpl(OperatorDefinition* arg) override;
-  virtual void visitPrimitiveTypeImpl(PrimitiveType* arg) override;
-  virtual void visitArrayTypeImpl(ArrayType* arg) override;
-  virtual void visitTupleTypeImpl(TupleType* arg) override;
-  virtual void visitCallableTypeImpl(CallableType* arg) override;
-  virtual void visitClassTypeImpl(ClassType* arg) override;
-  virtual void visitIfStatementImpl(IfStatement* arg) override;
-  virtual void visitWhileStatementImpl(WhileStatement* arg) override;
-  virtual void visitForStatementImpl(ForStatement* arg) override;
-  virtual void visitReturnStatementImpl(ReturnStatement* arg) override;
-  virtual void visitClosureImpl(Closure* arg) override;
-  virtual void visitOperatorImpl(Operator* arg) override;
-  virtual void visitCallExpressionImpl(CallExpression* arg) override;
-  virtual void visitUseExpressionImpl(UseExpression* arg) override;
-  virtual void visitIntExpressionImpl(IntExpression* arg) override;
-  virtual void visitUIntExpressionImpl(UIntExpression* arg) override;
-  virtual void visitRealExpressionImpl(RealExpression* arg) override;
-  virtual void visitStringExpressionImpl(StringExpression* arg) override;
-  virtual void visitNilImpl(Nil* arg) override;
+#define ast_node_def_exclude
+#define ast_node_def_exclude_Statement
+#define ast_node_def_exclude_Expression
+#define ast_node_def(type) virtual void visit##type##Impl(type* arg) override;
+#include "ast/ast-node.inc"
 };
 } // namespace visitor
 } // namespace ast

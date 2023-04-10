@@ -40,7 +40,7 @@ export -f check_format_python
 
 FILES=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.inc")
 for s in "${FILES[@]}"; do
-    (find $SAPPHIRE_HOME/src -ipath $s -type f -exec bash -c 'check_format "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
+    (find $SAPPHIRE_HOME/src -ipath "$s" -type f -exec bash -c 'check_format "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
 done
 
 DIRS=("src" "scripts")

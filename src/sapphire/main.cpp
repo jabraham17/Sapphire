@@ -1,5 +1,6 @@
 #include "ast/ast.h"
 #include "ast/visitors/dump-ast.h"
+#include "codegen/codegen.h"
 #include "parser/parser.h"
 
 int main(int argc, const char** argv, const char** envp) {
@@ -12,11 +13,14 @@ int main(int argc, const char** argv, const char** envp) {
   } else {
     fp = stdin;
   }
-  auto a = parser::parse(fp);
+  auto ast = parser::parse(fp);
   if(needToClose) fclose(fp);
 
-  if(a == nullptr) return 1;
+  if(ast == nullptr) return 1;
 
-  a->accept(new ast::visitor::DumpAST(std::cout));
-  std::cout << std::endl;
+  // ast->accept(new ast::visitor::DumpAST(std::cout));
+  // std::cout << std::endl;
+
+  auto ir = codegen::doCodegen(ast);
+  std::cout << ir << std::endl;
 }

@@ -182,12 +182,12 @@ type_nilable_:
         $$->setNilable(true);
     }
 type_base_:
-    INT      { $$ = new PrimitiveType(PrimitiveTypeEnum::INT); }
-    | UINT   { $$ = new PrimitiveType(PrimitiveTypeEnum::UINT); }
-    | REAL   { $$ = new PrimitiveType(PrimitiveTypeEnum::REAL); }
-    | STRING { $$ = new PrimitiveType(PrimitiveTypeEnum::STRING); }
-    | BOOL   { $$ = new PrimitiveType(PrimitiveTypeEnum::BOOL); }
-    | BYTE   { $$ = new PrimitiveType(PrimitiveTypeEnum::BYTE); }
+    INT             { $$ = new PrimitiveType(PrimitiveTypeEnum::INT); }
+    | UINT          { $$ = new PrimitiveType(PrimitiveTypeEnum::UINT); }
+    | REAL          { $$ = new PrimitiveType(PrimitiveTypeEnum::REAL); }
+    | STRING        { $$ = new PrimitiveType(PrimitiveTypeEnum::STRING); }
+    | BOOL          { $$ = new PrimitiveType(PrimitiveTypeEnum::BOOL); }
+    | BYTE          { $$ = new PrimitiveType(PrimitiveTypeEnum::BYTE); }
     | array_type    { $$ = $1; }
     | tuple_type    { $$ = $1; }
     | callable_type { $$ = $1; }
@@ -541,6 +541,9 @@ void yyerror(parser::Context* context, const char *s) {
 
 namespace parser {
 ASTNode* parse(FILE* fp) {
+    #if defined(DEBUG_PARSER) && DEBUG_PARSER==1
+    yydebug = 1;
+    #endif
     yyin = fp;
     Context context;
     yyparse(&context);

@@ -28,7 +28,7 @@ CF=$SAPPHIRE_HOME/../llvm/llvm-project/build/bin/clang-format
 
 FILES=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.inc")
 for s in "${FILES[@]}"; do
-    (set -x && find $SAPPHIRE_HOME/src -ipath $s -type f -exec $CF --Werror --style=file:$SAPPHIRE_HOME/.clang-format -i {} +)
+    (set -x && find $SAPPHIRE_HOME/src -ipath "$s" -type f -exec $CF --Werror --style=file:$SAPPHIRE_HOME/.clang-format -i {} +)
 done
 
 DIRS=("src" "scripts")

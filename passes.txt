@@ -1,0 +1,5 @@
+resolve vars
+
+fully type everything
+
+function mangle: externs are left alone, non externs get prefixed with 'spph_'

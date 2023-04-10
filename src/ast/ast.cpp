@@ -40,15 +40,15 @@ DefExpression::DefExpression(
   }
 }
 DefExpression::DefExpression(Type* type, Symbol* symbol)
-    : DefExpression(type, symbol, new Nil()) {}
+    : DefExpression(type, symbol, nullptr) {}
 DefExpression::DefExpression(Symbol* symbol, Expression* assignValue)
     : DefExpression(assignValue->type(), symbol, assignValue) {}
-DefExpression::DefExpression(Symbol* symbol)
-    : DefExpression(symbol, new Nil()) {}
+DefExpression::DefExpression(Symbol* symbol) : DefExpression(symbol, nullptr) {}
 
 bool DefExpression::hasInitialValue() {
-  auto n = toNilNode(assignValue_);
-  return n == nullptr || (n != nullptr && n->isUserSpecified());
+  // auto n = toNilNode(assignValue_);
+  return assignValue_ != nullptr;
+  //  || (n != nullptr && n->isUserSpecified());
 }
 
 bool Type::isNilable(Type* t) { return t->isNilable(); }
@@ -121,7 +121,7 @@ bool Type::isSameType(Type* t1, Type* t2) {
 
 bool Type::isSameType(NodeList* t1, NodeList* t2) {
   if(t1->size() == t2->size()) {
-    for(auto i = 0; i < t1->size(); i++) {
+    for(size_t i = 0; i < t1->size(); i++) {
       auto pt1 = toTypeNode((*t1)[i]);
       auto pt2 = toTypeNode((*t2)[i]);
       if(pt1 != nullptr && pt2 != nullptr) {
@@ -172,7 +172,7 @@ std::string Type::getTypeString(Type* t) {
     }
     s += ") -> " + getTypeString(ct->returnType()) + ")";
   } else if(auto ct = toClassType(t); ct != nullptr) {
-    s += ct->className();
+    s += "class " + ct->className();
   } else {
     s += "t";
   }
@@ -253,9 +253,8 @@ bool IfStatement::hasElseIf() {
 Scope* IfStatement::plainElseBody() { return toScopeNode(elseBody_); }
 IfStatement* IfStatement::elseIfBody() { return toIfStatementNode(elseBody_); }
 
-#define accept_func(type)                                                      \
+#define ast_node_def(type)                                                     \
   void type::accept(ASTVisitor* ast) { ast->visit##type(this); }
-ast_node_list(accept_func)
-#undef accept_func
+#include "ast-node.inc"
 
 } // namespace ast

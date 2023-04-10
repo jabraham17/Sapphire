@@ -19,40 +19,6 @@ public:
   virtual void accept(ASTVisitor* ast) = 0;
 };
 
-#define ast_node_list(F)                                                       \
-  F(NodeList)                                                                  \
-  F(Parameter)                                                                 \
-  F(FunctionPrototype)                                                         \
-  F(FunctionDefinition)                                                        \
-  F(ExternDefinition)                                                          \
-  F(InitDefinition)                                                            \
-  F(Statement)                                                                 \
-  F(Scope)                                                                     \
-  F(Expression)                                                                \
-  F(ExpressionStatement)                                                       \
-  F(DefExpression)                                                             \
-  F(ClassDefinition)                                                           \
-  F(OperatorDefinition)                                                        \
-  F(Type)                                                                      \
-  F(PrimitiveType)                                                             \
-  F(ArrayType)                                                                 \
-  F(TupleType)                                                                 \
-  F(CallableType)                                                              \
-  F(ClassType)                                                                 \
-  F(IfStatement)                                                               \
-  F(WhileStatement)                                                            \
-  F(ForStatement)                                                              \
-  F(ReturnStatement)                                                           \
-  F(Closure)                                                                   \
-  F(Operator)                                                                  \
-  F(CallExpression)                                                            \
-  F(UseExpression)                                                             \
-  F(IntExpression)                                                             \
-  F(UIntExpression)                                                            \
-  F(RealExpression)                                                            \
-  F(StringExpression)                                                          \
-  F(Nil)
-
 struct ASTException : public std::runtime_error {
   ASTException() : ASTException("Unknown AST Exception") {}
   ASTException(std::string message) : std::runtime_error(message) {}
@@ -187,6 +153,7 @@ public:
   virtual ~InitDefinition() = default;
   virtual void accept(ASTVisitor* ast) override;
   bool isDeinit() { return !isInit_; }
+  bool isInit() { return isInit_; }
   NodeList* parameters() { return parameters_; }
   Scope* body() { return body_; }
 };
@@ -530,7 +497,7 @@ enum class OperatorType {
   NEGATE,
   NOT
 };
-static std::string getOperatorTypeString(OperatorType ot) {
+[[maybe_unused]] static std::string getOperatorTypeString(OperatorType ot) {
   switch(ot) {
     case OperatorType::ASSIGNMENT: return "=";
     case OperatorType::CONDITIONAL: return "?:";
@@ -704,13 +671,14 @@ public:
 };
 
 // defines the visitors
-#define ast_funcs(type)                                                        \
-  static type* to##type##Node(ASTNode* a) { return dynamic_cast<type*>(a); }   \
-  static bool is##type##Node(ASTNode* a) {                                     \
+#define ast_node_def(type)                                                     \
+  [[maybe_unused]] static type* to##type##Node(ASTNode* a) {                   \
+    return dynamic_cast<type*>(a);                                             \
+  }                                                                            \
+  [[maybe_unused]] static bool is##type##Node(ASTNode* a) {                    \
     return to##type##Node(a) != nullptr;                                       \
   }
-ast_node_list(ast_funcs)
-#undef ast_funcs
+#include "ast-node.inc"
 
 } // namespace ast
 

@@ -83,8 +83,11 @@ func main(args: [string]): int {
     }
 */
 
+
     var a = new (7, 10);
     var b: [int];
+
+    var s = "str";
 
 
     // this will be reported as an error
