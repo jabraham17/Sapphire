@@ -1,0 +1,34 @@
+{
+  "name": "sapphire-vscode-syntax-highlighter",
+  "displayName": "Sapphire",
+  "description": "A simple extension for Sapphire syntax highlighting.",
+  "version": "0.0.1",
+  "publisher": "jabraham17",
+  "engines": {
+    "vscode": "^1.5.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sapphire",
+        "aliases": [
+          "sapphire"
+        ],
+        "extensions": [
+          ".spp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sapphire",
+        "scopeName": "source.sapphire",
+        "path": "./syntaxes/sapphire.tmLanguage.json"
+      }
+    ]
+  }
+}
