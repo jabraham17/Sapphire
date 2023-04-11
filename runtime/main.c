@@ -1,8 +1,9 @@
 
 #include "string.h"
+#include "types.h"
 #include "alloc.h"
 #include <string.h>
-extern long long spp_main(spp_str arg);
+extern spp_int spp_main(spp_str arg);
 
 int main(int argc, const char** argv, const char** envp) {
 
