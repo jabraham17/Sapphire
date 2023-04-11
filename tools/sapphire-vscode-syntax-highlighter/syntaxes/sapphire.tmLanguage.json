@@ -34,8 +34,25 @@
     "literals": {
       "patterns": [
         {
-          "match": "\".*\"",
-          "name": "string.quoted.double.spp"
+          "name": "string.quoted.double.spp",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.spp"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.spp"
+            }
+          },
+          "patterns": [
+            {
+              "match": "\\\\(\\\\|[nt\"])",
+              "name": "constant.character.escape.spp"
+            }
+          ]
         },
         {
           "match": "\\b([0-9]+)\\b",

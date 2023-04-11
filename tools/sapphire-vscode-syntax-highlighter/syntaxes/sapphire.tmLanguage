@@ -14,6 +14,10 @@
     <array>
       <dict>
         <key>include</key>
+        <string>#comments</string>
+      </dict>
+      <dict>
+        <key>include</key>
         <string>#keywords</string>
       </dict>
       <dict>
@@ -22,7 +26,15 @@
       </dict>
       <dict>
         <key>include</key>
-        <string>#comments</string>
+        <string>#operators</string>
+      </dict>
+      <dict>
+        <key>include</key>
+        <string>#types</string>
+      </dict>
+      <dict>
+        <key>include</key>
+        <string>#punctuation</string>
       </dict>
     </array>
     <key>repository</key>
@@ -33,13 +45,13 @@
         <array>
           <dict>
             <key>match</key>
-            <string>\b(var)|(func)|(extern)|(operator)|(class)\b</string>
+            <string>\b((var)|(func)|(extern)|(operator)|(class))\b</string>
             <key>name</key>
             <string>storage.type.spp</string>
           </dict>
           <dict>
             <key>match</key>
-            <string>\b(for)|(in)|(if)|(else)|(then)|(while)|(return)\b</string>
+            <string>\b((for)|(in)|(if)|(else)|(then)|(while)|(return)|(init)|(deinit))\b</string>
             <key>name</key>
             <string>keyword.control.spp</string>
           </dict>
@@ -49,6 +61,12 @@
             <key>name</key>
             <string>keyword.operator.spp</string>
           </dict>
+          <dict>
+            <key>match</key>
+            <string>\b(this)\b</string>
+            <key>name</key>
+            <string>variable.language.this.spp</string>
+          </dict>
         </array>
       </dict>
       <key>literals</key>
@@ -56,10 +74,37 @@
         <key>patterns</key>
         <array>
           <dict>
-            <key>match</key>
-            <string>".*"</string>
             <key>name</key>
             <string>string.quoted.double.spp</string>
+            <key>begin</key>
+            <string>"</string>
+            <key>end</key>
+            <string>"</string>
+            <key>beginCaptures</key>
+            <dict>
+              <key>0</key>
+              <dict>
+                <key>name</key>
+                <string>punctuation.definition.string.begin.spp</string>
+              </dict>
+            </dict>
+            <key>endCaptures</key>
+            <dict>
+              <key>0</key>
+              <dict>
+                <key>name</key>
+                <string>punctuation.definition.string.end.spp</string>
+              </dict>
+            </dict>
+            <key>patterns</key>
+            <array>
+              <dict>
+                <key>match</key>
+                <string>\\(\\|[nt"])</string>
+                <key>name</key>
+                <string>constant.character.escape.spp</string>
+              </dict>
+            </array>
           </dict>
           <dict>
             <key>match</key>
@@ -90,6 +135,66 @@
             <string>\b(nil)\b</string>
             <key>name</key>
             <string>constant.language.spp</string>
+          </dict>
+        </array>
+      </dict>
+      <key>operators</key>
+      <dict>
+        <key>patterns</key>
+        <array>
+          <dict>
+            <key>match</key>
+            <string>((\+)|(\-)|(\*)|(/)|(%)|(&lt;&lt;)|(&gt;&gt;)|(==)|(=)|(\!=)|(\!)|(&lt;)|(&lt;=)|(&gt;)|(&gt;=)|(\&amp;)|(\|)|(~)|(\&amp;\&amp;)|(\|\|)|(\?))</string>
+            <key>name</key>
+            <string>keyword.operator.spp</string>
+          </dict>
+        </array>
+      </dict>
+      <key>types</key>
+      <dict>
+        <key>patterns</key>
+        <array>
+          <dict>
+            <key>match</key>
+            <string>\b((int)|(string)|(uint)|(bool)|(byte)|(real))\b</string>
+            <key>name</key>
+            <string>entity.name.type.spp</string>
+          </dict>
+          <dict>
+            <key>match</key>
+            <string>\b(ref)\b</string>
+            <key>name</key>
+            <string>storage.modifier.spp</string>
+          </dict>
+        </array>
+      </dict>
+      <key>punctuation</key>
+      <dict>
+        <key>patterns</key>
+        <array>
+          <dict>
+            <key>match</key>
+            <string>;</string>
+            <key>name</key>
+            <string>punctuation.terminator.spp</string>
+          </dict>
+          <dict>
+            <key>match</key>
+            <string>,</string>
+            <key>name</key>
+            <string>punctuation.separator.delimiter.comma.spp</string>
+          </dict>
+          <dict>
+            <key>name</key>
+            <string>punctuation.separator.dot-access.spp</string>
+          </dict>
+          <dict>
+            <key>name</key>
+            <string>punctuation.separator.dot-access.spp</string>
+          </dict>
+          <dict>
+            <key>name</key>
+            <string>punctuation.separator.colon.spp</string>
           </dict>
         </array>
       </dict>
