@@ -106,6 +106,7 @@ definition:
 
 function_definition:
     FUNC function_prototype curly_statement_list {
+        $2->setMangled(true);
         $$ = new FunctionDefinition($2, $3);
     }
     ;
@@ -461,7 +462,10 @@ expression_list:
     ;
 
 extern_definition:
-    EXTERN function_prototype SEMICOLON { $$ = new ExternDefinition($2); }
+    EXTERN function_prototype SEMICOLON {
+        $2->setMangled(false);
+        $$ = new ExternDefinition($2);
+    }
     ;
 
 

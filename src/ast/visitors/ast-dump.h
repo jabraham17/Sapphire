@@ -1,10 +1,11 @@
-#ifndef SAPPHIRE_AST_VISITORS_DUMP_AST_H_
-#define SAPPHIRE_AST_VISITORS_DUMP_AST_H_
+#ifndef SAPPHIRE_AST_VISITORS_AST_DUMP_H_
+#define SAPPHIRE_AST_VISITORS_AST_DUMP_H_
 
-#include "ast/ast-visitor.h"
 #include "ast/ast.h"
 
 #include <iostream>
+
+#include "ast-visitor.h"
 
 namespace ast {
 
@@ -69,21 +70,22 @@ public:
   // }
 };
 
-class DumpAST : public ASTVisitor {
+class ASTDump : public ASTVisitor {
 private:
   IndentedOStream strm;
 
 public:
-  DumpAST(std::ostream& rawStrm, size_t indentLevel = 2)
+  ASTDump(std::ostream& rawStrm, size_t indentLevel = 2)
       : strm(rawStrm, indentLevel) {}
-  virtual ~DumpAST() = default;
+  virtual ~ASTDump() = default;
 
 private:
 protected:
 #define ast_node_def_exclude
 #define ast_node_def_exclude_Statement
 #define ast_node_def_exclude_Expression
-#define ast_node_def(type) virtual void visit##type##Impl(type* arg) override;
+#define ast_node_def_exclude_Type
+#define ast_node_def(type) virtual void visitImpl(type* arg) override;
 #include "ast/ast-node.inc"
 };
 } // namespace visitor

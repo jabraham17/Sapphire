@@ -10,13 +10,15 @@
 #include <vector>
 
 namespace ast {
+namespace visitor {
 class ASTVisitor;
+}
 class ASTNode {
 public:
   ASTNode() = default;
   virtual ~ASTNode() = default;
   // virtual  toString() { return "ast"; }
-  virtual void accept(ASTVisitor* ast) = 0;
+  virtual void accept(visitor::ASTVisitor* ast) = 0;
 };
 
 struct ASTException : public std::runtime_error {
@@ -32,7 +34,7 @@ public:
   NodeList() = default;
   virtual ~NodeList() = default;
   // virtual std::string toString() override { return ""; }
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   void addFront(ASTNode* elm) { elms.push_front(elm); }
   void addBack(ASTNode* elm) { elms.push_back(elm); }
@@ -70,7 +72,7 @@ public:
   virtual ~Parameter() = default;
   Symbol* symbol() { return symbol_; }
   // virtual std::string toString() override;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 };
 
 class FunctionPrototype : public ASTNode {
@@ -79,10 +81,12 @@ private:
   std::string name_;
   NodeList* parameters_;
   Type* returnType_;
+  bool shouldMangle_;
 
 public:
   FunctionPrototype(const char* name, NodeList* parameters, Type* returnType)
-      : name_(name), parameters_(parameters), returnType_(returnType) {}
+      : name_(name), parameters_(parameters), returnType_(returnType),
+        shouldMangle_(false) {}
   FunctionPrototype(
       const char* namespaceName,
       const char* name,
@@ -93,12 +97,20 @@ public:
   }
   virtual ~FunctionPrototype() = default;
   // virtual std::string toString() override;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   std::string name() {
     std::string s;
     if(namespaceName_.has_value()) s += *namespaceName_ + ".";
     s += name_;
+    return s;
+  }
+  void setMangled(bool shouldMangle = true) { shouldMangle_ = shouldMangle; }
+  std::string mangledNamed() {
+    std::string s;
+    if(namespaceName_.has_value()) s += *namespaceName_ + "_";
+    s += name_;
+    if(shouldMangle_) s = "spp_" + s;
     return s;
   }
   NodeList* parameters() { return parameters_; }
@@ -122,7 +134,7 @@ public:
       : functionPrototype_(functionPrototype), body_(body) {}
   virtual ~FunctionDefinition() = default;
   // virtual std::string toString() override;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   FunctionPrototype* functionPrototype() { return functionPrototype_; }
   Scope* body() { return body_; }
@@ -135,7 +147,7 @@ public:
   ExternDefinition(FunctionPrototype* functionPrototype)
       : functionPrototype_(functionPrototype) {}
   virtual ~ExternDefinition() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   FunctionPrototype* functionPrototype() { return functionPrototype_; }
 };
 
@@ -151,7 +163,7 @@ public:
   InitDefinition(Scope* body)
       : parameters_(nullptr), body_(body), isInit_(false) {}
   virtual ~InitDefinition() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   bool isDeinit() { return !isInit_; }
   bool isInit() { return isInit_; }
   NodeList* parameters() { return parameters_; }
@@ -163,7 +175,7 @@ class Statement : public ASTNode {
 public:
   Statement() = default;
   virtual ~Statement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 };
 
 class Scope : public Statement {
@@ -172,7 +184,7 @@ class Scope : public Statement {
 public:
   Scope(NodeList* statements) : statements_(statements){};
   virtual ~Scope() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   NodeList* statements() { return statements_; }
 };
 class Expression : public ASTNode {
@@ -184,7 +196,7 @@ public:
   virtual ~Expression() = default;
   virtual bool isLValue() { return false; }
   virtual Type* type() { return type_; }
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 };
 
 class ExpressionStatement : public Statement {
@@ -193,7 +205,7 @@ class ExpressionStatement : public Statement {
 public:
   ExpressionStatement(Expression* expr) : expression_(expr) {}
   virtual ~ExpressionStatement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Expression* expression() { return expression_; }
 };
 
@@ -208,7 +220,7 @@ public:
   DefExpression(Symbol* symbol);
   virtual ~DefExpression() = default;
   virtual void setValue(Expression* value) { assignValue_ = value; }
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
   bool hasInitialValue();
   Expression* assignValue() { return assignValue_; }
@@ -229,7 +241,7 @@ public:
   virtual ~ClassDefinition() = default;
 
   static ClassDefinition* buildClass(ClassType* classType, NodeList* defs);
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   ClassType* classType() { return classType_; }
   NodeList* variables() { return variables_; }
   NodeList* functions() { return functions_; }
@@ -246,7 +258,7 @@ public:
   OperatorDefinition(Operator* op, NodeList* parameters, Scope* body)
       : op_(op), parameters_(parameters), body_(body) {}
   virtual ~OperatorDefinition() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   Operator* op() { return op_; }
   NodeList* parameters() { return parameters_; }
@@ -309,7 +321,7 @@ public:
 
   static std::string getTypeString(Type* t);
 
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 };
 
 class PrimitiveType : public Type {
@@ -322,7 +334,7 @@ public:
   PrimitiveType(PrimitiveTypeEnum type, bool isRef, bool isNilable)
       : Type(isRef, isNilable), primType(type) {}
   virtual ~PrimitiveType() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   PrimitiveTypeEnum primitiveType() { return primType; }
 };
 class ArrayType : public Type {
@@ -335,7 +347,7 @@ public:
   ArrayType(Type* arrayType, bool isRef, bool isNilable)
       : Type(isRef, isNilable), arrayType(arrayType) {}
   virtual ~ArrayType() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Type* elementType() { return arrayType; }
 };
 
@@ -349,7 +361,7 @@ public:
   TupleType(NodeList* tupleTypes, bool isRef, bool isNilable)
       : Type(isRef, isNilable), tupleTypes(tupleTypes) {}
   virtual ~TupleType() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   NodeList* elementTypes() { return tupleTypes; }
 };
 class Closure;
@@ -370,7 +382,7 @@ public:
       : Type(isRef, isNilable), parameterTypes_(parameterTypes),
         returnType_(returnType) {}
   virtual ~CallableType() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   NodeList* parameterTypes() { return parameterTypes_; }
   Type* returnType() { return returnType_; }
@@ -386,7 +398,7 @@ public:
       : Type(isRef, isNilable), className_(className) {}
 
   virtual ~ClassType() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   std::string className() { return className_; }
 };
 
@@ -401,7 +413,7 @@ public:
   IfStatement(Expression* expr, Scope* ifBody)
       : IfStatement(expr, ifBody, nullptr) {}
   virtual ~IfStatement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Expression* expr() { return expr_; }
   Scope* ifBody() { return ifBody_; }
   bool hasElseBody();
@@ -417,7 +429,7 @@ class WhileStatement : public Statement {
 public:
   WhileStatement(Expression* expr, Scope* body) : expr_(expr), body_(body) {}
   virtual ~WhileStatement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
   Expression* expr() { return expr_; }
   Scope* body() { return body_; }
@@ -431,7 +443,7 @@ public:
   ForStatement(DefExpression* var, Expression* expr, Scope* body)
       : var_(var), expr_(expr), body_(body) {}
   virtual ~ForStatement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   DefExpression* variable() { return var_; }
   Expression* expr() { return expr_; }
   Scope* body() { return body_; }
@@ -442,7 +454,7 @@ class ReturnStatement : public Statement {
 public:
   ReturnStatement(Expression* expr) : expr_(expr) {}
   virtual ~ReturnStatement() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Expression* expression() { return expr_; }
 };
 
@@ -454,7 +466,7 @@ public:
   Closure(CallableType* type, NodeList* parameters, Scope* body)
       : Expression(type), parameters_(parameters), body_(body) {}
   virtual ~Closure() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   static CallableType* determineClosureType(
       Type* type_specifier,
       const NodeList& parameters,
@@ -538,7 +550,7 @@ class Operator : public ASTNode {
 public:
   Operator(OperatorType opType) : opType_(opType){};
   virtual ~Operator() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   OperatorType opType() { return opType_; }
 };
 
@@ -559,7 +571,7 @@ public:
     initOperands(std::forward<Args>(operands)...);
   }
   virtual ~CallExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
 
 private:
   template <typename Arg> void initOperands(Arg operand) {
@@ -607,7 +619,7 @@ private:
 public:
   UseExpression(Symbol* symbol) : Expression(symbol->type()), symbol_(symbol) {}
   virtual ~UseExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
 };
 
@@ -619,7 +631,7 @@ public:
   IntExpression(long long value)
       : Expression(PrimitiveTypeEnum::INT), value_(value) {}
   virtual ~IntExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   auto value() { return value_; }
 };
 
@@ -631,7 +643,7 @@ public:
   UIntExpression(long long value)
       : Expression(PrimitiveTypeEnum::INT), value_(value) {}
   virtual ~UIntExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   auto value() { return value_; }
 };
 
@@ -643,19 +655,22 @@ public:
   RealExpression(double value)
       : Expression(PrimitiveTypeEnum::INT), value_(value) {}
   virtual ~RealExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   auto value() { return value_; }
 };
 
 class StringExpression : public Expression {
+private:
   std::string str;
 
 public:
   StringExpression(const std::string str)
       : Expression(PrimitiveTypeEnum::STRING), str(str) {}
   virtual ~StringExpression() = default;
-  virtual void accept(ASTVisitor* ast) override;
-  auto value() { return str; }
+  virtual void accept(visitor::ASTVisitor* ast) override;
+  std::string value() { return str; }
+  //  return the string with all escapes resolved
+  std::string escapedValue();
 };
 
 class Nil : public Expression {
@@ -666,7 +681,7 @@ public:
   Nil(bool isUserSpecified)
       : Expression(Type::getNilType()), isUserSpecified_(isUserSpecified) {}
   virtual ~Nil() = default;
-  virtual void accept(ASTVisitor* ast) override;
+  virtual void accept(visitor::ASTVisitor* ast) override;
   bool isUserSpecified() { return isUserSpecified_; }
 };
 

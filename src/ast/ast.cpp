@@ -1,6 +1,6 @@
 #include "ast.h"
 
-#include "ast-visitor.h"
+#include "visitors/ast-visitor.h"
 
 namespace ast {
 
@@ -253,8 +253,28 @@ bool IfStatement::hasElseIf() {
 Scope* IfStatement::plainElseBody() { return toScopeNode(elseBody_); }
 IfStatement* IfStatement::elseIfBody() { return toIfStatementNode(elseBody_); }
 
+char codeForEscapedChar(char c) {
+  if(c == 'n') return '\n';
+  if(c == 't') return '\t';
+  if(c == '\\') return '\\';
+}
+
+std::string StringExpression::escapedValue() {
+  std::string v = str;
+  size_t pos = 0;
+  while(true) {
+    pos = v.find('\\');
+    if(pos == std::string::npos) break;
+    char replacementChar = codeForEscapedChar(v[pos + 1]);
+    std::string replacement;
+    replacement += replacementChar;
+    v.replace(pos, 2, replacement);
+  }
+  return v;
+}
+
 #define ast_node_def(type)                                                     \
-  void type::accept(ASTVisitor* ast) { ast->visit##type(this); }
+  void type::accept(visitor::ASTVisitor* ast) { ast->visit(this); }
 #include "ast-node.inc"
 
 } // namespace ast

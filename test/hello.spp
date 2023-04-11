@@ -3,4 +3,5 @@ extern print(x: string): nil;
 
 func main(args: [string]): int {
     print("hello world\n");
+    return 0;
 }

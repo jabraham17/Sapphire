@@ -25,7 +25,6 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 %option nomain
 
 %x COMMENTS
-%x STRING_PARSE
 
 %%
 
@@ -122,16 +121,12 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
     yylval.lexeme = strdup(yytext);
     return REAL_LITERAL;
 }
-    /* string needs custom state to handle escapes */
-["] { BEGIN(STRING_PARSE); }
-<STRING_PARSE>[\\]["] {}
-<STRING_PARSE>["] {
-    BEGIN(INITIAL);
-    yylval.lexeme = strdup(yytext);
+    /* string automatically lops of '"' on either end*/
+["]([^"\\\n]|\\(.|\n))*["]  {
+    yylval.lexeme = strdup(yytext+1);
+    yylval.lexeme[strlen(yylval.lexeme)-1] = '\0';
     return STRING_LITERAL;
 }
-<STRING_PARSE>. {}
-
 
     /* comments */
 "//".* {}

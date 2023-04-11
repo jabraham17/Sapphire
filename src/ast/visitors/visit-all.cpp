@@ -1,6 +1,6 @@
-#include "visit-all.h"
+#include "ast-visitor.h"
 
-#define VISIT(name) void ast::visitor::VisitAll::visit##name##Impl(name* arg)
+#define VISIT(name) void ast::visitor::VisitAll::visitImpl(name* arg)
 
 VISIT(NodeList) {
   for(auto a : *arg)
