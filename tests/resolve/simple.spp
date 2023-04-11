@@ -1,0 +1,22 @@
+
+extern print(x: string): nil;
+extern strFromInt(x: int): string;
+
+func printInt(prefix: string, x: int): nil {
+    print(prefix);
+    print(strFromInt(x));
+    print("\n");
+}
+
+func main(args: [string]): int {
+    var x: int = 7;
+    var y: int = 10;
+
+    var c = x + y;
+    printInt("c = ", c);
+
+    var d = x * y;
+    printInt("d = ", d);
+
+    return 0;
+}

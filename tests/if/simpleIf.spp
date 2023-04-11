@@ -1,0 +1,13 @@
+
+extern print(x: string): nil;
+
+func main(args: [string]): int {
+    var x: int = 1;
+    if x {
+        print("true\n");
+    }
+    else {
+        print("false\n");
+    }
+    return 0;
+}

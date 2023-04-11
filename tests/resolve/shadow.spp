@@ -1,0 +1,35 @@
+
+
+extern print(x: string): nil;
+extern strFromInt(x: int): string;
+
+func printInt(prefix: string, x: int): nil {
+    print(prefix);
+    print(strFromInt(x));
+    print("\n");
+}
+
+
+func foo(x: int) {
+    x = x + 1;
+    printInt("  x = ", x);
+    if x {
+        printInt("    x = ", x);
+        x = x + 1;
+
+        // shadows param
+        var x: int = 17;
+        printInt("    x = ", x);
+        
+        x = x * 2;
+        printInt("    x = ", x);
+    }
+    printInt("  x = ", x);
+}
+
+func main(args: [string]): int {
+    var x: int = 10;
+    printInt("x = ", x);
+    foo(x);
+    printInt("x = ", x);
+}
