@@ -1,11 +1,13 @@
 
-
 extern print(x: string): nil;
+
+func println(x: string) {
+    print(x + "\n");
+}
 
 func main(args: [string]): int {
     for var a in args {
-        print(a);
-        print("\n");
+        println(a);
     }
     return 0;
 }

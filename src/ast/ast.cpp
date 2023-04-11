@@ -257,6 +257,7 @@ char codeForEscapedChar(char c) {
   if(c == 'n') return '\n';
   if(c == 't') return '\t';
   if(c == '\\') return '\\';
+  return c;
 }
 
 std::string StringExpression::escapedValue() {

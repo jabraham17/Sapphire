@@ -63,10 +63,15 @@ protected:
   }
   virtual void visitImpl(ast::ArrayType* arg) override {
     auto Context = get<0>();
-    set(llvm::StructType::get(
-        *Context,
-        {llvm::Type::getInt8PtrTy(*Context),
-         llvm::Type::getInt64Ty(*Context)}));
+
+    arg->elementType()->accept(this);
+    auto elementType = this->returnValueAndClear();
+
+    set(elementType->getPointerTo());
+    // set(llvm::StructType::get(
+    //     *Context,
+    //     {llvm::Type::getInt8PtrTy(*Context),
+    //      llvm::Type::getInt64Ty(*Context)}));
   }
 };
 
@@ -109,13 +114,20 @@ protected:
 //   }
 // };
 
-class ExpressionBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
-                                    ExpressionBuilder,
-                                    ast::visitor::VisitAll,
-                                    llvm::Value*,
-                                    llvm::LLVMContext*,
-                                    llvm::IRBuilder<>*,
-                                    llvm::Module*> {
+ast::Symbol* getSymbol(ast::ASTNode* ast) {
+  if(auto a = ast::toUseExpressionNode(ast); a != nullptr) return a->symbol();
+  return nullptr;
+}
+
+class ExpressionBuilder final
+    : public ast::visitor::VisitorWithArgsAndReturn<
+          ExpressionBuilder,
+          ast::visitor::VisitAll,
+          llvm::Value*,
+          llvm::LLVMContext*,
+          llvm::IRBuilder<>*,
+          llvm::Module*,
+          std::unordered_map<std::string, llvm::Value*>*> {
 public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
@@ -177,6 +189,24 @@ protected:
     set(ret);
   }
 
+  virtual void visitImpl(ast::UseExpression* arg) override {
+    auto Module = get<2>();
+    auto variables = get<3>();
+    // TODO: if symbol a func, get a func. if symbol a var, get a var
+    // right now just gets var
+
+    auto astSym = arg->symbol();
+    if(ast::Type::isCallableType(astSym->type())) {
+      //  TODO: this doesnt yet handle mangling I dont think
+      // TODO: also this if will never call because no type resolution :)
+      auto F = Module->getFunction(astSym->name());
+      set(F);
+    } else {
+      auto v = variables->at(astSym->name());
+      set(v);
+    }
+  }
+
   virtual void visitImpl(ast::CallExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
@@ -208,6 +238,44 @@ protected:
         set(funcCall);
         break;
       }
+      case ast::OperatorType::SUBSCRIPT: {
+        auto astArrayOrTuple = arg->operands()->get(0);
+        auto astIndex = arg->operands()->get(1);
+
+        astArrayOrTuple->accept(this);
+        auto arrayOrTuple = this->returnValueAndClear();
+
+        // if(auto astArray = ast::)
+        // TypeBuilder tb(Context);
+        // astArrayOrTuple->accept(&tb);
+        // auto arrayOrTupleType = tb.returnValue();
+
+        auto astSymbol = getSymbol(astArrayOrTuple);
+        llvm::Type* elmType = nullptr;
+        if(auto astArrayType = ast::Type::toArrayType(astSymbol->type());
+           astArrayType != nullptr) {
+          auto astElmType = astArrayType->elementType();
+          TypeBuilder tb(Context);
+          astElmType->accept(&tb);
+          elmType = tb.returnValue();
+        }
+
+        astIndex->accept(this);
+        auto index = this->returnValueAndClear();
+
+        // TODO: probably want to do array bounds checking here
+
+        elmType->print(llvm::errs());
+        std::cerr << "\n";
+        arrayOrTuple->print(llvm::errs());
+        std::cerr << "\n";
+        auto gep = Builder->CreateGEP(elmType, arrayOrTuple, index);
+        // auto elm = Builder->CreateLoad()
+
+        set(gep);
+
+        break;
+      }
       default: std::cerr << "not yet handled\n"; exit(1);
     }
   }
@@ -220,7 +288,7 @@ class ScopeBuilder final : public ast::visitor::VisitorWithArgs<
                                llvm::IRBuilder<>*,
                                llvm::Module*,
                                llvm::BasicBlock*,
-                               std::unordered_map<std::string, llvm::Value*>&> {
+                               std::unordered_map<std::string, llvm::Value*>*> {
 public:
   using VisitorWithArgs::VisitorWithArgs;
 
@@ -234,7 +302,7 @@ protected:
 
     Builder->SetInsertPoint(BB);
     for(auto elm : *arg->statements()) {
-      ExpressionBuilder ep(Context, Builder, Module);
+      ExpressionBuilder ep(Context, Builder, Module, variables);
       elm->accept(&ep);
     }
   }
@@ -339,7 +407,7 @@ protected:
     for(auto& Arg : F->args())
       variables[std::string(Arg.getName())] = &Arg;
 
-    ScopeBuilder sb(Context, Builder, Module, BB, variables);
+    ScopeBuilder sb(Context, Builder, Module, BB, &variables);
     arg->body()->accept(&sb);
 
     // verify the body

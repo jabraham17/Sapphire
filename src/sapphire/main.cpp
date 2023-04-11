@@ -2,10 +2,11 @@
 #include "ast/visitors/ast-dump.h"
 #include "codegen/codegen.h"
 #include "parser/parser.h"
+#include "resolution/type-resolution.h"
 
 #include <fstream>
 
-int main(int argc, const char** argv, const char** envp) {
+int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
 
   FILE* fp;
   bool needToClose = false;
@@ -20,9 +21,20 @@ int main(int argc, const char** argv, const char** envp) {
 
   if(ast == nullptr) return 1;
 
+  // unresolved code
   ast->accept(new ast::visitor::ASTDump(std::cout));
   std::cout << std::endl;
   std::cout << std::string(80, '=') << std::endl;
+
+  // resolve types
+  ast->accept(new pass::resolution::TypeResolutionPass());
+
+  // resolved code
+  ast->accept(new ast::visitor::ASTDump(std::cout));
+  std::cout << std::endl;
+  std::cout << std::string(80, '=') << std::endl;
+
+  // codegen
 
   codegen::LLVMCodegen codegenObject;
 

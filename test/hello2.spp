@@ -3,8 +3,7 @@
 extern print(x: string): nil;
 
 func main(args: [string]): int {
-    for var a in args {
-        print(a);
-        print("\n");
-    }
+    print(args[0]);
+    print("\n");
+    return 0;
 }
