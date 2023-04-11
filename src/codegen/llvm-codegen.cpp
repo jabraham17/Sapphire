@@ -62,6 +62,7 @@ protected:
     }
   }
   virtual void visitImpl(ast::ArrayType* arg) override {
+    // TODO: arrays should also store their length internally
     auto Context = get<0>();
 
     arg->elementType()->accept(this);

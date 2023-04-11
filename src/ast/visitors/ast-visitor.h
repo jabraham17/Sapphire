@@ -62,7 +62,9 @@ template <class Visitor, class ParentVisitor, typename... ParameterTypes>
 class VisitorWithArgs : public ParentVisitor {
 protected:
   std::tuple<ParameterTypes...> parameterValues_;
-  template <size_t idx> auto get() { return std::get<idx>(parameterValues_); }
+  // template <size_t idx> auto& get() { return std::get<idx>(parameterValues_);
+  // }
+  template <size_t idx> auto& get() { return std::get<idx>(parameterValues_); }
 
 public:
   VisitorWithArgs(std::tuple<ParameterTypes...> params)

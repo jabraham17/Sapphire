@@ -149,7 +149,10 @@ void ASTDump::visitImpl(CallExpression* arg) {
   }
   strm << ")";
 }
-void ASTDump::visitImpl(UseExpression* arg) { strm << arg->symbol()->name(); }
+void ASTDump::visitImpl(UseExpression* arg) {
+  strm << "(" << arg->symbol()->name() << ":"
+       << Type::getTypeString(arg->symbol()->type()) << ")";
+}
 void ASTDump::visitImpl(IntExpression* arg) { strm << arg->value(); }
 void ASTDump::visitImpl(UIntExpression* arg) { strm << arg->value(); }
 void ASTDump::visitImpl(RealExpression* arg) { strm << arg->value(); }

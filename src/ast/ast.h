@@ -82,19 +82,15 @@ private:
   NodeList* parameters_;
   Type* returnType_;
   bool shouldMangle_;
+  Symbol* funcSymbol_;
 
 public:
-  FunctionPrototype(const char* name, NodeList* parameters, Type* returnType)
-      : name_(name), parameters_(parameters), returnType_(returnType),
-        shouldMangle_(false) {}
+  FunctionPrototype(const char* name, NodeList* parameters, Type* returnType);
   FunctionPrototype(
       const char* namespaceName,
       const char* name,
       NodeList* parameters,
-      Type* returnType)
-      : FunctionPrototype(name, parameters, returnType) {
-    setNamespace(namespaceName);
-  }
+      Type* returnType);
   virtual ~FunctionPrototype() = default;
   // virtual std::string toString() override;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -105,7 +101,7 @@ public:
     s += name_;
     return s;
   }
-  void setMangled(bool shouldMangle = true) { shouldMangle_ = shouldMangle; }
+  void setMangled(bool shouldMangle = true);
   std::string mangledNamed() {
     std::string s;
     if(namespaceName_.has_value()) s += *namespaceName_ + "_";
@@ -115,10 +111,9 @@ public:
   }
   NodeList* parameters() { return parameters_; }
   Type* returnType() { return returnType_; }
+  Symbol* functionSymbol() { return funcSymbol_; }
 
-  void setNamespace(const char* namespaceName) {
-    this->namespaceName_ = namespaceName;
-  }
+  void setNamespace(const char* namespaceName);
 };
 
 class Statement;
@@ -605,6 +600,7 @@ public:
   virtual ~Symbol() = default;
 
   std::string name() { return symbolName; }
+  void setName(const std::string& name) { symbolName = name; }
   Type* type() { return type_; }
   void setType(Type* t) { type_ = t; }
   std::string toString() {
@@ -621,6 +617,7 @@ public:
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
+  void setSymbol(Symbol* symbol) { symbol_ = symbol; }
 };
 
 class IntExpression : public Expression {

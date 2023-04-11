@@ -2,6 +2,9 @@
 
 #include "visitors/ast-visitor.h"
 
+#include <cassert>
+#include <iostream>
+
 namespace ast {
 
 Parameter::Parameter(Symbol* symbol, Type* type) : symbol_(symbol) {
@@ -26,6 +29,38 @@ Parameter::Parameter(Symbol* symbol, Type* type) : symbol_(symbol) {
 //   std::string FunctionDefinition::toString() {
 //     return
 //   }
+
+FunctionPrototype::FunctionPrototype(
+    const char* name,
+    NodeList* parameters,
+    Type* returnType)
+    : name_(name), parameters_(parameters), returnType_(returnType),
+      shouldMangle_(false), funcSymbol_(nullptr) {
+  NodeList* parameterTypes = new NodeList();
+  for(auto p : *parameters_) {
+    auto pp = toParameterNode(p);
+    assert(pp != nullptr);
+    parameterTypes->addBack(pp->symbol()->type());
+  }
+  auto funcSymbolType = new CallableType(parameterTypes, returnType_);
+  funcSymbol_ = new Symbol(name, funcSymbolType);
+}
+FunctionPrototype::FunctionPrototype(
+    const char* namespaceName,
+    const char* name,
+    NodeList* parameters,
+    Type* returnType)
+    : FunctionPrototype(name, parameters, returnType) {
+  setNamespace(namespaceName);
+}
+void FunctionPrototype::setMangled(bool shouldMangle) {
+  shouldMangle_ = shouldMangle;
+  funcSymbol_->setName(this->mangledNamed());
+}
+void FunctionPrototype::setNamespace(const char* namespaceName) {
+  this->namespaceName_ = namespaceName;
+  funcSymbol_->setName(this->mangledNamed());
+}
 
 Expression::Expression(PrimitiveTypeEnum type)
     : type_(new PrimitiveType(type)) {}
@@ -262,9 +297,10 @@ char codeForEscapedChar(char c) {
 
 std::string StringExpression::escapedValue() {
   std::string v = str;
-  size_t pos = 0;
+  // size_t pos = 0;
   while(true) {
-    pos = v.find('\\');
+    std::cout << "hewp\n";
+    size_t pos = v.find('\\');
     if(pos == std::string::npos) break;
     char replacementChar = codeForEscapedChar(v[pos + 1]);
     std::string replacement;
