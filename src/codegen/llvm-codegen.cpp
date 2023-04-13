@@ -41,6 +41,23 @@ ArrayType(llvm::LLVMContext* Context, llvm::Type* elmType) {
   return tt;
 }
 
+static llvm::Value* StackLocal(
+    llvm::LLVMContext* Context,
+    llvm::IRBuilder<>* Builder,
+    llvm::Type* Type) {
+  // save current BB
+  llvm::BasicBlock* BB = Builder->GetInsertBlock();
+  llvm::Function* F = BB->getParent();
+  // we need the entry because all of our local vars must be alloca on the
+  // entry for mem2reg to work properly
+  auto& EntryBB = F->getEntryBlock();
+  Builder->SetInsertPoint(&EntryBB);
+  auto local = Builder->CreateAlloca(Type);
+  // reset to BB
+  Builder->SetInsertPoint(BB);
+  return local;
+}
+
 class TypeBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
                               TypeBuilder,
                               ast::visitor::ASTVisitor,
@@ -125,7 +142,7 @@ protected:
 
     // allocate enough stack space for the string
     // TODO: should probably use an allocator here not stack memory
-    auto stringStructPtr = Builder->CreateAlloca(stringType);
+    auto stringStructPtr = StackLocal(Context, Builder, stringType);
 
     // store size into string
     auto sizeGEP = Builder->CreateStructGEP(stringType, stringStructPtr, 1);
@@ -177,9 +194,6 @@ protected:
 
     llvm::BasicBlock* BB = Builder->GetInsertBlock();
     llvm::Function* F = BB->getParent();
-    // we need the entry because all of our local vars must be alloca on the
-    // entry for mem2reg to work properly
-    auto& EntryBB = F->getEntryBlock();
 
     // Build 4 basic blocks
     // bb0: loop init
@@ -192,9 +206,8 @@ protected:
     // insert explicit fallthrough from BB to BB0
     Builder->CreateBr(BB0);
 
-    // allocate loopCount in the entryBB
-    Builder->SetInsertPoint(&EntryBB);
-    auto loopCount = Builder->CreateAlloca(llvm::Type::getInt64Ty(*Context));
+    auto loopCount =
+        StackLocal(Context, Builder, llvm::Type::getInt64Ty(*Context));
 
     // now in BB0, init index to 0
     Builder->SetInsertPoint(BB0);
@@ -246,16 +259,8 @@ protected:
 
     auto astSym = arg->symbol();
     auto llvmType = getLLVMType(Context, astSym->type());
+    auto valPtr = StackLocal(Context, Builder, llvmType);
 
-    llvm::BasicBlock* OldBB = Builder->GetInsertBlock();
-    auto& EntryBB = OldBB->getParent()->getEntryBlock();
-    // alloc on entry BB
-    Builder->SetInsertPoint(&EntryBB);
-    auto valPtr = Builder->CreateAlloca(llvmType);
-    Builder->SetInsertPoint(OldBB); // reset insert point
-
-    // unconditional set variable, this will shadow
-    // TODO: this will probably be better as a map from symbol* to value*
     variables->insert_or_assign(astSym, std::make_pair(llvmType, valPtr));
 
     // TODO handle initial expr
@@ -335,7 +340,7 @@ protected:
         auto elmType = getLLVMType(Context, astElmType);
 
         // store the array to the stack
-        auto arrayPtr = Builder->CreateAlloca(array->getType());
+        auto arrayPtr = StackLocal(Context, Builder, array->getType());
         Builder->CreateStore(array, arrayPtr);
 
         // extract raw array, which is just a pointer
@@ -474,7 +479,7 @@ protected:
         auto Arg = F->getArg(i);
         auto Sym = param->symbol();
         auto llvmType = Arg->getType();
-        auto local = Builder->CreateAlloca(llvmType);
+        auto local = StackLocal(Context, Builder, llvmType);
         Builder->CreateStore(Arg, local);
 
         variables[Sym] = {llvmType, local};
