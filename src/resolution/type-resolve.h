@@ -7,42 +7,19 @@
 namespace pass {
 namespace resolution {
 
-static ast::Symbol* getSymbol(ast::ASTNode* ast) {
-  if(auto a = ast::toUseExpressionNode(ast); a != nullptr) return a->symbol();
-  return nullptr;
-}
+class TypeResolve {
+private:
+  ast::ASTNode* root;
+  std::vector<std::string> errors_;
 
-class TypeResolve : public ast::visitor::VisitAll {
 public:
-  TypeResolve() = default;
+  TypeResolve(ast::ASTNode* root) : root(root), errors_() {}
   virtual ~TypeResolve() = default;
-
-protected:
-  //   virtual void visitImpl(ast::CallExpression* arg) override {
-  //     switch(arg->op()->opType()) {
-  //       case ast::OperatorType::SUBSCRIPT: {
-  // #warning this is really really hacky, i need to write some proper scope
-  // resolution
-  //         // TODO really hacky, actually should be apart of scope resolution
-  //         but
-  //         // this is fine :) operand 0 must be an array
-  //         auto sym = getSymbol(arg->operands()->get(0));
-  //         if(sym) {
-  //           sym->setType(new ast::ArrayType(
-  //               new ast::PrimitiveType(ast::PrimitiveTypeEnum::STRING)));
-  //         }
-  //         break;
-  //       }
-  //       default: {
-  //         for(auto a : *arg->operands()) {
-  //           a->accept(this);
-  //         }
-  //       }
-  //     }
-  //   }
+  bool hasErrors() { return !errors_.empty(); }
+  std::vector<std::string> errors() { return errors_; }
+  void resolve();
 };
 
 } // namespace resolution
 } // namespace pass
-
 #endif

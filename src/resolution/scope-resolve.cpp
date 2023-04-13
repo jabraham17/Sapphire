@@ -28,7 +28,9 @@ protected:
       // does not exist already, no error add it
       symbols->insert({name, sym});
     } else {
-      this->returnValue_.push_back("cannot redefine function '" + name + "'");
+      this->returnValue_.push_back(
+          "cannot redefine function '" + name + "' on line " +
+          std::to_string(proto->line()));
     }
   }
 };
@@ -81,7 +83,9 @@ protected:
       use->setSymbol(sym);
     } else {
       // did not exists, error
-      this->returnValue_.push_back("unable to resolve symbol '" + name + "'");
+      this->returnValue_.push_back(
+          "unable to resolve symbol '" + name + "' on line " +
+          std::to_string(use->line()));
     }
   }
 
@@ -126,12 +130,13 @@ protected:
         } else {
           this->returnValue_.push_back(
               "duplicate parameter '" + name + "' in function '" + funcName +
-              "'");
+              "' on line " + std::to_string(param->line()));
           return;
         }
       } else {
         this->returnValue_.push_back(
-            "invalid parameter in function '" + funcName + "'");
+            "invalid parameter in function '" + funcName + "' on line " +
+            std::to_string(func->line()));
         return;
       }
     }

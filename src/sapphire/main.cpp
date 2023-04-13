@@ -51,7 +51,17 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
   }
 
   // resolve types
-  ast->accept(new pass::resolution::TypeResolve());
+  {
+    pass::resolution::TypeResolve tr(ast);
+    tr.resolve();
+    if(tr.hasErrors()) {
+      std::cerr << "Failed to type resolve\n";
+      for(auto e : tr.errors()) {
+        std::cerr << e << std::endl;
+      }
+      return 1;
+    }
+  }
 
   // resolved code
   ast->accept(new ast::visitor::ASTDump(std::cout));
