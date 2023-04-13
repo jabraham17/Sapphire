@@ -2,15 +2,15 @@
 extern print(x: string): nil;
 
 func println(x: string) {
-    print(x + "\n");
+  print(x + "\n");
 }
 func main(args: [string]): int {
-    if args.size() == 1 {
-        print("One arg:\t");
-        println(args[0]);
-    }
-    else {
-        println("more than one or none");
-    }
-    return 0;
+  if args.size() == 1 {
+    print("One arg:\t");
+    println(args[0]);
+  }
+  else {
+    println("more than one or none");
+  }
+  return 0;
 }

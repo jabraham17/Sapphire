@@ -21,37 +21,37 @@ export CF=$SAPPHIRE_HOME/../llvm/llvm-project/build/bin/clang-format
 export STYLE=$SAPPHIRE_HOME/.clang-format
 
 check_format() {
-    file=$1
-    diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
+  file=$1
+  diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
 }
 
 check_format_python() {
-    file=$1
-    python3 -m black --check $file >/dev/null 2>&1
+  file=$1
+  python3 -m black --check $file >/dev/null 2>&1
 }
 
 # exclude delete files
 git diff --cached --name-only --diff-filter=d \
--- "src/*.c" "src/*.cpp" "src/*.cc" "src/*.h" "src/*.hpp" "src/*.inc" | \
-    while read file
-    do
-        check_format $file
-        if [ $? -ne 0 ]; then
-            echo "Error: Cannot commit '$file': has not passed the formatting checks"
-            echo "Run scripts/format.sh to resolve this"
-	        exit 1
-        fi
-    done || exit $?
+-- "src/*.c" "src/*.cpp" "src/*.cc" "src/*.h" "src/*.hpp" "src/*.inc" "runtime/*.c" "runtime/*.cpp" "runtime/*.cc" "runtime/*.h" "runtime/*.hpp" "runtime/*.inc" | \
+  while read file
+  do
+    check_format $file
+    if [ $? -ne 0 ]; then
+      echo "Error: Cannot commit '$file': has not passed the formatting checks"
+      echo "Run scripts/format.sh to resolve this"
+      exit 1
+      fi
+  done || exit $?
 
 git diff --cached --name-only --diff-filter=d \
 -- "*.py" | \
-    while read file
-    do
-        check_format $file
-        if [ $? -eq 0 ]; then
-            echo "Error: Cannot commit '$file': has not passed the formatting checks"
-            echo "Run scripts/format.sh to resolve this"
-	        exit 1
-        fi
-    done || exit $?
+  while read file
+  do
+    check_format $file
+    if [ $? -eq 0 ]; then
+      echo "Error: Cannot commit '$file': has not passed the formatting checks"
+      echo "Run scripts/format.sh to resolve this"
+      exit 1
+    fi
+  done || exit $?
 

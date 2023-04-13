@@ -3,9 +3,9 @@
 extern print(x: string): nil;
 
 func main(args: [string]): int {
-    for var a: string in args {
-        print(a);
-        print("\n");
-    }
-    return 0;
+  for var a: string in args {
+    print(a);
+    print("\n");
+  }
+  return 0;
 }

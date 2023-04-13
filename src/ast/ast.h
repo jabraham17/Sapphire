@@ -183,15 +183,18 @@ public:
   NodeList* statements() { return statements_; }
 };
 class Expression : public ASTNode {
-  Type* type_;
+private:
+  bool isLHSOfAssign_ = false;
 
 public:
-  Expression(Type* type) : type_(type) {}
-  Expression(PrimitiveTypeEnum type);
+  Expression() {}
   virtual ~Expression() = default;
-  virtual bool isLValue() { return false; }
-  virtual Type* type() { return type_; }
+  virtual Type* type() = 0;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  void setLHSOfAssign(bool isLHSOfAssign = true) {
+    isLHSOfAssign_ = isLHSOfAssign;
+  }
+  bool isLHSOfAssign() { return isLHSOfAssign_; }
 };
 
 class ExpressionStatement : public Statement {
@@ -217,6 +220,7 @@ public:
   virtual void setValue(Expression* value) { assignValue_ = value; }
   virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
+  virtual Type* type() override;
   bool hasInitialValue();
   Expression* assignValue() { return assignValue_; }
 };
@@ -454,13 +458,15 @@ public:
 };
 
 class Closure : public Expression {
+  CallableType* type_;
   NodeList* parameters_;
   Scope* body_;
 
 public:
   Closure(CallableType* type, NodeList* parameters, Scope* body)
-      : Expression(type), parameters_(parameters), body_(body) {}
+      : type_(type), parameters_(parameters), body_(body) {}
   virtual ~Closure() = default;
+  virtual Type* type() override { return type_; }
   virtual void accept(visitor::ASTVisitor* ast) override;
   static CallableType* determineClosureType(
       Type* type_specifier,
@@ -556,17 +562,20 @@ class CallExpression : public Expression {
 public:
   template <typename... Args>
   CallExpression(OperatorType opType, Args... operands)
-      : Expression(Type::getUnknownType()), op_(new Operator(opType)),
-        operands_(new NodeList()) {
+      : op_(new Operator(opType)), operands_(new NodeList()) {
     initOperands(std::forward<Args>(operands)...);
   }
   template <typename... Args>
   CallExpression(Operator* op, Args... operands)
-      : Expression(Type::getUnknownType()), op_(op), operands_(new NodeList()) {
+      : op_(op), operands_(new NodeList()) {
     initOperands(std::forward<Args>(operands)...);
   }
   virtual ~CallExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override {
+    // TODO: this should resolve in resolver
+    return Type::getUnknownType();
+  }
 
 private:
   template <typename Arg> void initOperands(Arg operand) {
@@ -613,10 +622,11 @@ private:
   Symbol* symbol_;
 
 public:
-  UseExpression(Symbol* symbol) : Expression(symbol->type()), symbol_(symbol) {}
+  UseExpression(Symbol* symbol) : symbol_(symbol) {}
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
+  virtual Type* type() override;
   void setSymbol(Symbol* symbol) { symbol_ = symbol; }
 };
 
@@ -625,10 +635,12 @@ private:
   long long value_;
 
 public:
-  IntExpression(long long value)
-      : Expression(PrimitiveTypeEnum::INT), value_(value) {}
+  IntExpression(long long value) : value_(value) {}
   virtual ~IntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override {
+    return new PrimitiveType(PrimitiveTypeEnum::INT);
+  }
   auto value() { return value_; }
 };
 
@@ -637,10 +649,12 @@ private:
   unsigned long long value_;
 
 public:
-  UIntExpression(long long value)
-      : Expression(PrimitiveTypeEnum::INT), value_(value) {}
+  UIntExpression(long long value) : value_(value) {}
   virtual ~UIntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override {
+    return new PrimitiveType(PrimitiveTypeEnum::UINT);
+  }
   auto value() { return value_; }
 };
 
@@ -649,10 +663,12 @@ private:
   double value_;
 
 public:
-  RealExpression(double value)
-      : Expression(PrimitiveTypeEnum::INT), value_(value) {}
+  RealExpression(double value) : value_(value) {}
   virtual ~RealExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override {
+    return new PrimitiveType(PrimitiveTypeEnum::REAL);
+  }
   auto value() { return value_; }
 };
 
@@ -661,10 +677,12 @@ private:
   std::string str;
 
 public:
-  StringExpression(const std::string str)
-      : Expression(PrimitiveTypeEnum::STRING), str(str) {}
+  StringExpression(const std::string str) : str(str) {}
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override {
+    return new PrimitiveType(PrimitiveTypeEnum::STRING);
+  }
   std::string value() { return str; }
   //  return the string with all escapes resolved
   std::string escapedValue();
@@ -675,10 +693,10 @@ class Nil : public Expression {
 
 public:
   Nil() : Nil(false) {}
-  Nil(bool isUserSpecified)
-      : Expression(Type::getNilType()), isUserSpecified_(isUserSpecified) {}
+  Nil(bool isUserSpecified) : isUserSpecified_(isUserSpecified) {}
   virtual ~Nil() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() override { return Type::getNilType(); }
   bool isUserSpecified() { return isUserSpecified_; }
 };
 

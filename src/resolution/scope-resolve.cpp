@@ -90,7 +90,8 @@ protected:
     auto symbols = get<0>();
     //  no changes to our symbols should occur, this subSAcope gets a copy
     ResolveOneScope ros(symbols);
-    subScope->accept(&ros);
+    for(auto stmt : *subScope->statements())
+      stmt->accept(&ros);
     auto subScopeErrors = ros.returnValueAndClear();
 
     this->returnValue_.insert(
@@ -113,7 +114,7 @@ public:
 
 protected:
   void visitImpl(ast::FunctionDefinition* func) {
-    auto& symbols = get<0>();
+    auto symbols = get<0>();
     auto funcName = func->functionPrototype()->name();
 
     for(auto elm : *func->functionPrototype()->parameters()) {
@@ -137,8 +138,7 @@ protected:
 
     // visit each statement and apply the scope resolution
     ResolveOneScope ros(symbols);
-    for(auto stmt : *func->body()->statements())
-      stmt->accept(&ros);
+    func->accept(&ros);
     auto scopeErrors = ros.returnValueAndClear();
 
     if(!scopeErrors.empty()) {

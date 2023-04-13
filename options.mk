@@ -86,11 +86,11 @@ endif
 LLVM=1
 LLVM_COMPILE_FLAGS=
 LLVM_LINK_FLAGS=
-override LLVM_INSTALL=/usr
+LLVM_INSTALL=/usr
 ifeq ($(LLVM),1)
 # dont use c++ flags, use c preprocessor flags to get includes and macros
 LLVM_COMPILE_FLAGS=$(shell $(LLVM_INSTALL)/bin/llvm-config --cppflags)
-LLVM_LINK_FLAGS=$(shell $(LLVM_INSTALL)/bin/llvm-config --ldflags --system-libs --libs core)
+LLVM_LINK_FLAGS=-Wl,-rpath=$(shell $(LLVM_INSTALL)/bin/llvm-config --libdir) $(shell $(LLVM_INSTALL)/bin/llvm-config --ldflags --system-libs --libs core)
 endif
 COMPILE_FLAGS_+= $(LLVM_COMPILE_FLAGS)
 LINK_FLAGS_+= $(LLVM_LINK_FLAGS)

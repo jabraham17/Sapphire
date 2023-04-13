@@ -1,4 +1,5 @@
 #include "ast/ast.h"
+#include "ast/visitors/ast-dump-tree.h"
 #include "ast/visitors/ast-dump.h"
 #include "codegen/codegen.h"
 #include "parser/parser.h"
@@ -25,6 +26,11 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
   if(needToClose) fclose(fp);
 
   if(ast == nullptr) return 1;
+
+  // dump the raw tree
+  ast->accept(new ast::visitor::ASTDumpTree(std::cout));
+  std::cout << std::endl;
+  std::cout << std::string(80, '=') << std::endl;
 
   // unresolved code
   ast->accept(new ast::visitor::ASTDump(std::cout));

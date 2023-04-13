@@ -3,7 +3,9 @@
 namespace ast {
 namespace visitor {
 
-void ASTDump::visitImpl(NodeList* arg) {
+#define VISIT(type) void ASTDump::visitImpl([[maybe_unused]] type* arg)
+
+VISIT(NodeList) {
   bool notFirstOne = false;
   for(auto a : *arg) {
     if(notFirstOne) strm << strm.nl();
@@ -11,8 +13,8 @@ void ASTDump::visitImpl(NodeList* arg) {
     a->accept(this);
   }
 }
-void ASTDump::visitImpl(Parameter* arg) { strm << arg->symbol()->toString(); }
-void ASTDump::visitImpl(FunctionPrototype* arg) {
+VISIT(Parameter) { strm << arg->symbol()->toString(); }
+VISIT(FunctionPrototype) {
   strm << arg->name() << "(";
   std::string sep;
   for(auto p : *arg->parameters()) {
@@ -23,7 +25,7 @@ void ASTDump::visitImpl(FunctionPrototype* arg) {
   strm << "): ";
   arg->returnType()->accept(this);
 }
-void ASTDump::visitImpl(FunctionDefinition* arg) {
+VISIT(FunctionDefinition) {
   arg->functionPrototype()->accept(this);
   strm << " {" << strm.nl();
   strm.increaseIndent();
@@ -31,11 +33,11 @@ void ASTDump::visitImpl(FunctionDefinition* arg) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-void ASTDump::visitImpl(ExternDefinition* arg) {
+VISIT(ExternDefinition) {
   strm << "extern ";
   arg->functionPrototype()->accept(this);
 }
-void ASTDump::visitImpl(InitDefinition* arg) {
+VISIT(InitDefinition) {
   if(arg->isDeinit()) {
     strm << "deinit";
   } else {
@@ -54,19 +56,17 @@ void ASTDump::visitImpl(InitDefinition* arg) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-void ASTDump::visitImpl(Scope* arg) { arg->statements()->accept(this); }
-void ASTDump::visitImpl(ExpressionStatement* arg) {
-  arg->expression()->accept(this);
-}
+VISIT(Scope) { arg->statements()->accept(this); }
+VISIT(ExpressionStatement) { arg->expression()->accept(this); }
 
-void ASTDump::visitImpl(DefExpression* arg) {
+VISIT(DefExpression) {
   strm << arg->symbol()->toString();
   if(arg->hasInitialValue()) {
     strm << " = ";
     arg->assignValue()->accept(this);
   }
 }
-void ASTDump::visitImpl(ClassDefinition* arg) {
+VISIT(ClassDefinition) {
   strm << "class ";
   arg->classType()->accept(this);
   strm << " {" << strm.nl();
@@ -83,15 +83,13 @@ void ASTDump::visitImpl(ClassDefinition* arg) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-void ASTDump::visitImpl(OperatorDefinition* arg) { strm << "unimp op def"; }
-void ASTDump::visitImpl(PrimitiveType* arg) {
-  strm << Type::getTypeString(arg);
-}
-void ASTDump::visitImpl(ArrayType* arg) { strm << Type::getTypeString(arg); }
-void ASTDump::visitImpl(TupleType* arg) { strm << Type::getTypeString(arg); }
-void ASTDump::visitImpl(CallableType* arg) { strm << Type::getTypeString(arg); }
-void ASTDump::visitImpl(ClassType* arg) { strm << Type::getTypeString(arg); }
-void ASTDump::visitImpl(IfStatement* arg) {
+VISIT(OperatorDefinition) { strm << "unimp op def"; }
+VISIT(PrimitiveType) { strm << Type::getTypeString(arg); }
+VISIT(ArrayType) { strm << Type::getTypeString(arg); }
+VISIT(TupleType) { strm << Type::getTypeString(arg); }
+VISIT(CallableType) { strm << Type::getTypeString(arg); }
+VISIT(ClassType) { strm << Type::getTypeString(arg); }
+VISIT(IfStatement) {
 
   strm << "if ";
   arg->expr()->accept(this);
@@ -112,7 +110,7 @@ void ASTDump::visitImpl(IfStatement* arg) {
     strm << strm.nl() << "}";
   }
 }
-void ASTDump::visitImpl(WhileStatement* arg) {
+VISIT(WhileStatement) {
   strm << "while ";
   arg->expr()->accept(this);
   strm << " {" << strm.nl();
@@ -121,7 +119,7 @@ void ASTDump::visitImpl(WhileStatement* arg) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-void ASTDump::visitImpl(ForStatement* arg) {
+VISIT(ForStatement) {
   strm << "for ";
   arg->variable()->accept(this);
   strm << " = ";
@@ -132,15 +130,13 @@ void ASTDump::visitImpl(ForStatement* arg) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-void ASTDump::visitImpl(ReturnStatement* arg) {
+VISIT(ReturnStatement) {
   strm << "return ";
   arg->expression()->accept(this);
 }
-void ASTDump::visitImpl(Closure* arg) { strm << "unimp closure"; }
-void ASTDump::visitImpl(Operator* arg) {
-  strm << ast::getOperatorTypeString(arg->opType());
-}
-void ASTDump::visitImpl(CallExpression* arg) {
+VISIT(Closure) { strm << "unimp closure"; }
+VISIT(Operator) { strm << ast::getOperatorTypeString(arg->opType()); }
+VISIT(CallExpression) {
   strm << "(";
   arg->op()->accept(this);
   for(auto e : *arg->operands()) {
@@ -149,17 +145,15 @@ void ASTDump::visitImpl(CallExpression* arg) {
   }
   strm << ")";
 }
-void ASTDump::visitImpl(UseExpression* arg) {
+VISIT(UseExpression) {
   strm << "(" << arg->symbol()->name() << ":"
        << Type::getTypeString(arg->symbol()->type()) << ")";
 }
-void ASTDump::visitImpl(IntExpression* arg) { strm << arg->value(); }
-void ASTDump::visitImpl(UIntExpression* arg) { strm << arg->value(); }
-void ASTDump::visitImpl(RealExpression* arg) { strm << arg->value(); }
-void ASTDump::visitImpl(StringExpression* arg) {
-  strm << "\"" << arg->value() << "\"";
-}
-void ASTDump::visitImpl(Nil* arg) {
+VISIT(IntExpression) { strm << arg->value(); }
+VISIT(UIntExpression) { strm << arg->value(); }
+VISIT(RealExpression) { strm << arg->value(); }
+VISIT(StringExpression) { strm << "\"" << arg->value() << "\""; }
+VISIT(Nil) {
   if(arg->isUserSpecified()) strm << "nil";
 }
 

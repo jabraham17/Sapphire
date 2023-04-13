@@ -11,10 +11,34 @@
 
 namespace codegen {
 
-static llvm::Type* StringType(llvm::LLVMContext* Context) {
-  return llvm::StructType::get(
-      *Context,
-      {llvm::Type::getInt8PtrTy(*Context), llvm::Type::getInt64Ty(*Context)});
+// ptr
+static llvm::PointerType* PointerType(llvm::LLVMContext* Context) {
+  return llvm::PointerType::getUnqual(*Context);
+}
+
+// {ptr, i64}
+static llvm::StructType* StringType(llvm::LLVMContext* Context) {
+  auto tt = llvm::StructType::getTypeByName(*Context, "spp_str");
+  // if cannot find, create it
+  if(tt == nullptr)
+    tt = llvm::StructType::create(
+        *Context,
+        {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
+        "spp_str");
+  return tt;
+}
+
+// {ptr, i64} = {elmType*, i64}
+static llvm::StructType*
+ArrayType(llvm::LLVMContext* Context, llvm::Type* elmType) {
+  auto tt = llvm::StructType::getTypeByName(*Context, "spp_array");
+  // if cannot find, create it
+  if(tt == nullptr)
+    tt = llvm::StructType::get(
+        *Context,
+        {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
+        "spp_array");
+  return tt;
 }
 
 class TypeBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
@@ -42,10 +66,7 @@ protected:
       case ast::PrimitiveTypeEnum::REAL:
         set(llvm::Type::getDoubleTy(*Context));
         break;
-      case ast::PrimitiveTypeEnum::STRING:
-        // a string is a pointer to the underlying buffer and a length
-        set(StringType(Context));
-        break;
+      case ast::PrimitiveTypeEnum::STRING: set(StringType(Context)); break;
       case ast::PrimitiveTypeEnum::BOOL:
         set(llvm::Type::getInt8Ty(*Context));
         break;
@@ -62,83 +83,39 @@ protected:
     }
   }
   virtual void visitImpl(ast::ArrayType* arg) override {
-    // TODO: arrays should also store their length internally
     auto Context = get<0>();
 
+    // get element types LLVM type
     arg->elementType()->accept(this);
     auto elementType = this->returnValueAndClear();
 
-    set(elementType->getPointerTo());
-    // set(llvm::StructType::get(
-    //     *Context,
-    //     {llvm::Type::getInt8PtrTy(*Context),
-    //      llvm::Type::getInt64Ty(*Context)}));
+    set(ArrayType(Context, elementType));
   }
 };
 
-// class ConstantBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
-//                                   ScopeBuilder,
-//                                   ast::visitor::ASTVisitor,
-//                                   llvm::Value*,
-//                                   llvm::LLVMContext*,
-//                                   llvm::IRBuilder<>*,
-//                                   llvm::Module*> {
-// public:
-//   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
-
-// protected:
-//   // build a local string
-//   virtual void visitImpl(ast::StringExpression* arg) override {
-//     auto Context = get<0>();
-//     auto Builder = get<1>();
-//     auto Module = get<2>();
-
-//     auto literal = arg->value();
-//     auto stringType = StringType(Context);
-
-//     // allocate enough stack space for the string
-//     // TODO: should probably use an allocator here not stack memory
-//     auto stringStruct = Builder->CreateAlloca(stringType);
-
-//     // store size into string
-//     auto sizeGEP = Builder->CreateStructGEP(stringType, stringStruct, 1);
-//     auto size = llvm::ConstantInt::get(sizeGEP->getType(), literal.size());
-//     Builder->CreateStore(size, sizeGEP);
-
-//     // alloc the literal string as a global and store in struct
-//     auto strPtr = Builder->CreateGlobalStringPtr(literal);
-//     auto strGEP = Builder->CreateStructGEP(stringType, stringStruct, 0);
-//     Builder->CreateStore(strPtr, strGEP);
-
-//     // return string struct
-//     set(stringStruct);
-//   }
-// };
+static llvm::Type* getLLVMType(llvm::LLVMContext* Context, ast::Type* t) {
+  TypeBuilder ltc(Context);
+  t->accept(&ltc);
+  return ltc.returnValue();
+}
 
 ast::Symbol* getSymbol(ast::ASTNode* ast) {
   if(auto a = ast::toUseExpressionNode(ast); a != nullptr) return a->symbol();
   return nullptr;
 }
 
-class ExpressionBuilder final
-    : public ast::visitor::VisitorWithArgsAndReturn<
-          ExpressionBuilder,
-          ast::visitor::VisitAll,
-          llvm::Value*,
-          llvm::LLVMContext*,
-          llvm::IRBuilder<>*,
-          llvm::Module*,
-          std::unordered_map<std::string, llvm::Value*>*> {
+class ExpressionBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
+                                    ExpressionBuilder,
+                                    ast::visitor::VisitAll,
+                                    llvm::Value*,
+                                    llvm::LLVMContext*,
+                                    llvm::IRBuilder<>*,
+                                    llvm::Module*,
+                                    LLVMCodegen::SymbolMap*> {
 public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  // llvm::Value* buildConstant(ast::ASTNode* constantNode) {
-  //   ConstantBuilder cp(get<0>(), get<1>(), get<2>());
-  //   constantNode->accept(&cp);
-  //   return cp.returnValue();
-  // }
-  // build a local string
   virtual void visitImpl(ast::StringExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
@@ -148,10 +125,10 @@ protected:
 
     // allocate enough stack space for the string
     // TODO: should probably use an allocator here not stack memory
-    auto stringStruct = Builder->CreateAlloca(stringType);
+    auto stringStructPtr = Builder->CreateAlloca(stringType);
 
     // store size into string
-    auto sizeGEP = Builder->CreateStructGEP(stringType, stringStruct, 1);
+    auto sizeGEP = Builder->CreateStructGEP(stringType, stringStructPtr, 1);
     auto size = llvm::ConstantInt::get(
         llvm::Type::getInt64Ty(*Context),
         literal.size());
@@ -159,10 +136,10 @@ protected:
 
     // alloc the literal string as a global and store in struct
     auto strPtr = Builder->CreateGlobalStringPtr(literal);
-    // auto strPtr = Builder->CreateGEP(llvm::Type::getInt8PtrTy(*Context), str,
-    // llvm::ConstantInt::get(*Context, llvm::APInt(64, 0)));
-    auto strGEP = Builder->CreateStructGEP(stringType, stringStruct, 0);
+    auto strGEP = Builder->CreateStructGEP(stringType, stringStructPtr, 0);
     Builder->CreateStore(strPtr, strGEP);
+
+    auto stringStruct = Builder->CreateLoad(stringType, stringStructPtr);
 
     // return string struct
     set(stringStruct);
@@ -183,14 +160,60 @@ protected:
     auto Context = get<0>();
     auto Builder = get<1>();
 
-    arg->expression()->accept(this);
+    auto exp = arg->expression();
+    exp->accept(this);
     auto val = this->returnValueAndClear();
+
     auto ret = Builder->CreateRet(val);
 
     set(ret);
   }
 
+  virtual void visitImpl(ast::ForStatement* arg) override {
+    auto Context = get<0>();
+    auto Builder = get<1>();
+    auto Module = get<2>();
+    auto variables = get<3>();
+
+    llvm::BasicBlock* BB = Builder->GetInsertBlock();
+    llvm::Function* F = BB->getParent();
+    // we need the entry because all of our local vars must be alloca on the
+    // entry for mem2reg to work properly
+    auto& EntryBB = F->getEntryBlock();
+
+    // Build 4 basic blocks
+    // bb0: loop init
+    // bb1: loop condition check and update var
+    // bb2: loop body, this is our ScopeBuilder
+    // bb3: loop cleanup, ie jump back to the top
+
+    // init a loop counter and fully resolve the use-expr (the 'in' part)
+    llvm::BasicBlock* BB0 = llvm::BasicBlock::Create(*Context, "", F);
+    // insert explicit fallthrough from BB to BB0
+    Builder->CreateBr(BB0);
+
+    // allocate loopCount in the entryBB
+    Builder->SetInsertPoint(&EntryBB);
+    auto loopCount = Builder->CreateAlloca(llvm::Type::getInt64Ty(*Context));
+
+    // now in BB0, init index to 0
+    Builder->SetInsertPoint(BB0);
+    Builder->CreateStore(
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), 0),
+        loopCount);
+    // here we should call the def expression
+    arg->variable()->accept(this);
+    auto defVar = this->returnValueAndClear();
+
+    llvm::BasicBlock* BB1 = llvm::BasicBlock::Create(*Context, "", F);
+    // insert explicit fallthrough from BB to BB0
+    Builder->CreateBr(BB1);
+    // now
+  }
+
   virtual void visitImpl(ast::UseExpression* arg) override {
+    auto Context = get<0>();
+    auto Builder = get<1>();
     auto Module = get<2>();
     auto variables = get<3>();
     // TODO: if symbol a func, get a func. if symbol a var, get a var
@@ -203,9 +226,46 @@ protected:
       auto F = Module->getFunction(astSym->name());
       set(F);
     } else {
-      auto v = variables->at(astSym->name());
-      set(v);
+      auto [llvmType, v_ptr] = variables->at(astSym);
+
+      if(arg->isLHSOfAssign()) {
+        // lhs, return a ptr
+        set(v_ptr);
+      } else {
+        auto v = Builder->CreateLoad(llvmType, v_ptr);
+        set(v);
+      }
     }
+  }
+
+  virtual void visitImpl(ast::DefExpression* arg) override {
+    auto Context = get<0>();
+    auto Builder = get<1>();
+    auto Module = get<2>();
+    auto& variables = get<3>();
+
+    auto astSym = arg->symbol();
+    auto llvmType = getLLVMType(Context, astSym->type());
+
+    llvm::BasicBlock* OldBB = Builder->GetInsertBlock();
+    auto& EntryBB = OldBB->getParent()->getEntryBlock();
+    // alloc on entry BB
+    Builder->SetInsertPoint(&EntryBB);
+    auto valPtr = Builder->CreateAlloca(llvmType);
+    Builder->SetInsertPoint(OldBB); // reset insert point
+
+    // unconditional set variable, this will shadow
+    // TODO: this will probably be better as a map from symbol* to value*
+    variables->insert_or_assign(astSym, std::make_pair(llvmType, valPtr));
+
+    // TODO handle initial expr
+  }
+
+  std::string getStr(llvm::Value* v) {
+    std::string str;
+    llvm::raw_string_ostream strm(str);
+    v->print(strm);
+    return str;
   }
 
   virtual void visitImpl(ast::CallExpression* arg) override {
@@ -239,41 +299,53 @@ protected:
         set(funcCall);
         break;
       }
+      case ast::OperatorType::ASSIGNMENT: {
+        auto astLHS = arg->operands()->get(0);
+        auto astRHS = arg->operands()->get(1);
+
+        astLHS->accept(this);
+        // lhs is a ptr
+        auto lhs = this->returnValueAndClear();
+        astRHS->accept(this);
+        auto rhs = this->returnValueAndClear();
+        Builder->CreateStore(rhs, lhs);
+        break;
+      }
       case ast::OperatorType::SUBSCRIPT: {
-        auto astArrayOrTuple = arg->operands()->get(0);
+        // TODO this will not work with tuples
+        // TODO: a better solution may be to add different subscript ops for
+        // array and tuples
+        // TODO: but this probably has to be done during type resolution
+        // TODO: probably want to do array bounds checking here
+
+        auto astArray = arg->operands()->get(0);
         auto astIndex = arg->operands()->get(1);
 
-        astArrayOrTuple->accept(this);
-        auto arrayOrTuple = this->returnValueAndClear();
-
-        // if(auto astArray = ast::)
-        // TypeBuilder tb(Context);
-        // astArrayOrTuple->accept(&tb);
-        // auto arrayOrTupleType = tb.returnValue();
-
-        auto astSymbol = getSymbol(astArrayOrTuple);
-        llvm::Type* elmType = nullptr;
-        if(auto astArrayType = ast::Type::toArrayType(astSymbol->type());
-           astArrayType != nullptr) {
-          auto astElmType = astArrayType->elementType();
-          TypeBuilder tb(Context);
-          astElmType->accept(&tb);
-          elmType = tb.returnValue();
-        }
-
+        astArray->accept(this);
+        auto array = this->returnValueAndClear();
         astIndex->accept(this);
         auto index = this->returnValueAndClear();
 
-        // TODO: probably want to do array bounds checking here
+        ast::Type* astArrayType = ast::toExpressionNode(astArray)->type();
+        assert(ast::toArrayTypeNode(astArrayType) != nullptr);
+        ast::Type* astElmType =
+            ast::toArrayTypeNode(astArrayType)->elementType();
 
-        elmType->print(llvm::errs());
-        std::cerr << "\n";
-        arrayOrTuple->print(llvm::errs());
-        std::cerr << "\n";
-        auto gep = Builder->CreateGEP(elmType, arrayOrTuple, index);
-        // auto elm = Builder->CreateLoad()
+        auto arrayType = getLLVMType(Context, astArrayType);
+        auto elmType = getLLVMType(Context, astElmType);
 
-        set(gep);
+        // store the array to the stack
+        auto arrayPtr = Builder->CreateAlloca(array->getType());
+        Builder->CreateStore(array, arrayPtr);
+
+        // extract raw array, which is just a pointer
+        auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
+        auto rawArray = Builder->CreateLoad(PointerType(Context), rawArrayGEP);
+
+        // get elm from rawArray
+        auto elmGEP = Builder->CreateGEP(elmType, rawArray, index);
+        auto elm = Builder->CreateLoad(elmType, elmGEP);
+        set(elm);
 
         break;
       }
@@ -288,8 +360,7 @@ class ScopeBuilder final : public ast::visitor::VisitorWithArgs<
                                llvm::LLVMContext*,
                                llvm::IRBuilder<>*,
                                llvm::Module*,
-                               llvm::BasicBlock*,
-                               std::unordered_map<std::string, llvm::Value*>*> {
+                               LLVMCodegen::SymbolMap*> {
 public:
   using VisitorWithArgs::VisitorWithArgs;
 
@@ -298,10 +369,7 @@ protected:
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
-    auto BB = get<3>();
-    auto variables = get<4>();
-
-    Builder->SetInsertPoint(BB);
+    auto variables = get<3>();
     for(auto elm : *arg->statements()) {
       ExpressionBuilder ep(Context, Builder, Module, variables);
       elm->accept(&ep);
@@ -330,11 +398,7 @@ protected:
       if(auto param = ast::toParameterNode(elm); param != nullptr) {
 
         auto tt = param->symbol()->type();
-        TypeBuilder ltc(Context);
-        tt->accept(&ltc);
-        auto llvmType = ltc.returnValue();
-        // struct types as arguments must be passed as pointers
-        if(llvmType->isStructTy()) llvmType = llvmType->getPointerTo();
+        auto llvmType = getLLVMType(Context, tt);
         paramTypes.push_back(llvmType);
 
         paramNames.push_back(param->symbol()->name());
@@ -344,9 +408,7 @@ protected:
       }
     }
 
-    TypeBuilder ltc(Context);
-    arg->returnType()->accept(&ltc);
-    auto retType = ltc.returnValue();
+    auto retType = getLLVMType(Context, arg->returnType());
 
     llvm::FunctionType* funcType =
         llvm::FunctionType::get(retType, paramTypes, false);
@@ -401,18 +463,38 @@ protected:
 
     // main function body starts here
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(*Context, "entry", F);
-
+    Builder->SetInsertPoint(BB);
     // build a map for function arguments
     // the scope will build its own local args to this
-    std::unordered_map<std::string, llvm::Value*> variables;
-    for(auto& Arg : F->args())
-      variables[std::string(Arg.getName())] = &Arg;
+    LLVMCodegen::SymbolMap variables;
+    auto params = arg->functionPrototype()->parameters();
+    assert((F->arg_size()) == params->size());
+    for(size_t i = 0; i < params->size(); i++) {
+      if(auto param = ast::toParameterNode((*params)[i]); param != nullptr) {
+        auto Arg = F->getArg(i);
+        auto Sym = param->symbol();
+        auto llvmType = Arg->getType();
+        auto local = Builder->CreateAlloca(llvmType);
+        Builder->CreateStore(Arg, local);
 
-    ScopeBuilder sb(Context, Builder, Module, BB, &variables);
+        variables[Sym] = {llvmType, local};
+      } else {
+        std::cerr << "error in codegen: type mismatch on param\n";
+        exit(1);
+      }
+    }
+
+    ScopeBuilder sb(Context, Builder, Module, &variables);
     arg->body()->accept(&sb);
 
+    if(F->getReturnType()->isVoidTy()) {
+      Builder->CreateRetVoid();
+    }
+
     // verify the body
-    llvm::verifyFunction(*F);
+    if(llvm::verifyFunction(*F, &llvm::errs())) {
+      std::cerr << "\nERROR in function\n";
+    }
   }
 };
 

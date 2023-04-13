@@ -28,22 +28,25 @@ export CF=$SAPPHIRE_HOME/../llvm/llvm-project/build/bin/clang-format
 export STYLE=$SAPPHIRE_HOME/.clang-format
 
 check_format() {
-    file=$1
-    diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
+  file=$1
+  diff <($CF --Werror --style=file:$STYLE $file) $file >/dev/null 2>&1
 }
 check_format_python() {
-    file=$1
-    python3 -m black --quiet --check $file >/dev/null 2>&1
+  file=$1
+  python3 -m black --quiet --check $file >/dev/null 2>&1
 }
 export -f check_format
 export -f check_format_python
 
+DIRS=("src" "runtime")
 FILES=("*.c" "*.cpp" "*.cc" "*.h" "*.hpp" "*.inc")
-for s in "${FILES[@]}"; do
-    (find $SAPPHIRE_HOME/src -ipath "$s" -type f -exec bash -c 'check_format "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
+for d in "${DIRS[@]}"; do
+  for s in "${FILES[@]}"; do
+    (find $SAPPHIRE_HOME/$d -ipath "$s" -type f -exec bash -c 'check_format "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
+  done
 done
 
 DIRS=("src" "scripts")
 for d in "${DIRS[@]}"; do
-    (find $SAPPHIRE_HOME/$d -ipath '*.py' -type f -exec bash -c 'check_format_python "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
+  (find $SAPPHIRE_HOME/$d -ipath '*.py' -type f -exec bash -c 'check_format_python "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
 done

@@ -56,6 +56,23 @@ protected:
 #define ast_node_def_exclude_Nil
 #define ast_node_def(type) virtual void visitImpl(type*) override;
 #include "ast/ast-node.inc"
+
+// these all do nothing, as they have no children to search through
+#define ast_node_def_include
+#define ast_node_def_include_Parameter
+#define ast_node_def_include_Statement
+#define ast_node_def_include_Type
+#define ast_node_def_include_PrimitiveType
+#define ast_node_def_include_ClassType
+#define ast_node_def_include_UseExpression
+#define ast_node_def_include_Operator
+#define ast_node_def_include_IntExpression
+#define ast_node_def_include_UIntExpression
+#define ast_node_def_include_RealExpression
+#define ast_node_def_include_StringExpression
+#define ast_node_def_include_Nil
+#define ast_node_def(type) virtual void visitImpl(type*) override{};
+#include "ast/ast-node.inc"
 };
 
 template <class Visitor, class ParentVisitor, typename... ParameterTypes>

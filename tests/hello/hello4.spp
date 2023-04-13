@@ -2,12 +2,12 @@
 extern print(x: string): nil;
 
 func println(x: string) {
-    print(x + "\n");
+  print(x + "\n");
 }
 
 func main(args: [string]): int {
-    for var a in args {
-        println(a);
-    }
-    return 0;
+  for var a in args {
+    println(a);
+  }
+  return 0;
 }

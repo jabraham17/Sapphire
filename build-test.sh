@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
-llc -O0 -filetype=obj test.ll -o test.o
-clang -O3 -c runtime/print.c -o runtime/print.o
-clang -O3 -c runtime/main.c -o runtime/main.o
-clang test.o runtime/print.o runtime/main.o -o a.out
+/home/jabraham/Development/llvm/llvm-install/bin/llc -filetype=obj test.ll -o test.o
+clang -g test.o -Lruntime -lruntime -static -o a.out

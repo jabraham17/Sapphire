@@ -8,13 +8,14 @@ typedef unsigned char spp_byte;
 typedef unsigned char spp_bool;
 typedef void spp_nil;
 
-struct spp_str_ {
-    char* str;
-    long long len;
-};
-typedef struct spp_str_* spp_str;
+typedef struct {
+  char* str;
+  spp_int len;
+} spp_str, *spp_str_ptr;
 
-
-
+typedef struct {
+  spp_str_ptr elements;
+  spp_int len;
+} spp_str_array, *spp_str_array_ptr;
 
 #endif

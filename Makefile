@@ -15,6 +15,10 @@ all: $(BUILD_DIRECTORY) $(BIN_DIRECTORY) $(LIB_DIRECTORY) $(OBJ_DIRECTORY) $(GEN
 $(BUILD_DIRECTORY) $(BIN_DIRECTORY) $(LIB_DIRECTORY) $(OBJ_DIRECTORY) $(GEN_DIRECTORY):
 	$(AT)mkdir -p $@
 
+.PHONY: cache_makefile
+cache_makefile:
+	$(MAKE) --no-print-directory -C $(MKFILE_DIR) dump_paths
+
 clean:
 	$(RM) -r $(BUILD_DIRECTORY)
 
@@ -35,4 +39,26 @@ dump_paths:
 	$(info LEX=$(LEX))
 	$(info YACC=$(YACC))
 	$(info PYTHON3=$(PYTHON3_1))
+	$(info )
+	$(info BUILD=$(BUILD))
+	$(info BUILD_DIRECTORY=$(BUILD_DIRECTORY))
+	$(info BIN_DIRECTORY=$(BIN_DIRECTORY))
+	$(info OBJ_DIRECTORY=$(OBJ_DIRECTORY))
+	$(info LIB_DIRECTORY=$(LIB_DIRECTORY))
+	$(info GEN_DIRECTORY=$(GEN_DIRECTORY))
+	$(info )
+	$(info VERBOSE=$(VERBOSE))
+	$(info DEBUG=$(DEBUG))
+	$(info LLVM_INSTALL=$(LLVM_INSTALL))
+	$(info LLVM=$(LLVM))
+	$(info )
+	$(info CFLAGS=$(CFLAGS))
+	$(info CXXFLAGS=$(CXXFLAGS))
+	$(info ASFLAGS=$(ASFLAGS))
+	$(info LDFLAGS=$(LDFLAGS))
+	$(info INCLUDE=$(INCLUDE))
+	$(info YFLAGS=$(YFLAGS))
+	$(info LFLAGS=$(LFLAGS))
+
+	@:
 

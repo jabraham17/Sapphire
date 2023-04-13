@@ -61,15 +61,11 @@ void FunctionPrototype::setNamespace(const char* namespaceName) {
   this->namespaceName_ = namespaceName;
   funcSymbol_->setName(this->mangledNamed());
 }
-
-Expression::Expression(PrimitiveTypeEnum type)
-    : type_(new PrimitiveType(type)) {}
-
 DefExpression::DefExpression(
     Type* type,
     Symbol* symbol,
     Expression* assignValue)
-    : Expression(type), symbol_(symbol), assignValue_(assignValue) {
+    : symbol_(symbol), assignValue_(assignValue) {
   if(Type::isUnknownType(symbol_->type())) {
     symbol_->setType(type);
   }
@@ -85,6 +81,8 @@ bool DefExpression::hasInitialValue() {
   return assignValue_ != nullptr;
   //  || (n != nullptr && n->isUserSpecified());
 }
+Type* DefExpression::type() { return symbol_->type(); }
+Type* UseExpression::type() { return symbol_->type(); }
 
 bool Type::isNilable(Type* t) { return t->isNilable(); }
 bool Type::isRef(Type* t) { return t->isRef(); }
@@ -297,10 +295,9 @@ char codeForEscapedChar(char c) {
 
 std::string StringExpression::escapedValue() {
   std::string v = str;
-  // size_t pos = 0;
+  size_t pos = 0;
   while(true) {
-    std::cout << "hewp\n";
-    size_t pos = v.find('\\');
+    pos = v.find('\\');
     if(pos == std::string::npos) break;
     char replacementChar = codeForEscapedChar(v[pos + 1]);
     std::string replacement;

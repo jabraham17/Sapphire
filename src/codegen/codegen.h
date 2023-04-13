@@ -29,6 +29,10 @@ class LLVMCodegen : Codegen {
   std::unique_ptr<llvm::Module> Module;
 
 public:
+  using SymbolMap =
+      std::unordered_map<ast::Symbol*, std::pair<llvm::Type*, llvm::Value*>>;
+
+public:
   LLVMCodegen()
       : Context(std::make_unique<llvm::LLVMContext>()),
         Builder(std::make_unique<llvm::IRBuilder<>>(*Context)),

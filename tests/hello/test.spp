@@ -28,11 +28,11 @@ extern foo(a, b);
 extern foo(a: int, b: (int, int));
 
 func foo(arr: [int]) {
-    return arr.size();
+  return arr.size();
 }
 
 func foo(a: ref int): nil {
-    a = 8;
+  a = 8;
 }
 
 extern print(x: string): nil;
@@ -41,15 +41,15 @@ extern print(x: string): nil;
 # can also defined methods outside 
 # no nesting classes, yet
 class A {
-    var field1;
+  var field1;
 
-    init(field1) {
-        
-    }
-    func foo() {}
-    deinit { // parens here causes a seg fault? fix
+  init(field1) {
+      
+  }
+  func foo() {}
+  deinit { // parens here causes a seg fault? fix
 
-    }
+  }
 }
 func A.foo() {
 
@@ -71,77 +71,77 @@ operator *(lhs: A, rhs: A) {
 
 # main func, args and ret can be excluded
 func main(args: [string]): int {
-    var a: int = 10;
-    var a = 10;
+  var a: int = 10;
+  var a = 10;
 
-    var a_: ref int = &a;
+  var a_: ref int = &a;
 
-    var x: string? = nil;
-    x!.size(); # force unwrap
- /*   if var y = x {
-        # conditional unwrap
-    }
+  var x: string? = nil;
+  x!.size(); # force unwrap
+/*   if var y = x {
+      # conditional unwrap
+  }
 */
 
 
-    var a = new (7, 10);
-    var b: [int];
+  var a = new (7, 10);
+  var b: [int];
 
-    var s = "str";
-
-
-    // this will be reported as an error
-    //var a: ;
-
-    while h != k {
-
-    }
-
-    if i < k {
-
-    }
+  var s = "str";
 
 
-    if a {
+  // this will be reported as an error
+  //var a: ;
 
-    }
-    else {
+  while h != k {
 
-    }
+  }
 
+  if i < k {
 
-    if a {
-
-    }
-    else if 1 {
-
-    }
+  }
 
 
-    if b {
+  if a {
 
-    }
-    else if 7 {
+  }
+  else {
 
-    }
-    else {
+  }
 
-    }
 
-    for var a in arr {
+  if a {
 
-    }
+  }
+  else if 1 {
 
-    # parens are optional
-    # use types
-    /*func foo: ((int, int) -> int) = (a: real): string {
+  }
 
-    }*/
-    // THESE SHOULD NOT BE ERRORS
+
+  if b {
+
+  }
+  else if 7 {
+
+  }
+  else {
+
+  }
+
+  for var a in arr {
+
+  }
+
+  # parens are optional
+  # use types
+  /*func foo: ((int, int) -> int) = (a: real): string {
+
+  }*/
+  // THESE SHOULD NOT BE ERRORS
 /*    func foo: ((string) -> nil) = (arg: string): nil {
-        print(arg);
-    }
-    func foo: ((int) -> string) = (a: int): string {
+      print(arg);
+  }
+  func foo: ((int) -> string) = (a: int): string {
 
-    }*/
+  }*/
 }
