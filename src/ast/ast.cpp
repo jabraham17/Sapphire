@@ -82,7 +82,9 @@ bool DefExpression::hasInitialValue() {
   //  || (n != nullptr && n->isUserSpecified());
 }
 Type* DefExpression::type() { return symbol_->type(); }
+void DefExpression::setType(Type* type) { symbol_->setType(type); }
 Type* UseExpression::type() { return symbol_->type(); }
+void UseExpression::setType(Type* type) { symbol_->setType(type); }
 
 bool Type::isNilable(Type* t) { return t->isNilable(); }
 bool Type::isRef(Type* t) { return t->isRef(); }
@@ -157,9 +159,8 @@ bool Type::isSameType(NodeList* t1, NodeList* t2) {
     for(size_t i = 0; i < t1->size(); i++) {
       auto pt1 = toTypeNode((*t1)[i]);
       auto pt2 = toTypeNode((*t2)[i]);
-      if(pt1 != nullptr && pt2 != nullptr) {
-        if(!isSameType(pt1, pt2)) return false;
-      } else throw ASTException("Expected a Type");
+      assert(pt1 != nullptr && pt2 != nullptr);
+      if(!isSameType(pt1, pt2)) return false;
     }
     // all types are the same
     return true;

@@ -1,6 +1,7 @@
 #ifndef SAPPHIRE_AST_AST_H_
 #define SAPPHIRE_AST_AST_H_
 
+#include <cassert>
 #include <deque>
 #include <memory>
 #include <optional>
@@ -14,11 +15,16 @@ namespace visitor {
 class ASTVisitor;
 }
 class ASTNode {
+private:
+  long lineNumber;
+
 public:
-  ASTNode() = default;
+  ASTNode() : lineNumber(-1){};
   virtual ~ASTNode() = default;
   // virtual  toString() { return "ast"; }
   virtual void accept(visitor::ASTVisitor* ast) = 0;
+  long line() { return lineNumber; }
+  void setLine(long line) { this->lineNumber = line; }
 };
 
 struct ASTException : public std::runtime_error {
@@ -68,6 +74,10 @@ private:
   Symbol* symbol_;
 
 public:
+  Parameter(long lineNumber, Symbol* symbol, Type* type)
+      : Parameter(symbol, type) {
+    setLine(lineNumber);
+  }
   Parameter(Symbol* symbol, Type* type);
   virtual ~Parameter() = default;
   Symbol* symbol() { return symbol_; }
@@ -85,7 +95,24 @@ private:
   Symbol* funcSymbol_;
 
 public:
+  FunctionPrototype(
+      long lineNumber,
+      const char* name,
+      NodeList* parameters,
+      Type* returnType)
+      : FunctionPrototype(name, parameters, returnType) {
+    setLine(lineNumber);
+  }
   FunctionPrototype(const char* name, NodeList* parameters, Type* returnType);
+  FunctionPrototype(
+      long lineNumber,
+      const char* namespaceName,
+      const char* name,
+      NodeList* parameters,
+      Type* returnType)
+      : FunctionPrototype(namespaceName, name, parameters, returnType) {
+    setLine(lineNumber);
+  }
   FunctionPrototype(
       const char* namespaceName,
       const char* name,
@@ -125,6 +152,13 @@ private:
   Scope* body_;
 
 public:
+  FunctionDefinition(
+      long lineNumber,
+      FunctionPrototype* functionPrototype,
+      Scope* body)
+      : FunctionDefinition(functionPrototype, body) {
+    setLine(lineNumber);
+  }
   FunctionDefinition(FunctionPrototype* functionPrototype, Scope* body)
       : functionPrototype_(functionPrototype), body_(body) {}
   virtual ~FunctionDefinition() = default;
@@ -139,6 +173,10 @@ private:
   FunctionPrototype* functionPrototype_;
 
 public:
+  ExternDefinition(long lineNumber, FunctionPrototype* functionPrototype)
+      : ExternDefinition(functionPrototype) {
+    setLine(lineNumber);
+  }
   ExternDefinition(FunctionPrototype* functionPrototype)
       : functionPrototype_(functionPrototype) {}
   virtual ~ExternDefinition() = default;
@@ -153,8 +191,15 @@ private:
   bool isInit_;
 
 public:
+  InitDefinition(long lineNumber, NodeList* parameters, Scope* body)
+      : InitDefinition(parameters, body) {
+    setLine(lineNumber);
+  }
   InitDefinition(NodeList* parameters, Scope* body)
       : parameters_(parameters), body_(body), isInit_(true) {}
+  InitDefinition(long lineNumber, Scope* body) : InitDefinition(body) {
+    setLine(lineNumber);
+  }
   InitDefinition(Scope* body)
       : parameters_(nullptr), body_(body), isInit_(false) {}
   virtual ~InitDefinition() = default;
@@ -177,6 +222,9 @@ class Scope : public Statement {
   NodeList* statements_;
 
 public:
+  Scope(long lineNumber, NodeList* statements) : Scope(statements) {
+    setLine(lineNumber);
+  };
   Scope(NodeList* statements) : statements_(statements){};
   virtual ~Scope() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -189,8 +237,9 @@ private:
 public:
   Expression() {}
   virtual ~Expression() = default;
-  virtual Type* type() = 0;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual Type* type() = 0;
+  virtual void setType(Type* type) = 0;
   void setLHSOfAssign(bool isLHSOfAssign = true) {
     isLHSOfAssign_ = isLHSOfAssign;
   }
@@ -201,6 +250,10 @@ class ExpressionStatement : public Statement {
   Expression* expression_;
 
 public:
+  ExpressionStatement(long lineNumber, Expression* expr)
+      : ExpressionStatement(expr) {
+    setLine(lineNumber);
+  }
   ExpressionStatement(Expression* expr) : expression_(expr) {}
   virtual ~ExpressionStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -212,15 +265,35 @@ class DefExpression : public Expression {
   Expression* assignValue_;
 
 public:
+  DefExpression(
+      long lineNumber,
+      Type* type,
+      Symbol* symbol,
+      Expression* assignValue)
+      : DefExpression(type, symbol, assignValue) {
+    setLine(lineNumber);
+  }
   DefExpression(Type* type, Symbol* symbol, Expression* assignValue);
+  DefExpression(long lineNumber, Type* type, Symbol* symbol)
+      : DefExpression(type, symbol) {
+    setLine(lineNumber);
+  }
   DefExpression(Type* type, Symbol* symbol);
+  DefExpression(long lineNumber, Symbol* symbol, Expression* assignValue)
+      : DefExpression(symbol, assignValue) {
+    setLine(lineNumber);
+  }
   DefExpression(Symbol* symbol, Expression* assignValue);
+  DefExpression(long lineNumber, Symbol* symbol) : DefExpression(symbol) {
+    setLine(lineNumber);
+  }
   DefExpression(Symbol* symbol);
   virtual ~DefExpression() = default;
   virtual void setValue(Expression* value) { assignValue_ = value; }
   virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
   virtual Type* type() override;
+  virtual void setType(Type* type) override;
   bool hasInitialValue();
   Expression* assignValue() { return assignValue_; }
 };
@@ -233,6 +306,10 @@ class ClassDefinition : public ASTNode {
   InitDefinition* deinitializer_;
 
 public:
+  ClassDefinition(long lineNumber, ClassType* classType)
+      : ClassDefinition(classType) {
+    setLine(lineNumber);
+  }
   ClassDefinition(ClassType* classType)
       : classType_(classType), variables_(new NodeList()),
         functions_(new NodeList()), initializers_(new NodeList()),
@@ -254,6 +331,14 @@ class OperatorDefinition : public ASTNode {
   Scope* body_;
 
 public:
+  OperatorDefinition(
+      long lineNumber,
+      Operator* op,
+      NodeList* parameters,
+      Scope* body)
+      : OperatorDefinition(op, parameters, body) {
+    setLine(lineNumber);
+  }
   OperatorDefinition(Operator* op, NodeList* parameters, Scope* body)
       : op_(op), parameters_(parameters), body_(body) {}
   virtual ~OperatorDefinition() = default;
@@ -329,7 +414,18 @@ private:
   PrimitiveTypeEnum primType;
 
 public:
+  PrimitiveType(long lineNumber, PrimitiveTypeEnum type) : PrimitiveType(type) {
+    setLine(lineNumber);
+  }
   PrimitiveType(PrimitiveTypeEnum type) : PrimitiveType(type, false, false) {}
+  PrimitiveType(
+      long lineNumber,
+      PrimitiveTypeEnum type,
+      bool isRef,
+      bool isNilable)
+      : PrimitiveType(type, isRef, isNilable) {
+    setLine(lineNumber);
+  }
   PrimitiveType(PrimitiveTypeEnum type, bool isRef, bool isNilable)
       : Type(isRef, isNilable), primType(type) {}
   virtual ~PrimitiveType() = default;
@@ -342,7 +438,14 @@ private:
   Type* arrayType;
 
 public:
+  ArrayType(long lineNumber, Type* arrayType) : ArrayType(arrayType) {
+    setLine(lineNumber);
+  }
   ArrayType(Type* arrayType) : ArrayType(arrayType, false, false) {}
+  ArrayType(long lineNumber, Type* arrayType, bool isRef, bool isNilable)
+      : ArrayType(arrayType, isRef, isNilable) {
+    setLine(lineNumber);
+  }
   ArrayType(Type* arrayType, bool isRef, bool isNilable)
       : Type(isRef, isNilable), arrayType(arrayType) {}
   virtual ~ArrayType() = default;
@@ -356,7 +459,14 @@ private:
   NodeList* tupleTypes;
 
 public:
+  TupleType(long lineNumber, NodeList* tupleTypes) : TupleType(tupleTypes) {
+    setLine(lineNumber);
+  }
   TupleType(NodeList* tupleTypes) : TupleType(tupleTypes, false, false) {}
+  TupleType(long lineNumber, NodeList* tupleTypes, bool isRef, bool isNilable)
+      : TupleType(tupleTypes, isRef, isNilable) {
+    setLine(lineNumber);
+  }
   TupleType(NodeList* tupleTypes, bool isRef, bool isNilable)
       : Type(isRef, isNilable), tupleTypes(tupleTypes) {}
   virtual ~TupleType() = default;
@@ -371,8 +481,21 @@ private:
   Type* returnType_;
 
 public:
+  CallableType(long lineNumber, NodeList* parameterTypes, Type* returnType)
+      : CallableType(parameterTypes, returnType) {
+    setLine(lineNumber);
+  }
   CallableType(NodeList* parameterTypes, Type* returnType)
       : CallableType(parameterTypes, returnType, false, false) {}
+  CallableType(
+      long lineNumber,
+      NodeList* parameterTypes,
+      Type* returnType,
+      bool isRef,
+      bool isNilable)
+      : CallableType(parameterTypes, returnType, isRef, isNilable) {
+    setLine(lineNumber);
+  }
   CallableType(
       NodeList* parameterTypes,
       Type* returnType,
@@ -392,7 +515,14 @@ private:
   std::string className_;
 
 public:
+  ClassType(long lineNumber, const char* className) : ClassType(className) {
+    setLine(lineNumber);
+  }
   ClassType(const char* className) : ClassType(className, false, false) {}
+  ClassType(long lineNumber, const char* className, bool isRef, bool isNilable)
+      : ClassType(className, isRef, isNilable) {
+    setLine(lineNumber);
+  }
   ClassType(const char* className, bool isRef, bool isNilable)
       : Type(isRef, isNilable), className_(className) {}
 
@@ -407,8 +537,20 @@ class IfStatement : public Statement {
   // can be nullptr
   Statement* elseBody_; // either Scope or IfStatement
 public:
+  IfStatement(
+      long lineNumber,
+      Expression* expr,
+      Scope* ifBody,
+      Statement* elseBody)
+      : IfStatement(expr, ifBody, elseBody) {
+    setLine(lineNumber);
+  }
   IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody)
       : expr_(expr), ifBody_(ifBody), elseBody_(elseBody) {}
+  IfStatement(long lineNumber, Expression* expr, Scope* ifBody)
+      : IfStatement(expr, ifBody) {
+    setLine(lineNumber);
+  }
   IfStatement(Expression* expr, Scope* ifBody)
       : IfStatement(expr, ifBody, nullptr) {}
   virtual ~IfStatement() = default;
@@ -426,6 +568,10 @@ class WhileStatement : public Statement {
   Scope* body_;
 
 public:
+  WhileStatement(long lineNumber, Expression* expr, Scope* body)
+      : WhileStatement(expr, body) {
+    setLine(lineNumber);
+  }
   WhileStatement(Expression* expr, Scope* body) : expr_(expr), body_(body) {}
   virtual ~WhileStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -439,6 +585,14 @@ class ForStatement : public Statement {
   Scope* body_;
 
 public:
+  ForStatement(
+      long lineNumber,
+      DefExpression* var,
+      Expression* expr,
+      Scope* body)
+      : ForStatement(var, expr, body) {
+    setLine(lineNumber);
+  }
   ForStatement(DefExpression* var, Expression* expr, Scope* body)
       : var_(var), expr_(expr), body_(body) {}
   virtual ~ForStatement() = default;
@@ -451,6 +605,9 @@ class ReturnStatement : public Statement {
   Expression* expr_;
 
 public:
+  ReturnStatement(long lineNumber, Expression* expr) : ReturnStatement(expr) {
+    setLine(lineNumber);
+  }
   ReturnStatement(Expression* expr) : expr_(expr) {}
   virtual ~ReturnStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -463,10 +620,23 @@ class Closure : public Expression {
   Scope* body_;
 
 public:
+  Closure(
+      long lineNumber,
+      CallableType* type,
+      NodeList* parameters,
+      Scope* body)
+      : Closure(type, parameters, body) {
+    setLine(lineNumber);
+  }
   Closure(CallableType* type, NodeList* parameters, Scope* body)
       : type_(type), parameters_(parameters), body_(body) {}
   virtual ~Closure() = default;
   virtual Type* type() override { return type_; }
+  virtual void setType(Type* type) override {
+    auto callableType = ast::Type::toCallableType(type);
+    assert(callableType != nullptr && "type must be a callable type");
+    this->type_ = callableType;
+  }
   virtual void accept(visitor::ASTVisitor* ast) override;
   static CallableType* determineClosureType(
       Type* type_specifier,
@@ -549,6 +719,9 @@ class Operator : public ASTNode {
   OperatorType opType_;
 
 public:
+  Operator(long lineNumber, OperatorType opType) : Operator(opType) {
+    setLine(lineNumber);
+  }
   Operator(OperatorType opType) : opType_(opType){};
   virtual ~Operator() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
@@ -558,24 +731,34 @@ public:
 class CallExpression : public Expression {
   Operator* op_;
   NodeList* operands_;
+  Type* type_;
 
 public:
   template <typename... Args>
+  CallExpression(long lineNumber, OperatorType opType, Args... operands)
+      : CallExpression(opType, operands...) {
+    setLine(lineNumber);
+  }
+  template <typename... Args>
   CallExpression(OperatorType opType, Args... operands)
-      : op_(new Operator(opType)), operands_(new NodeList()) {
+      : op_(new Operator(opType)), operands_(new NodeList()),
+        type_(Type::getUnknownType()) {
     initOperands(std::forward<Args>(operands)...);
   }
   template <typename... Args>
+  CallExpression(long lineNumber, Operator* op, Args... operands)
+      : CallExpression(op, operands...) {
+    setLine(lineNumber);
+  }
+  template <typename... Args>
   CallExpression(Operator* op, Args... operands)
-      : op_(op), operands_(new NodeList()) {
+      : op_(op), operands_(new NodeList()), type_(Type::getUnknownType()) {
     initOperands(std::forward<Args>(operands)...);
   }
   virtual ~CallExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual Type* type() override {
-    // TODO: this should resolve in resolver
-    return Type::getUnknownType();
-  }
+  virtual Type* type() override { return type_; }
+  virtual void setType(Type* type) override { this->type_ = type; }
 
 private:
   template <typename Arg> void initOperands(Arg operand) {
@@ -622,11 +805,15 @@ private:
   Symbol* symbol_;
 
 public:
+  UseExpression(long lineNumber, Symbol* symbol) : UseExpression(symbol) {
+    setLine(lineNumber);
+  }
   UseExpression(Symbol* symbol) : symbol_(symbol) {}
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   Symbol* symbol() { return symbol_; }
   virtual Type* type() override;
+  virtual void setType(Type* type) override;
   void setSymbol(Symbol* symbol) { symbol_ = symbol; }
 };
 
@@ -635,11 +822,17 @@ private:
   long long value_;
 
 public:
+  IntExpression(long lineNumber, long long value) : IntExpression(value) {
+    setLine(lineNumber);
+  }
   IntExpression(long long value) : value_(value) {}
   virtual ~IntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual Type* type() override {
     return new PrimitiveType(PrimitiveTypeEnum::INT);
+  }
+  virtual void setType(Type* type) override {
+    assert(false && "cannot set the type of an int expression");
   }
   auto value() { return value_; }
 };
@@ -649,11 +842,18 @@ private:
   unsigned long long value_;
 
 public:
-  UIntExpression(long long value) : value_(value) {}
+  UIntExpression(long lineNumber, unsigned long long value)
+      : UIntExpression(value) {
+    setLine(lineNumber);
+  }
+  UIntExpression(unsigned long long value) : value_(value) {}
   virtual ~UIntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual Type* type() override {
     return new PrimitiveType(PrimitiveTypeEnum::UINT);
+  }
+  virtual void setType(Type* type) override {
+    assert(false && "cannot set the type of an uint expression");
   }
   auto value() { return value_; }
 };
@@ -663,11 +863,17 @@ private:
   double value_;
 
 public:
+  RealExpression(long lineNumber, double value) : RealExpression(value) {
+    setLine(lineNumber);
+  }
   RealExpression(double value) : value_(value) {}
   virtual ~RealExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual Type* type() override {
     return new PrimitiveType(PrimitiveTypeEnum::REAL);
+  }
+  virtual void setType(Type* type) override {
+    assert(false && "cannot set the type of a real expression");
   }
   auto value() { return value_; }
 };
@@ -677,11 +883,18 @@ private:
   std::string str;
 
 public:
+  StringExpression(long lineNumber, const std::string& value)
+      : StringExpression(value) {
+    setLine(lineNumber);
+  }
   StringExpression(const std::string str) : str(str) {}
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual Type* type() override {
     return new PrimitiveType(PrimitiveTypeEnum::STRING);
+  }
+  virtual void setType(Type* type) override {
+    assert(false && "cannot set the type of a string expression");
   }
   std::string value() { return str; }
   //  return the string with all escapes resolved
@@ -692,11 +905,18 @@ class Nil : public Expression {
   bool isUserSpecified_;
 
 public:
+  Nil(long lineNumber) : Nil() { setLine(lineNumber); }
   Nil() : Nil(false) {}
+  Nil(long lineNumber, bool isUserSpecified) : Nil(isUserSpecified) {
+    setLine(lineNumber);
+  }
   Nil(bool isUserSpecified) : isUserSpecified_(isUserSpecified) {}
   virtual ~Nil() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual Type* type() override { return Type::getNilType(); }
+  virtual void setType(Type* type) override {
+    assert(false && "cannot set the type of nil");
+  }
   bool isUserSpecified() { return isUserSpecified_; }
 };
 
