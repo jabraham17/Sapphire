@@ -18,43 +18,53 @@ static llvm::PointerType* PointerType(llvm::LLVMContext* Context) {
 
 // {ptr, i64}
 static llvm::StructType* StringType(llvm::LLVMContext* Context) {
-  auto tt = llvm::StructType::getTypeByName(*Context, "spp_str");
+  auto tt = llvm::StructType::getTypeByName(*Context, "spp_string");
   // if cannot find, create it
   if(tt == nullptr)
     tt = llvm::StructType::create(
         *Context,
         {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
-        "spp_str");
+        "spp_string");
   return tt;
 }
 
 // {ptr, i64} = {elmType*, i64}
-static llvm::StructType*
-ArrayType(llvm::LLVMContext* Context, llvm::Type* elmType) {
-  auto tt = llvm::StructType::getTypeByName(*Context, "spp_array");
+static llvm::StructType* ArrayType(
+    llvm::LLVMContext* Context,
+    llvm::Type* elmType,
+    const std::string& elmTypeName = "") {
+  auto name = "spp_array_" + elmTypeName;
+  auto tt = llvm::StructType::getTypeByName(*Context, name);
   // if cannot find, create it
   if(tt == nullptr)
-    tt = llvm::StructType::get(
+    tt = llvm::StructType::create(
         *Context,
         {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
-        "spp_array");
+        name);
   return tt;
 }
 
 static llvm::Value* StackLocal(
     llvm::LLVMContext* Context,
     llvm::IRBuilder<>* Builder,
-    llvm::Type* Type) {
+    llvm::Type* Type,
+    llvm::Value* Initial = nullptr,
+    const std::string& Name = "") {
   // save current BB
   llvm::BasicBlock* BB = Builder->GetInsertBlock();
   llvm::Function* F = BB->getParent();
   // we need the entry because all of our local vars must be alloca on the
   // entry for mem2reg to work properly
   auto& EntryBB = F->getEntryBlock();
-  Builder->SetInsertPoint(&EntryBB);
-  auto local = Builder->CreateAlloca(Type);
+  //  insert at beginning of block
+  Builder->SetInsertPoint(&EntryBB, EntryBB.getFirstInsertionPt());
+  auto local = Builder->CreateAlloca(Type, nullptr, Name);
   // reset to BB
   Builder->SetInsertPoint(BB);
+  // now check and set initial
+  if(Initial != nullptr) {
+    Builder->CreateStore(Initial, local);
+  }
   return local;
 }
 
@@ -106,7 +116,10 @@ protected:
     arg->elementType()->accept(this);
     auto elementType = this->returnValueAndClear();
 
-    set(ArrayType(Context, elementType));
+    set(ArrayType(
+        Context,
+        elementType,
+        ast::Type::getTypeString(arg->elementType())));
   }
 };
 
@@ -156,10 +169,10 @@ protected:
     auto strGEP = Builder->CreateStructGEP(stringType, stringStructPtr, 0);
     Builder->CreateStore(strPtr, strGEP);
 
-    auto stringStruct = Builder->CreateLoad(stringType, stringStructPtr);
+    // auto stringStruct = Builder->CreateLoad(stringType, stringStructPtr);
 
     // return string struct
-    set(stringStruct);
+    set(stringStructPtr);
   }
   virtual void visitImpl(ast::IntExpression* arg) override {
     auto Context = get<0>();
@@ -168,9 +181,14 @@ protected:
     auto literal = arg->value();
     auto numConstant =
         llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), literal);
+    auto numConstantPtr = StackLocal(
+        Context,
+        Builder,
+        llvm::Type::getInt64Ty(*Context),
+        numConstant);
 
     // return num
-    set(numConstant);
+    set(numConstantPtr);
   }
 
   virtual void visitImpl(ast::ReturnStatement* arg) override {
@@ -179,7 +197,9 @@ protected:
 
     auto exp = arg->expression();
     exp->accept(this);
-    auto val = this->returnValueAndClear();
+    auto valPtr = this->returnValueAndClear();
+    auto valType = getLLVMType(Context, exp->type());
+    auto val = Builder->CreateLoad(valType, valPtr);
 
     auto ret = Builder->CreateRet(val);
 
@@ -197,31 +217,82 @@ protected:
 
     // Build 4 basic blocks
     // bb0: loop init
-    // bb1: loop condition check and update var
-    // bb2: loop body, this is our ScopeBuilder
-    // bb3: loop cleanup, ie jump back to the top
+    // bb1: loop condition check
+    // bb2: update var, then do loop body (this is our ScopeBuilder), then jump
+    // to bb1 bb3: landing pad
 
     // init a loop counter and fully resolve the use-expr (the 'in' part)
-    llvm::BasicBlock* BB0 = llvm::BasicBlock::Create(*Context, "", F);
+    llvm::BasicBlock* BB0 = llvm::BasicBlock::Create(*Context, "loop_init", F);
     // insert explicit fallthrough from BB to BB0
     Builder->CreateBr(BB0);
 
-    auto loopCount =
-        StackLocal(Context, Builder, llvm::Type::getInt64Ty(*Context));
-
-    // now in BB0, init index to 0
+    // now in BB0, init loopCount to 0
     Builder->SetInsertPoint(BB0);
-    Builder->CreateStore(
+    auto loopCountPtr = StackLocal(
+        Context,
+        Builder,
+        llvm::Type::getInt64Ty(*Context),
         llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), 0),
-        loopCount);
+        "loopCount");
+
+    // get a local for the array
+    ast::Type* astArrayType = arg->expr()->type();
+    assert(ast::toArrayTypeNode(astArrayType) != nullptr);
+    ast::Type* astElmType = ast::toArrayTypeNode(astArrayType)->elementType();
+    auto arrayType = getLLVMType(Context, astArrayType);
+    auto elmType = getLLVMType(Context, astElmType);
+
+    arg->expr()->accept(this);
+    auto arrayPtr = this->returnValueAndClear();
+    // auto arrayPtr = StackLocal(Context, Builder, arrayType, array, "array");
+
+    // init array size
+    auto arraySizeGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
+    auto arraySize =
+        Builder->CreateLoad(llvm::Type::getInt64Ty(*Context), arraySizeGEP);
+
     // here we should call the def expression
     arg->variable()->accept(this);
-    auto defVar = this->returnValueAndClear();
+    auto defVarPtr = this->returnValueAndClear();
 
-    llvm::BasicBlock* BB1 = llvm::BasicBlock::Create(*Context, "", F);
+    llvm::BasicBlock* BB1 = llvm::BasicBlock::Create(*Context, "loop_cond", F);
     // insert explicit fallthrough from BB to BB0
     Builder->CreateBr(BB1);
-    // now
+    // switch to BB1
+    Builder->SetInsertPoint(BB1);
+    // check if index is the size of the array and create jump
+    auto loopCount =
+        Builder->CreateLoad(llvm::Type::getInt64Ty(*Context), loopCountPtr);
+    auto cond = Builder->CreateICmpSLT(loopCount, arraySize);
+    llvm::BasicBlock* BB2 = llvm::BasicBlock::Create(*Context, "loop_body", F);
+    llvm::BasicBlock* BB3 = llvm::BasicBlock::Create(*Context, "", F);
+    Builder->CreateCondBr(cond, BB2 /*true*/, BB3 /*false*/);
+
+    Builder->SetInsertPoint(BB2);
+    // copy new array elm into defVar
+    auto aGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
+
+    auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
+    auto rawArray = Builder->CreateLoad(PointerType(Context), rawArrayGEP);
+
+    // get elm from rawArray
+    auto elmGEP = Builder->CreateGEP(elmType, rawArray, loopCount);
+    auto elm = Builder->CreateLoad(elmType, elmGEP);
+    //  store elm into defVar
+    Builder->CreateStore(elm, defVarPtr);
+
+    // build the loop body
+    arg->body()->accept(this);
+
+    // increment the loop count and jump to the top
+    auto newLoopCount = Builder->CreateAdd(
+        loopCount,
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), 1));
+    Builder->CreateStore(newLoopCount, loopCountPtr);
+    Builder->CreateBr(BB1);
+
+    // now switch to the landing pad, code will continue to go here after loop
+    Builder->SetInsertPoint(BB3);
   }
 
   virtual void visitImpl(ast::UseExpression* arg) override {
@@ -240,14 +311,8 @@ protected:
       set(F);
     } else {
       auto [llvmType, v_ptr] = variables->at(astSym);
-
-      if(arg->isLHSOfAssign()) {
-        // lhs, return a ptr
-        set(v_ptr);
-      } else {
-        auto v = Builder->CreateLoad(llvmType, v_ptr);
-        set(v);
-      }
+      // always returns a ptr
+      set(v_ptr);
     }
   }
 
@@ -259,11 +324,15 @@ protected:
 
     auto astSym = arg->symbol();
     auto llvmType = getLLVMType(Context, astSym->type());
-    auto valPtr = StackLocal(Context, Builder, llvmType);
+    auto valPtr =
+        StackLocal(Context, Builder, llvmType, nullptr, astSym->name());
 
     variables->insert_or_assign(astSym, std::make_pair(llvmType, valPtr));
 
     // TODO handle initial expr
+
+    // return value is the ptr to the value
+    set(valPtr);
   }
 
   std::string getStr(llvm::Value* v) {
@@ -286,6 +355,7 @@ protected:
         // TODO: add proper resolution to a function with a visitor based on
         // type
         auto astFuncToCall = ast::toUseExpressionNode(arg->operands()->get(0));
+        assert(astFuncToCall != nullptr);
         // auto astFuncToCall = arg->operands()->get(0);
         // astFuncToCall->accept(this);
         // auto funcToCall = this->returnValueAndClear();
@@ -295,8 +365,14 @@ protected:
         for(auto it = arg->operands()->begin() + 1;
             it != arg->operands()->end();
             it++) {
-          (*it)->accept(this);
-          auto val = this->returnValueAndClear();
+          auto argExp = ast::toExpressionNode(*it);
+          assert(argExp != nullptr);
+
+          argExp->accept(this);
+          auto valPtr = this->returnValueAndClear();
+          auto valType = getLLVMType(Context, argExp->type());
+          // load the result of the call
+          auto val = Builder->CreateLoad(valType, valPtr);
           functionArgs.push_back(val);
         }
 
@@ -306,14 +382,19 @@ protected:
       }
       case ast::OperatorType::ASSIGNMENT: {
         auto astLHS = arg->operands()->get(0);
-        auto astRHS = arg->operands()->get(1);
+        auto astRHS = ast::toExpressionNode(arg->operands()->get(1));
+        assert(astRHS != nullptr);
 
         astLHS->accept(this);
-        // lhs is a ptr
-        auto lhs = this->returnValueAndClear();
+        auto lhsPtr = this->returnValueAndClear();
         astRHS->accept(this);
-        auto rhs = this->returnValueAndClear();
-        Builder->CreateStore(rhs, lhs);
+        auto rhsPtr = this->returnValueAndClear();
+        auto rhsType = getLLVMType(Context, astRHS->type());
+        auto rhs = Builder->CreateLoad(rhsType, rhsPtr);
+        Builder->CreateStore(rhs, lhsPtr);
+
+        // result of an assignment is the lhsPtr
+        set(lhsPtr);
         break;
       }
       case ast::OperatorType::SUBSCRIPT: {
@@ -323,25 +404,24 @@ protected:
         // TODO: but this probably has to be done during type resolution
         // TODO: probably want to do array bounds checking here
 
-        auto astArray = arg->operands()->get(0);
-        auto astIndex = arg->operands()->get(1);
+        auto astArray = ast::toExpressionNode(arg->operands()->get(0));
+        auto astIndex = ast::toExpressionNode(arg->operands()->get(1));
+        assert(astArray != nullptr && astIndex != nullptr);
 
         astArray->accept(this);
-        auto array = this->returnValueAndClear();
+        auto arrayPtr = this->returnValueAndClear();
         astIndex->accept(this);
-        auto index = this->returnValueAndClear();
+        auto indexPtr = this->returnValueAndClear();
 
-        ast::Type* astArrayType = ast::toExpressionNode(astArray)->type();
-        assert(ast::toArrayTypeNode(astArrayType) != nullptr);
-        ast::Type* astElmType =
-            ast::toArrayTypeNode(astArrayType)->elementType();
+        auto astArrayType = ast::Type::toArrayType(astArray->type());
+        assert(astArrayType != nullptr);
+        auto astElmType = astArrayType->elementType();
 
         auto arrayType = getLLVMType(Context, astArrayType);
         auto elmType = getLLVMType(Context, astElmType);
+        auto indexType = getLLVMType(Context, astIndex->type());
 
-        // store the array to the stack
-        auto arrayPtr = StackLocal(Context, Builder, array->getType());
-        Builder->CreateStore(array, arrayPtr);
+        auto index = Builder->CreateLoad(indexType, indexPtr);
 
         // extract raw array, which is just a pointer
         auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
@@ -349,8 +429,9 @@ protected:
 
         // get elm from rawArray
         auto elmGEP = Builder->CreateGEP(elmType, rawArray, index);
-        auto elm = Builder->CreateLoad(elmType, elmGEP);
-        set(elm);
+        // auto elm = Builder->CreateLoad(elmType, elmGEP);
+        // result is a pointer
+        set(elmGEP);
 
         break;
       }
@@ -479,8 +560,8 @@ protected:
         auto Arg = F->getArg(i);
         auto Sym = param->symbol();
         auto llvmType = Arg->getType();
-        auto local = StackLocal(Context, Builder, llvmType);
-        Builder->CreateStore(Arg, local);
+        auto local =
+            StackLocal(Context, Builder, llvmType, Arg, Sym->name() + "_local");
 
         variables[Sym] = {llvmType, local};
       } else {
