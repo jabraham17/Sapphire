@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_NODE_EXPRESSION_H_
-#define SAPPHIRE_AST_NODE_EXPRESSION_H_
+#ifndef SAPPHIRE_AST_NODE_EXPRESSION_EXPRESSION_H_
+#define SAPPHIRE_AST_NODE_EXPRESSION_EXPRESSION_H_
 #include "ast/ast.h"
 #include "ast/node/ASTNode.h"
 namespace ast {

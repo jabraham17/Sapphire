@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_NODE_ARRAYTYPE_H_
-#define SAPPHIRE_AST_NODE_ARRAYTYPE_H_
+#ifndef SAPPHIRE_AST_NODE_TYPE_ARRAYTYPE_H_
+#define SAPPHIRE_AST_NODE_TYPE_ARRAYTYPE_H_
 #include "Type.h"
 
 #include "ast/ast.h"

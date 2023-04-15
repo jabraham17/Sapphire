@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_VISITORS_AST_DUMP_H_
-#define SAPPHIRE_AST_VISITORS_AST_DUMP_H_
+#ifndef SAPPHIRE_AST_VISITOR_AST_DUMP_H_
+#define SAPPHIRE_AST_VISITOR_AST_DUMP_H_
 
 #include "ast/ast.h"
 #include "common/indented-ostream.h"

@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_NODE_TYPE_H_
-#define SAPPHIRE_AST_NODE_TYPE_H_
+#ifndef SAPPHIRE_AST_NODE_TYPE_TYPE_H_
+#define SAPPHIRE_AST_NODE_TYPE_TYPE_H_
 #include "PrimitiveType.h"
 #include "TypeList.h"
 

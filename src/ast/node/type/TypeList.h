@@ -1,6 +1,5 @@
-
-#ifndef SAPPHIRE_AST_NODE_TYPELIST_H_
-#define SAPPHIRE_AST_NODE_TYPELIST_H_
+#ifndef SAPPHIRE_AST_NODE_TYPE_TYPELIST_H_
+#define SAPPHIRE_AST_NODE_TYPE_TYPELIST_H_
 
 #include "ast/ast.h"
 #include "ast/node/ASTNode.h"

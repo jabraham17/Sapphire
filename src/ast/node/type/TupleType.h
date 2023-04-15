@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_NODE_TUPLETYPE_H_
-#define SAPPHIRE_AST_NODE_TUPLETYPE_H_
+#ifndef SAPPHIRE_AST_NODE_TYPE_TUPLETYPE_H_
+#define SAPPHIRE_AST_NODE_TYPE_TUPLETYPE_H_
 #include "Type.h"
 #include "TypeList.h"
 

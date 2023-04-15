@@ -1,5 +1,5 @@
-#ifndef SAPPHIRE_AST_NODE_STATEMENT_H_
-#define SAPPHIRE_AST_NODE_STATEMENT_H_
+#ifndef SAPPHIRE_AST_NODE_STATEMENT_STATEMENT_H_
+#define SAPPHIRE_AST_NODE_STATEMENT_STATEMENT_H_
 #include "ast/ast.h"
 namespace ast {
 namespace node {

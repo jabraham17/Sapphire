@@ -1,4 +1,3 @@
-
 #ifndef SAPPHIRE_COMMON_INDENTED_OSTREAM_H_
 #define SAPPHIRE_COMMON_INDENTED_OSTREAM_H_
 #include <ostream>
