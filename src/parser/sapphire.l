@@ -33,6 +33,7 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 "var"      { return VAR; }
 "class"    { return CLASS; }
 "extern"   { return EXTERN; }
+"ffi"      { return FFI; }
 "if"       { return IF; }
 "then"     { return THEN; }
 "else"     { return ELSE; }

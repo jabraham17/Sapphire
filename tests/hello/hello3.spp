@@ -1,6 +1,6 @@
 
 
-extern print(x: string): nil;
+extern ffi print(x: string): nil;
 
 func main(args: [string]): int {
   for var a: string in args {

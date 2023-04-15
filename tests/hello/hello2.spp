@@ -1,6 +1,6 @@
 
 
-extern print(x: string): nil;
+extern ffi print(x: string): nil;
 
 
 func foo(): string {

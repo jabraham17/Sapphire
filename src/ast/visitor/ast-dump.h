@@ -27,7 +27,7 @@ protected:
 #define ast_node_def_exclude_Statement
 #define ast_node_def_exclude_Expression
 #define ast_node_def_exclude_Type
-#define ast_node_def(type) virtual void visitImpl(type* arg) override;
+#define ast_node_def(type) virtual void visitImpl(node::type* arg) override;
 #include "ast/ast-node.inc"
 };
 } // namespace visitor

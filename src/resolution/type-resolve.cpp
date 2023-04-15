@@ -21,6 +21,16 @@ private:
     return ast::Type::isSameBaseType(type, &intType) ||
            ast::Type::isSameBaseType(type, &uintType);
   }
+  bool isStringType(ast::Type* type) {
+    ast::PrimitiveType stringType(ast::PrimitiveTypeEnum::STRING);
+    return ast::Type::isSameBaseType(type, &stringType);
+  }
+  bool isNumType(ast::Type* type) {
+    ast::PrimitiveType realType(ast::PrimitiveTypeEnum::REAL);
+    ast::PrimitiveType byteType(ast::PrimitiveTypeEnum::BYTE);
+    return isIntegralType(type) || ast::Type::isSameBaseType(type, &realType) ||
+           ast::Type::isSameBaseType(type, &byteType);
+  }
 
 protected:
   virtual void visitImpl(ast::CallExpression* call) override {
@@ -28,7 +38,26 @@ protected:
     // resolve the operands
     call->operands()->accept(this);
 
-    switch(call->op()->opType()) {
+    switch(call->opType()) {
+      case ast::OperatorType::PLUS: {
+        // if num types, string types, or array types, OF THE SAME TYPE, return
+        // the same type
+        auto op0 = ast::toExpressionNode(call->operands()->get(0));
+        auto op1 = ast::toExpressionNode(call->operands()->get(1));
+        assert(op0 != nullptr && op1 != nullptr);
+
+        if(ast::Type::isSameType(op0->type(), op1->type()) &&
+           (isNumType(op0->type()) || isStringType(op0->type()) ||
+            ast::Type::isArrayType(op0->type()))) {
+          call->setType(op0->type());
+        } else {
+          errors.push_back(
+              "type mismatch on '" + ast::Type::getTypeString(op0->type()) +
+              " + " + ast::Type::getTypeString(op1->type()) + "' on line " +
+              std::to_string(call->line()));
+        }
+        break;
+      }
       case ast::OperatorType::ASSIGNMENT: {
         // if op0's type is unknown, set to be op1 type
         // op0 must equal op1
@@ -38,6 +67,7 @@ protected:
 
         if(ast::Type::isUnknownType(op0->type())) {
           op0->setType(op1->type());
+          call->setType(op0->type());
         } else if(ast::Type::isSameType(op0->type(), op1->type())) {
           // no need to do anything
         } else {

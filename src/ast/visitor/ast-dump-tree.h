@@ -22,7 +22,7 @@ public:
   virtual ~ASTDumpTree() = default;
 
 protected:
-#define ast_node_def(type) virtual void visitImpl(type*) override;
+#define ast_node_def(type) virtual void visitImpl(node::type*) override;
 #include "ast/ast-node.inc"
 };
 } // namespace visitor

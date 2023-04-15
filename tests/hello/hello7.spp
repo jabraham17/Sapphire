@@ -1,7 +1,7 @@
 
-extern print(x: string): nil;
+extern ffi print(x: string): nil;
 
-extern itoa(x: int): string;
+extern ffi itoa(x: int): string;
 
 func int.toString(): string {
   var s: string = itoa(this);

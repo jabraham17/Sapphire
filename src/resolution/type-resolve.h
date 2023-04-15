@@ -2,7 +2,7 @@
 #define SAPPHIRE_RESOLUTION_TYPE_RESOLVE_H_
 
 #include "ast/ast.h"
-#include "ast/visitors/ast-visitor.h"
+#include "ast/visitor/ast-visitor.h"
 
 namespace pass {
 namespace resolution {

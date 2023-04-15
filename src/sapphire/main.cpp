@@ -1,6 +1,6 @@
 #include "ast/ast.h"
-#include "ast/visitors/ast-dump-tree.h"
-#include "ast/visitors/ast-dump.h"
+#include "ast/visitor/ast-dump-tree.h"
+#include "ast/visitor/ast-dump.h"
 #include "codegen/codegen.h"
 #include "parser/parser.h"
 #include "resolution/scope-resolve.h"
@@ -27,12 +27,8 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
 
   if(ast == nullptr) return 1;
 
-  // dump the raw tree
-  ast->accept(new ast::visitor::ASTDumpTree(std::cout));
-  std::cout << std::endl;
-  std::cout << std::string(80, '=') << std::endl;
-
   // unresolved code
+  std::cout << "initial ast\n";
   ast->accept(new ast::visitor::ASTDump(std::cout));
   std::cout << std::endl;
   std::cout << std::string(80, '=') << std::endl;
@@ -46,6 +42,11 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
       for(auto e : sr.errors()) {
         std::cerr << e << std::endl;
       }
+      std::cerr << "\nat this point...\n";
+      ast->accept(new ast::visitor::ASTDump(std::cerr));
+      std::cerr << std::endl;
+      std::cerr << std::string(80, '=') << std::endl;
+
       return 1;
     }
   }
@@ -59,11 +60,16 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
       for(auto e : tr.errors()) {
         std::cerr << e << std::endl;
       }
+      std::cerr << "\nat this point...\n";
+      ast->accept(new ast::visitor::ASTDump(std::cerr));
+      std::cerr << std::endl;
+      std::cerr << std::string(80, '=') << std::endl;
       return 1;
     }
   }
 
   // resolved code
+  std::cout << "resolved ast\n";
   ast->accept(new ast::visitor::ASTDump(std::cout));
   std::cout << std::endl;
   std::cout << std::string(80, '=') << std::endl;

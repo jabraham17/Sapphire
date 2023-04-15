@@ -21,11 +21,11 @@ public:
   virtual ~ASTVisitor() = default;
 #define ast_node_def(type)                                                     \
 protected:                                                                     \
-  virtual void visitImpl(type*) {}                                             \
+  virtual void visitImpl(node::type*) {}                                       \
                                                                                \
 public:                                                                        \
-  void visit(type* a) {                                                        \
-    if(!is##type##Node(a)) {                                                   \
+  void visit(node::type* a) {                                                  \
+    if(!ast::is##type##Node(a)) {                                              \
       throw ASTVisitorException(                                               \
           "Unexpected " #type " in visitor " + std::string(__FUNCTION__));     \
     }                                                                          \
@@ -48,13 +48,12 @@ protected:
 #define ast_node_def_exclude_PrimitiveType
 #define ast_node_def_exclude_ClassType
 #define ast_node_def_exclude_UseExpression
-#define ast_node_def_exclude_Operator
 #define ast_node_def_exclude_IntExpression
 #define ast_node_def_exclude_UIntExpression
 #define ast_node_def_exclude_RealExpression
 #define ast_node_def_exclude_StringExpression
 #define ast_node_def_exclude_Nil
-#define ast_node_def(type) virtual void visitImpl(type*) override;
+#define ast_node_def(type) virtual void visitImpl(node::type*) override;
 #include "ast/ast-node.inc"
 
 // these all do nothing, as they have no children to search through
@@ -65,13 +64,12 @@ protected:
 #define ast_node_def_include_PrimitiveType
 #define ast_node_def_include_ClassType
 #define ast_node_def_include_UseExpression
-#define ast_node_def_include_Operator
 #define ast_node_def_include_IntExpression
 #define ast_node_def_include_UIntExpression
 #define ast_node_def_include_RealExpression
 #define ast_node_def_include_StringExpression
 #define ast_node_def_include_Nil
-#define ast_node_def(type) virtual void visitImpl(type*) override{};
+#define ast_node_def(type) virtual void visitImpl(node::type*) override{};
 #include "ast/ast-node.inc"
 };
 

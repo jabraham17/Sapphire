@@ -2,7 +2,7 @@
 #define SAPPHIRE_RESOLUTION_SCOPE_RESOLVE_H_
 
 #include "ast/ast.h"
-#include "ast/visitors/ast-visitor.h"
+#include "ast/visitor/ast-visitor.h"
 
 #include <string>
 #include <unordered_map>
@@ -12,6 +12,7 @@ namespace pass {
 namespace resolution {
 
 using SymbolMap = std::unordered_map<std::string, ast::Symbol*>;
+using FunctionSymbolMap = std::unordered_map<std::string, ast::FunctionSymbol*>;
 
 class ScopeResolve {
 private:

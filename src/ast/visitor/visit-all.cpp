@@ -1,6 +1,6 @@
 #include "ast-visitor.h"
 
-#define VISIT(name) void ast::visitor::VisitAll::visitImpl(name* arg)
+#define VISIT(name) void ast::visitor::VisitAll::visitImpl(node::name* arg)
 
 VISIT(NodeList) {
   for(auto a : *arg)
@@ -8,7 +8,7 @@ VISIT(NodeList) {
 }
 VISIT(FunctionPrototype) {
   arg->parameters()->accept(this);
-  arg->returnType()->accept(this);
+  arg->type()->accept(this);
 }
 VISIT(FunctionDefinition) {
   arg->functionPrototype()->accept(this);
@@ -34,7 +34,6 @@ VISIT(ClassDefinition) {
   arg->deinitializer()->accept(this);
 }
 VISIT(OperatorDefinition) {
-  arg->op()->accept(this);
   arg->parameters()->accept(this);
   arg->body()->accept(this);
 }
@@ -65,7 +64,4 @@ VISIT(Closure) {
   arg->parameters()->accept(this);
   arg->body()->accept(this);
 }
-VISIT(CallExpression) {
-  arg->op()->accept(this);
-  arg->operands()->accept(this);
-}
+VISIT(CallExpression) { arg->operands()->accept(this); }

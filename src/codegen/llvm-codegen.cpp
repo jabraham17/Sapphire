@@ -1,7 +1,7 @@
 
 #include "codegen.h"
 
-#include "ast/visitors/ast-visitor.h"
+#include "ast/visitor/ast-visitor.h"
 
 #include <iostream>
 #include <llvm/IR/Constants.h>
@@ -335,19 +335,12 @@ protected:
     set(valPtr);
   }
 
-  std::string getStr(llvm::Value* v) {
-    std::string str;
-    llvm::raw_string_ostream strm(str);
-    v->print(strm);
-    return str;
-  }
-
   virtual void visitImpl(ast::CallExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
 
-    switch(arg->op()->opType()) {
+    switch(arg->opType()) {
       case ast::OperatorType::FUNCTION: {
 
         std::vector<llvm::Value*> functionArgs;
@@ -360,6 +353,7 @@ protected:
         // astFuncToCall->accept(this);
         // auto funcToCall = this->returnValueAndClear();
         auto funcToCall = Module->getFunction(astFuncToCall->symbol()->name());
+        assert(funcToCall != nullptr);
         // funcToCall->print(llvm::errs());
 
         for(auto it = arg->operands()->begin() + 1;
@@ -494,7 +488,7 @@ protected:
       }
     }
 
-    auto retType = getLLVMType(Context, arg->returnType());
+    auto retType = getLLVMType(Context, arg->type()->returnType());
 
     llvm::FunctionType* funcType =
         llvm::FunctionType::get(retType, paramTypes, false);
@@ -502,7 +496,7 @@ protected:
     llvm::Function* F = llvm::Function::Create(
         funcType,
         llvm::Function::ExternalLinkage,
-        arg->mangledNamed(),
+        arg->name(),
         Module);
 
     // set arg names to the names for the params

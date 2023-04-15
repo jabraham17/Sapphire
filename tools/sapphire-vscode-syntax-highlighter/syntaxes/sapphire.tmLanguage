@@ -45,7 +45,7 @@
         <array>
           <dict>
             <key>match</key>
-            <string>\b((var)|(func)|(extern)|(operator)|(class))\b</string>
+            <string>\b((var)|(func)|(extern)|(ffi)|(operator)|(class))\b</string>
             <key>name</key>
             <string>storage.type.spp</string>
           </dict>

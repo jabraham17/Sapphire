@@ -3,7 +3,8 @@
 namespace ast {
 namespace visitor {
 
-#define VISIT(type) void ASTDumpTree::visitImpl([[maybe_unused]] type* arg)
+#define VISIT(type)                                                            \
+  void ASTDumpTree::visitImpl([[maybe_unused]] node::type* arg)
 
 VISIT(NodeList) {
   strm << "<node-list>" << strm.nl();
@@ -22,7 +23,7 @@ VISIT(FunctionPrototype) {
   strm.increaseIndent();
   strm << "<func:" << arg->name() << ">" << strm.nl();
   arg->parameters()->accept(this);
-  arg->returnType()->accept(this);
+  arg->type()->accept(this);
   strm.decreaseIndent();
 }
 VISIT(FunctionDefinition) {
@@ -96,7 +97,8 @@ VISIT(ClassDefinition) {
 VISIT(OperatorDefinition) {
   strm << "<op-def>" << strm.nl();
   strm.increaseIndent();
-  arg->op()->accept(this);
+  strm << "<op:" << ast::getOperatorTypeString(arg->opType()) << ">"
+       << strm.nl();
   arg->parameters()->accept(this);
   arg->body()->accept(this);
 
@@ -159,14 +161,11 @@ VISIT(Closure) {
   arg->body()->accept(this);
   strm.decreaseIndent();
 }
-VISIT(Operator) {
-  strm << "<op:" << ast::getOperatorTypeString(arg->opType()) << ">"
-       << strm.nl();
-}
 VISIT(CallExpression) {
   strm << "<call-expr>" << strm.nl();
   strm.increaseIndent();
-  arg->op()->accept(this);
+  strm << "<op:" << ast::getOperatorTypeString(arg->opType()) << ">"
+       << strm.nl();
   arg->operands()->accept(this);
   strm.decreaseIndent();
 }

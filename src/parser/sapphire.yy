@@ -17,6 +17,25 @@
 
 %code requires {
   #include "parser/parser.h"
+
+  struct FunctionPrototypeWrapper {
+    const char* name;
+    ast::NodeList* parameters;
+    ast::Type* returnType;
+    ast::Type* belongsTo;
+    bool isFFI;
+    FunctionPrototypeWrapper(
+      const char* name,
+      ast::NodeList* parameters,
+      ast::Type* returnType,
+      ast::Type* belongsTo = nullptr,
+      bool isFFI = false):
+        name(name),
+        parameters(parameters),
+        returnType(returnType),
+        belongsTo(belongsTo),
+        isFFI(isFFI) {}
+  };
 }
 
 %union {
@@ -24,10 +43,11 @@
 
   ast::ASTNode* node;
   ast::Expression* expr;
+  FunctionPrototypeWrapper* funcPrototypeWrapper;
   ast::FunctionPrototype* funcPrototype;
   ast::Type* type;
   ast::Statement* stmt;
-  ast::Operator* op;
+  ast::OperatorType op;
   ast::Parameter* param;
   ast::Scope* scope;
   ast::Symbol* symbol;
@@ -35,7 +55,7 @@
   ast::NodeList* nodeList;
 }
 
-%token FUNC VAR CLASS EXTERN IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
+%token FUNC VAR CLASS EXTERN FFI IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
 %token INIT DEINIT THIS
 %token ARROW COLON COMMA SEMICOLON
 %token BOOL BYTE INT UINT REAL STRING
@@ -63,11 +83,12 @@
 
 %type <nodeList> class_statement_list definition_list statement_list expression_list optional_expression_list type_list parameter_list parameter_list_
 %type <node> file class_statement definition function_definition extern_definition operator_definition class_definition init_definition
-%type <funcPrototype> function_prototype function_prototype_
+%type <funcPrototype> function_prototype
+%type <funcPrototypeWrapper> function_prototype_base function_prototype_typebase function_prototype_ffi
 %type <scope> curly_statement_list
 %type <stmt> statement control_flow_statement statement_ if_statement while_statement for_statement return_statement
 %type <expr> expression number if_condition closure_definition def_expression def_expression_with_value
-%type <type> type_specifier type type_ref_ type_nilable_ type_base_ return_type array_type tuple_type callable_type callable_return_type class_type
+%type <type> type_specifier type type_ref_ type_nilable_ type_base return_type array_type tuple_type callable_type callable_return_type class_type
 %type <param> parameter
 %type <op> overloadable_op
 %type <lexeme> name
@@ -87,7 +108,7 @@ file:
   definition_list { context->ast = $1; }
   ;
 definition_list:
-  definition { 
+  definition {
     $$ = new NodeList();
     $$->addFront($1);
   }
@@ -106,19 +127,34 @@ definition:
 
 function_definition:
   FUNC function_prototype curly_statement_list {
-    $2->setMangled(true);
     $$ = new FunctionDefinition(line_num, $2, $3);
   }
   ;
+
 function_prototype:
-  name DOT function_prototype_ %dprec 1 {
-    $$ = $3;
-    $$->setNamespace($1);
+  function_prototype_ffi {
+    bool mangled = !$1->isFFI;
+    $$ = new FunctionPrototype(line_num, $1->name, $1->parameters, $1->returnType, mangled, $1->belongsTo);
+    delete $1;
   }
-  | function_prototype_ %dprec 2 { $$ = $1; }
   ;
-function_prototype_:
-  name parameter_list return_type { $$ = new FunctionPrototype(line_num, $1, $2, $3); }
+function_prototype_ffi:
+  FFI function_prototype_typebase %dprec 1 {
+    $$ = $2;
+    $$->isFFI = true;
+  }
+  | function_prototype_typebase %dprec 2 { $$ = $1; }
+function_prototype_typebase:
+  type_base DOT function_prototype_base %dprec 1 {
+    $$ = $3;
+    $$->belongsTo = $1;
+  }
+  | function_prototype_base %dprec 2 { $$ = $1; }
+  ;
+function_prototype_base:
+  name parameter_list return_type {
+    $$ = new FunctionPrototypeWrapper($1, $2, $3);
+  }
   ;
 parameter_list:
   LPAREN parameter_list_ RPAREN { $$ = $2; }
@@ -149,7 +185,7 @@ symbol:
   name { $$ = new Symbol($1); }
   ;
 type_specifier:
-  %empty       { 
+  %empty       {
     $$ = Type::getUnknownType();
     $$->setLine(line_num);
   }
@@ -166,7 +202,7 @@ type_list:
   }
   ;
 type:
-  type_ref_ { 
+  type_ref_ {
     $$ = $1;
     $$->setUserSpecified();
   }
@@ -183,12 +219,12 @@ type_ref_:
   }
   ;
 type_nilable_:
-  type_base_ { $$ = $1; }
-  | type_base_ QUESTION {
+  type_base { $$ = $1; }
+  | type_base QUESTION {
     $$ = $1;
     $$->setNilable(true);
   }
-type_base_:
+type_base:
   INT             { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::INT); }
   | UINT          { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::UINT); }
   | REAL          { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::REAL); }
@@ -210,13 +246,13 @@ callable_type:
   LPAREN LPAREN type_list RPAREN ARROW callable_return_type RPAREN %dprec 1 {
     $$ = new CallableType(line_num, $3, $6);
   }
-  | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 { 
+  | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 {
     $$ = new CallableType(line_num, new NodeList(), $5);
   }
   ;
 callable_return_type:
   type  { $$ = $1; }
-  | NIL { 
+  | NIL {
     $$ = Type::getNilType();
     $$->setLine(line_num);
   }
@@ -243,7 +279,7 @@ statement:
   | closure_definition        { $$ = toStatementNode($1); }
   ;
 
-control_flow_statement: 
+control_flow_statement:
   if_statement   { $$ = $1; }
   | while_statement { $$ = $1; }
   | for_statement   { $$ = $1; }
@@ -261,13 +297,13 @@ curly_statement_list:
 
 
 if_statement:
-  IF if_condition curly_statement_list { 
+  IF if_condition curly_statement_list {
     $$ = new IfStatement(line_num, $2, $3);
   }
-  | IF if_condition curly_statement_list ELSE if_statement { 
+  | IF if_condition curly_statement_list ELSE if_statement {
     $$ = new IfStatement(line_num, $2, $3, $5);
   }
-  | IF if_condition curly_statement_list ELSE curly_statement_list { 
+  | IF if_condition curly_statement_list ELSE curly_statement_list {
     $$ = new IfStatement(line_num, $2, $3, $5);
   }
   ;
@@ -293,7 +329,7 @@ return_statement:
 
 
 def_expression:
-  VAR symbol type_specifier { 
+  VAR symbol type_specifier {
     $$ = new DefExpression($3, $2);
   }
   | error {
@@ -323,7 +359,7 @@ closure_definition:
   }
   }
   ;
-    
+
 expression:
   symbol                     { $$ = new UseExpression(line_num, $1); }
   | THIS                     { $$ = new UseExpression(line_num, new Symbol("this")); }
@@ -331,13 +367,12 @@ expression:
   | STRING_LITERAL           { $$ = new StringExpression(line_num, $1); }
   | NIL                      { $$ = new Nil(line_num, true); }
   | LPAREN expression RPAREN { $$ = $2; }
-  | expression EQUALS expression { 
-    $1->setLHSOfAssign();
+  | expression EQUALS expression {
     $$ = new CallExpression(line_num, OperatorType::ASSIGNMENT, $1, $3);
   }
   | expression DOT symbol {
     $$ = new CallExpression(
-        line_num, 
+        line_num,
         OperatorType::FIELD_ACCESS,
         $1,
         new UseExpression(line_num, $3));
@@ -422,7 +457,7 @@ expression:
   }
   | NEW class_type LPAREN optional_expression_list RPAREN {
     $$ = new CallExpression(
-        line_num, 
+        line_num,
         OperatorType::NEW_CLASS,
         $2,
         $4);
@@ -457,7 +492,7 @@ number:
     $$ = new RealExpression(line_num, v);
   }
   ;
-    
+
 optional_expression_list:
   expression_list { $$ = $1; }
   | %empty { $$ = new NodeList(); }
@@ -475,7 +510,6 @@ expression_list:
 
 extern_definition:
   EXTERN function_prototype SEMICOLON {
-    $2->setMangled(false);
     $$ = new ExternDefinition(line_num, $2);
   }
   ;
@@ -524,25 +558,25 @@ operator_definition:
   ;
 
 overloadable_op:
-  PLUS        { $$ = new Operator(line_num, OperatorType::PLUS); }
-  | MINUS     { $$ = new Operator(line_num, OperatorType::MINUS); }
-  | MULTIPLY  { $$ = new Operator(line_num, OperatorType::MULTIPLY); }
-  | DIVIDE    { $$ = new Operator(line_num, OperatorType::DIVIDE); }
-  | LSHIFT    { $$ = new Operator(line_num, OperatorType::LSHIFT); }
-  | RSHIFT    { $$ = new Operator(line_num, OperatorType::RSHIFT); }
-  | MODULO    { $$ = new Operator(line_num, OperatorType::MODULO); }
-  | AND       { $$ = new Operator(line_num, OperatorType::AND); }
-  | OR        { $$ = new Operator(line_num, OperatorType::OR); }
-  | AMPERSAND { $$ = new Operator(line_num, OperatorType::BW_AND); }
-  | BW_OR     { $$ = new Operator(line_num, OperatorType::BW_OR); }
-  | EQ        { $$ = new Operator(line_num, OperatorType::EQ); }
-  | NEQ       { $$ = new Operator(line_num, OperatorType::NEQ); }
-  | LT        { $$ = new Operator(line_num, OperatorType::LT); }
-  | GT        { $$ = new Operator(line_num, OperatorType::GT); }
-  | LTEQ      { $$ = new Operator(line_num, OperatorType::LTEQ); }
-  | GTEQ      { $$ = new Operator(line_num, OperatorType::GTEQ); }
-  | BANG      { $$ = new Operator(line_num, OperatorType::NEGATE); }
-  | BW_NEGATE { $$ = new Operator(line_num, OperatorType::BW_NEGATE); }
+  PLUS        { $$ = OperatorType::PLUS; }
+  | MINUS     { $$ = OperatorType::MINUS; }
+  | MULTIPLY  { $$ = OperatorType::MULTIPLY; }
+  | DIVIDE    { $$ = OperatorType::DIVIDE; }
+  | LSHIFT    { $$ = OperatorType::LSHIFT; }
+  | RSHIFT    { $$ = OperatorType::RSHIFT; }
+  | MODULO    { $$ = OperatorType::MODULO; }
+  | AND       { $$ = OperatorType::AND; }
+  | OR        { $$ = OperatorType::OR; }
+  | AMPERSAND { $$ = OperatorType::BW_AND; }
+  | BW_OR     { $$ = OperatorType::BW_OR; }
+  | EQ        { $$ = OperatorType::EQ; }
+  | NEQ       { $$ = OperatorType::NEQ; }
+  | LT        { $$ = OperatorType::LT; }
+  | GT        { $$ = OperatorType::GT; }
+  | LTEQ      { $$ = OperatorType::LTEQ; }
+  | GTEQ      { $$ = OperatorType::GTEQ; }
+  | BANG      { $$ = OperatorType::NEGATE; }
+  | BW_NEGATE { $$ = OperatorType::BW_NEGATE; }
   ;
 
 
@@ -567,7 +601,7 @@ ASTNode* parser::parse(FILE* fp) {
   if(context.hasErrors()) {
     std::cerr << "Errors occured while parsing" << std::endl;
     for(auto e: context.errors()) {
-      std::cerr << "  " << e << std::endl; 
+      std::cerr << "  " << e << std::endl;
     }
     return nullptr;
   }

@@ -1,5 +1,5 @@
 
-extern print(x: string): nil;
+extern ffi print(x: string): nil;
 
 func println(x: string) {
   print(x + "\n");

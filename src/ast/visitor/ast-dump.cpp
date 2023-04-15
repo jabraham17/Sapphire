@@ -3,7 +3,7 @@
 namespace ast {
 namespace visitor {
 
-#define VISIT(type) void ASTDump::visitImpl([[maybe_unused]] type* arg)
+#define VISIT(type) void ASTDump::visitImpl([[maybe_unused]] node::type* arg)
 
 VISIT(NodeList) {
   bool notFirstOne = false;
@@ -23,7 +23,7 @@ VISIT(FunctionPrototype) {
     sep = ", ";
   }
   strm << "): ";
-  arg->returnType()->accept(this);
+  arg->type()->accept(this);
 }
 VISIT(FunctionDefinition) {
   arg->functionPrototype()->accept(this);
@@ -135,10 +135,9 @@ VISIT(ReturnStatement) {
   arg->expression()->accept(this);
 }
 VISIT(Closure) { strm << "unimp closure"; }
-VISIT(Operator) { strm << ast::getOperatorTypeString(arg->opType()); }
 VISIT(CallExpression) {
   strm << "(";
-  arg->op()->accept(this);
+  strm << ast::getOperatorTypeString(arg->opType());
   for(auto e : *arg->operands()) {
     strm << ", ";
     e->accept(this);

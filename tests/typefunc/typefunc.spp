@@ -1,0 +1,25 @@
+extern ffi print(x: string): nil;
+
+
+func println(x: string): nil {
+  print(x);
+  print("\n");
+}
+
+func string.concat(x: string): string {
+  println("concat");
+  println(this);
+  println(x);
+  return x;
+}
+
+func main(args: [string]): int {
+  for var a: string in args {
+    println(a);
+  }
+  var s:string = "str";
+  s = s.concat("cat");
+  println(s);
+  return 0;
+}
+

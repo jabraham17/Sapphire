@@ -1,7 +1,7 @@
 
-extern print(x: string): nil;
+extern ffi print(x: string): nil;
 
-func println(x: string) {
+func println(x: string): nil {
   print(x + "\n");
 }
 

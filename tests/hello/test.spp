@@ -24,7 +24,7 @@
 # ref type refers to the object, get a ref from anything with &
 # NO GLOBALS
 
-extern foo(a, b);
+extern ffi foo(a, b);
 extern foo(a: int, b: (int, int));
 
 func foo(arr: [int]) {

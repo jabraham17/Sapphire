@@ -14,7 +14,7 @@
     "keywords": {
       "patterns": [
         {
-          "match": "\\b((var)|(func)|(extern)|(operator)|(class))\\b",
+          "match": "\\b((var)|(func)|(extern)|(ffi)|(operator)|(class))\\b",
           "name": "storage.type.spp"
         },
         {
