@@ -6,13 +6,14 @@
 namespace ast {
 namespace node {
 
+// todo: move to cpp definition stuff
+
 class ExpressionStatement : public Statement {
   Expression* expression_;
 
 public:
-  ExpressionStatement(long lineNumber, Expression* expr)
-      : ExpressionStatement(expr) {
-    setLine(lineNumber);
+  ExpressionStatement(long line, Expression* expr) : ExpressionStatement(expr) {
+    setLine(line);
   }
   ExpressionStatement(Expression* expr) : expression_(expr) {}
   virtual ~ExpressionStatement() = default;

@@ -7,9 +7,9 @@
 
 namespace ast {
 namespace node {
-RealExpression::RealExpression(long lineNumber, value_type value)
+RealExpression::RealExpression(long line, value_type value)
     : RealExpression(value) {
-  setLine(lineNumber);
+  setLine(line);
 }
 RealExpression::RealExpression(value_type value) : value_(value) {}
 

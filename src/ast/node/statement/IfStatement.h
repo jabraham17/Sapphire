@@ -5,25 +5,23 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
+
 class IfStatement : public Statement {
   Expression* expr_;
   Scope* ifBody_;
   // can be nullptr
   Statement* elseBody_; // either Scope or IfStatement
 public:
-  IfStatement(
-      long lineNumber,
-      Expression* expr,
-      Scope* ifBody,
-      Statement* elseBody)
+  IfStatement(long line, Expression* expr, Scope* ifBody, Statement* elseBody)
       : IfStatement(expr, ifBody, elseBody) {
-    setLine(lineNumber);
+    setLine(line);
   }
   IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody)
       : expr_(expr), ifBody_(ifBody), elseBody_(elseBody) {}
-  IfStatement(long lineNumber, Expression* expr, Scope* ifBody)
+  IfStatement(long line, Expression* expr, Scope* ifBody)
       : IfStatement(expr, ifBody) {
-    setLine(lineNumber);
+    setLine(line);
   }
   IfStatement(Expression* expr, Scope* ifBody)
       : IfStatement(expr, ifBody, nullptr) {}

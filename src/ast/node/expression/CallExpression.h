@@ -7,6 +7,9 @@
 #include "ast/node/OperatorType.h"
 #include "ast/node/type/PrimitiveType.h"
 #include "ast/node/type/Type.h"
+#include "common/compiler-specific.h"
+
+#include <type_traits>
 namespace ast {
 namespace node {
 class CallExpression : public Expression {
@@ -15,39 +18,42 @@ class CallExpression : public Expression {
   Type* type_;
 
 public:
-  template <typename... Args>
-  CallExpression(long lineNumber, OperatorType opType, Args... operands)
-      : CallExpression(opType, operands...) {
-    setLine(lineNumber);
+  template <typename... Ts>
+  CallExpression(long line, OperatorType opType, Ts&&... operands)
+      : CallExpression(opType, std::forward<Ts>(operands)...) {
+    setLine(line);
   }
-  template <typename... Args>
-  CallExpression(OperatorType opType, Args... operands)
+
+  DIAGNOSTIC_PUSH
+  // if there is only one template arg, this complains about an unused value
+  DIAGNOSTIC_IGNORE("-Wunused-value")
+  template <typename... Ts>
+  CallExpression(OperatorType opType, Ts... operands)
       : op_(opType), operands_(new NodeList()), type_(Type::getUnknownType()) {
-    initOperands(std::forward<Args>(operands)...);
+    static_assert(
+        std::conjunction<std::bool_constant<(
+            (std::is_pointer_v<Ts> &&
+             std::is_base_of_v<ASTNode, std::remove_pointer_t<Ts>>),
+            ...)>>::value,
+        "");
+    (([&] {
+       if(auto nl = toNodeListNode(operands); nl != nullptr) {
+         for(auto elm : *nl) {
+           this->operands_->addBack(elm);
+         }
+       } else this->operands_->addBack(operands);
+     }()),
+     ...);
   }
+  DIAGNOSTIC_POP
   virtual ~CallExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual Type* type() override { return type_; }
-  virtual void setType(Type* type) override { this->type_ = type; }
 
-private:
-  template <typename Arg> void initOperands(Arg operand) {
-    // unwrap node lists past in
-    if(auto nl = toNodeListNode(operand); nl != nullptr) {
-      for(auto elm : *nl) {
-        this->operands_->addBack(elm);
-      }
-    } else this->operands_->addBack(operand);
-  }
-  template <typename Arg, typename... Args>
-  void initOperands(Arg operand, Args... operands) {
-    initOperands(std::forward<Arg>(operand));
-    initOperands(std::forward<Args>(operands)...);
-  }
+  virtual Type* type() override;
+  virtual void setType(Type* type) override;
 
-public:
-  OperatorType opType() { return op_; }
-  NodeList* operands() { return operands_; }
+  OperatorType opType();
+  NodeList* operands();
 };
 } // namespace node
 } // namespace ast

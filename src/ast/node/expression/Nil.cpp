@@ -7,10 +7,10 @@
 
 namespace ast {
 namespace node {
-Nil::Nil(long lineNumber) : Nil() { setLine(lineNumber); }
+Nil::Nil(long line) : Nil() { setLine(line); }
 Nil::Nil() : Nil(false) {}
-Nil::Nil(long lineNumber, bool isUserSpecified) : Nil(isUserSpecified) {
-  setLine(lineNumber);
+Nil::Nil(long line, bool isUserSpecified) : Nil(isUserSpecified) {
+  setLine(line);
 }
 Nil::Nil(bool isUserSpecified) : isUserSpecified_(isUserSpecified) {}
 

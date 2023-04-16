@@ -10,9 +10,9 @@ class Nil : public Expression {
   bool isUserSpecified_;
 
 public:
-  Nil(long lineNumber);
+  Nil(long line);
   Nil();
-  Nil(long lineNumber, bool isUserSpecified);
+  Nil(long line, bool isUserSpecified);
   Nil(bool isUserSpecified);
   virtual ~Nil() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

@@ -5,12 +5,14 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
+
 class ReturnStatement : public Statement {
   Expression* expr_;
 
 public:
-  ReturnStatement(long lineNumber, Expression* expr) : ReturnStatement(expr) {
-    setLine(lineNumber);
+  ReturnStatement(long line, Expression* expr) : ReturnStatement(expr) {
+    setLine(line);
   }
   ReturnStatement(Expression* expr) : expr_(expr) {}
   virtual ~ReturnStatement() = default;

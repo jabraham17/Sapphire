@@ -25,6 +25,8 @@ enum class PrimitiveTypeEnum {
   UNKNOWN
 };
 
+// todo: cleanup templates to be consistent
+
 class Type : public ASTNode {
 private:
   bool isRef_;

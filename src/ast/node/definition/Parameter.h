@@ -9,7 +9,7 @@ private:
   symbol::Symbol* symbol_;
 
 public:
-  Parameter(long lineNumber, symbol::Symbol* symbol, Type* type);
+  Parameter(long line, symbol::Symbol* symbol, Type* type);
   Parameter(symbol::Symbol* symbol, Type* type);
   virtual ~Parameter() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

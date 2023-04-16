@@ -5,19 +5,20 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
 class ClassType : public Type {
 
 private:
   std::string className_;
 
 public:
-  ClassType(long lineNumber, const char* className) : ClassType(className) {
-    setLine(lineNumber);
+  ClassType(long line, const char* className) : ClassType(className) {
+    setLine(line);
   }
   ClassType(const char* className) : ClassType(className, false, false) {}
-  ClassType(long lineNumber, const char* className, bool isRef, bool isNilable)
+  ClassType(long line, const char* className, bool isRef, bool isNilable)
       : ClassType(className, isRef, isNilable) {
-    setLine(lineNumber);
+    setLine(line);
   }
   ClassType(const char* className, bool isRef, bool isNilable)
       : Type(isRef, isNilable), className_(className) {}

@@ -6,6 +6,8 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
+
 class CallableType : public Type {
 
 private:
@@ -13,20 +15,20 @@ private:
   Type* returnType_;
 
 public:
-  CallableType(long lineNumber, TypeList* parameterTypes, Type* returnType)
+  CallableType(long line, TypeList* parameterTypes, Type* returnType)
       : CallableType(parameterTypes, returnType) {
-    setLine(lineNumber);
+    setLine(line);
   }
   CallableType(TypeList* parameterTypes, Type* returnType)
       : CallableType(parameterTypes, returnType, false, false) {}
   CallableType(
-      long lineNumber,
+      long line,
       TypeList* parameterTypes,
       Type* returnType,
       bool isRef,
       bool isNilable)
       : CallableType(parameterTypes, returnType, isRef, isNilable) {
-    setLine(lineNumber);
+    setLine(line);
   }
   CallableType(
       TypeList* parameterTypes,

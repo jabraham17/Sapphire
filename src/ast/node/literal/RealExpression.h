@@ -13,7 +13,7 @@ private:
   value_type value_;
 
 public:
-  RealExpression(long lineNumber, double value);
+  RealExpression(long line, double value);
   RealExpression(double value);
   virtual ~RealExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

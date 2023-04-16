@@ -11,14 +11,14 @@ private:
   bool isInit_;
 
 public:
-  InitDefinition(long lineNumber, NodeList* parameters, Scope* body)
+  InitDefinition(long line, NodeList* parameters, Scope* body)
       : InitDefinition(parameters, body) {
-    setLine(lineNumber);
+    setLine(line);
   }
   InitDefinition(NodeList* parameters, Scope* body)
       : parameters_(parameters), body_(body), isInit_(true) {}
-  InitDefinition(long lineNumber, Scope* body) : InitDefinition(body) {
-    setLine(lineNumber);
+  InitDefinition(long line, Scope* body) : InitDefinition(body) {
+    setLine(line);
   }
   InitDefinition(Scope* body)
       : parameters_(nullptr), body_(body), isInit_(false) {}

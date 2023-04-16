@@ -10,17 +10,16 @@ private:
   symbol::Symbol* symbol_;
 
 public:
-  UseExpression(long lineNumber, symbol::Symbol* symbol)
-      : UseExpression(symbol) {
-    setLine(lineNumber);
-  }
-  UseExpression(symbol::Symbol* symbol) : symbol_(symbol) {}
+  UseExpression(long line, symbol::Symbol* symbol);
+  UseExpression(symbol::Symbol* symbol);
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  symbol::Symbol* symbol() { return symbol_; }
+
+  symbol::Symbol* symbol();
   virtual Type* type() override;
+
+  void setSymbol(symbol::Symbol* symbol);
   virtual void setType(Type* type) override;
-  void setSymbol(symbol::Symbol* symbol) { symbol_ = symbol; }
 };
 } // namespace node
 } // namespace ast

@@ -11,11 +11,11 @@ private:
 
 public:
   FunctionDefinition(
-      long lineNumber,
+      long line,
       FunctionPrototype* functionPrototype,
       Scope* body)
       : FunctionDefinition(functionPrototype, body) {
-    setLine(lineNumber);
+    setLine(line);
   }
   FunctionDefinition(FunctionPrototype* functionPrototype, Scope* body)
       : functionPrototype_(functionPrototype), body_(body) {}

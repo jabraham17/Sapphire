@@ -5,13 +5,14 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+
+// todo: move to cpp definition stuff
+
 class Scope : public Statement {
   NodeList* statements_;
 
 public:
-  Scope(long lineNumber, NodeList* statements) : Scope(statements) {
-    setLine(lineNumber);
-  };
+  Scope(long line, NodeList* statements) : Scope(statements) { setLine(line); };
   Scope(NodeList* statements) : statements_(statements){};
   virtual ~Scope() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

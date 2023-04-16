@@ -16,7 +16,7 @@ private:
   value_type value_;
 
 public:
-  StringExpression(long lineNumber, const value_type& value);
+  StringExpression(long line, const value_type& value);
   StringExpression(const value_type& value);
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

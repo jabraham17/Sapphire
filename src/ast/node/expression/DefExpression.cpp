@@ -4,29 +4,44 @@
 #include "ast/symbol/symbol.h"
 namespace ast {
 namespace node {
+
+DefExpression::DefExpression(
+    long line,
+    Type* type,
+    symbol::Symbol* symbol,
+    Expression* initialValue)
+    : DefExpression(type, symbol, initialValue) {
+  setLine(line);
+}
+DefExpression::DefExpression(
+    long line,
+    symbol::Symbol* symbol,
+    Expression* initialValue)
+    : DefExpression(symbol, initialValue) {
+  setLine(line);
+}
 DefExpression::DefExpression(
     Type* type,
     symbol::Symbol* symbol,
-    Expression* assignValue)
-    : symbol_(symbol), assignValue_(assignValue) {
+    Expression* initialValue)
+    : symbol_(symbol), initialValue_(initialValue) {
   if(symbol_->type()->isUnknownType()) {
     symbol_->setType(type);
   }
 }
-DefExpression::DefExpression(Type* type, symbol::Symbol* symbol)
-    : DefExpression(type, symbol, nullptr) {}
-DefExpression::DefExpression(symbol::Symbol* symbol, Expression* assignValue)
-    : DefExpression(assignValue->type(), symbol, assignValue) {}
-DefExpression::DefExpression(symbol::Symbol* symbol)
-    : DefExpression(symbol, nullptr) {}
+DefExpression::DefExpression(symbol::Symbol* symbol, Expression* initialValue)
+    : DefExpression((Type*)Type::getUnknownType(), symbol, initialValue) {}
 
-bool DefExpression::hasInitialValue() {
-  // auto n = toNilNode(assignValue_);
-  return assignValue_ != nullptr;
-  //  || (n != nullptr && n->isUserSpecified());
+symbol::Symbol* DefExpression::symbol() { return this->symbol_; }
+
+Type* DefExpression::type() { return this->symbol()->type(); }
+void DefExpression::setType(Type* type) { this->symbol()->setType(type); }
+
+void DefExpression::setInitialValue(Expression* value) {
+  this->initialValue_ = value;
 }
-Type* DefExpression::type() { return symbol_->type(); }
-void DefExpression::setType(Type* type) { symbol_->setType(type); }
+bool DefExpression::hasInitialValue() { return this->initialValue_ != nullptr; }
+Expression* DefExpression::initialValue() { return this->initialValue_; }
 
 } // namespace node
 } // namespace ast

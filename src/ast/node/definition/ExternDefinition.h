@@ -9,9 +9,9 @@ private:
   FunctionPrototype* functionPrototype_;
 
 public:
-  ExternDefinition(long lineNumber, FunctionPrototype* functionPrototype)
+  ExternDefinition(long line, FunctionPrototype* functionPrototype)
       : ExternDefinition(functionPrototype) {
-    setLine(lineNumber);
+    setLine(line);
   }
   ExternDefinition(FunctionPrototype* functionPrototype)
       : functionPrototype_(functionPrototype) {}

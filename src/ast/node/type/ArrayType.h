@@ -5,19 +5,20 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
-class ArrayType : public Type {
+// todo: move to cpp definition stuff
 
+class ArrayType : public Type {
 private:
   Type* elementType_;
 
 public:
-  ArrayType(long lineNumber, Type* elementType) : ArrayType(elementType) {
-    setLine(lineNumber);
+  ArrayType(long line, Type* elementType) : ArrayType(elementType) {
+    setLine(line);
   }
   ArrayType(Type* elementType) : ArrayType(elementType, false, false) {}
-  ArrayType(long lineNumber, Type* elementType, bool isRef, bool isNilable)
+  ArrayType(long line, Type* elementType, bool isRef, bool isNilable)
       : ArrayType(elementType, isRef, isNilable) {
-    setLine(lineNumber);
+    setLine(line);
   }
   ArrayType(Type* elementType, bool isRef, bool isNilable)
       : Type(isRef, isNilable), elementType_(elementType) {}

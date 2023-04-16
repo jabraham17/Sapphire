@@ -11,11 +11,7 @@ class Closure : public Expression {
   Scope* body_;
 
 public:
-  Closure(
-      long lineNumber,
-      CallableType* type,
-      NodeList* parameters,
-      Scope* body);
+  Closure(long line, CallableType* type, NodeList* parameters, Scope* body);
   Closure(CallableType* type, NodeList* parameters, Scope* body);
   virtual ~Closure() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

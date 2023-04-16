@@ -5,6 +5,7 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
 
 class ForStatement : public Statement {
   DefExpression* var_;
@@ -12,13 +13,9 @@ class ForStatement : public Statement {
   Scope* body_;
 
 public:
-  ForStatement(
-      long lineNumber,
-      DefExpression* var,
-      Expression* expr,
-      Scope* body)
+  ForStatement(long line, DefExpression* var, Expression* expr, Scope* body)
       : ForStatement(var, expr, body) {
-    setLine(lineNumber);
+    setLine(line);
   }
   ForStatement(DefExpression* var, Expression* expr, Scope* body)
       : var_(var), expr_(expr), body_(body) {}

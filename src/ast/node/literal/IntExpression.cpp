@@ -7,9 +7,9 @@
 
 namespace ast {
 namespace node {
-IntExpression::IntExpression(long lineNumber, value_type value)
+IntExpression::IntExpression(long line, value_type value)
     : IntExpression(value) {
-  setLine(lineNumber);
+  setLine(line);
 }
 IntExpression::IntExpression(value_type value) : value_(value) {}
 

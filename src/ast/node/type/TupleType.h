@@ -6,6 +6,8 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+// todo: move to cpp definition stuff
+// todo: cleanup templates to be consistent
 class TupleType : public Type {
 
 private:
@@ -13,26 +15,20 @@ private:
 
 public:
   template <class InputIt>
-  TupleType(long lineNumber, InputIt begin, InputIt end)
-      : TupleType(begin, end) {
-    setLine(lineNumber);
+  TupleType(long line, InputIt begin, InputIt end) : TupleType(begin, end) {
+    setLine(line);
   }
   template <class InputIt>
   TupleType(InputIt begin, InputIt end) : TupleType(begin, end, false, false) {}
 
   TupleType(TypeList* tupleTypes) : TupleType(tupleTypes, false, false) {}
-  TupleType(long lineNumber, TypeList* tupleTypes) : TupleType(tupleTypes) {
-    setLine(lineNumber);
+  TupleType(long line, TypeList* tupleTypes) : TupleType(tupleTypes) {
+    setLine(line);
   }
   template <class InputIt>
-  TupleType(
-      long lineNumber,
-      InputIt begin,
-      InputIt end,
-      bool isRef,
-      bool isNilable)
+  TupleType(long line, InputIt begin, InputIt end, bool isRef, bool isNilable)
       : TupleType(begin, end, isRef, isNilable) {
-    setLine(lineNumber);
+    setLine(line);
   }
   template <class InputIt>
   TupleType(InputIt begin, InputIt end, bool isRef, bool isNilable)

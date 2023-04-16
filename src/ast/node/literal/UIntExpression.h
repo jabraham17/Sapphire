@@ -14,7 +14,7 @@ private:
   value_type value_;
 
 public:
-  UIntExpression(long lineNumber, value_type value);
+  UIntExpression(long line, value_type value);
   UIntExpression(value_type value);
   virtual ~UIntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

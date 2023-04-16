@@ -77,7 +77,7 @@ protected:
 
     // also resolve def body
     if(def->hasInitialValue()) {
-      def->assignValue()->accept(this);
+      def->initialValue()->accept(this);
     }
   }
   // on a use: resolve to the table of values if possible, otherwise error

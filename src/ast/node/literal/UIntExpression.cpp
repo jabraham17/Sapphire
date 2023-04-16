@@ -8,9 +8,9 @@
 namespace ast {
 namespace node {
 
-UIntExpression::UIntExpression(long lineNumber, value_type value)
+UIntExpression::UIntExpression(long line, value_type value)
     : UIntExpression(value) {
-  setLine(lineNumber);
+  setLine(line);
 }
 UIntExpression::UIntExpression(value_type value) : value_(value) {}
 

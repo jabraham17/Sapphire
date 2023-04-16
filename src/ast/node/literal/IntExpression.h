@@ -14,7 +14,7 @@ private:
   value_type value_;
 
 public:
-  IntExpression(long lineNumber, value_type value);
+  IntExpression(long line, value_type value);
   IntExpression(value_type value);
   virtual ~IntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

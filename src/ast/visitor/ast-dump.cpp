@@ -67,7 +67,7 @@ VISIT(DefExpression) {
   strm << arg->symbol()->toString();
   if(arg->hasInitialValue()) {
     strm << " = ";
-    arg->assignValue()->accept(this);
+    arg->initialValue()->accept(this);
   }
 }
 VISIT(ClassDefinition) {

@@ -348,7 +348,7 @@ def_expression_with_value:
   def_expression EQUALS expression {
     $$ = $1;
     auto v = toDefExpressionNode($$);
-    if(v) v->setValue($3);
+    if(v) v->setInitialValue($3);
     else context->addError("  invalid def expression");
   }
   ;

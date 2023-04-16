@@ -5,14 +5,17 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
+
+// todo: move to cpp definition stuff
+
 class WhileStatement : public Statement {
   Expression* expr_;
   Scope* body_;
 
 public:
-  WhileStatement(long lineNumber, Expression* expr, Scope* body)
+  WhileStatement(long line, Expression* expr, Scope* body)
       : WhileStatement(expr, body) {
-    setLine(lineNumber);
+    setLine(line);
   }
   WhileStatement(Expression* expr, Scope* body) : expr_(expr), body_(body) {}
   virtual ~WhileStatement() = default;

@@ -12,12 +12,12 @@ class OperatorDefinition : public ASTNode {
 
 public:
   OperatorDefinition(
-      long lineNumber,
+      long line,
       OperatorType op,
       NodeList* parameters,
       Scope* body)
       : OperatorDefinition(op, parameters, body) {
-    setLine(lineNumber);
+    setLine(line);
   }
   OperatorDefinition(OperatorType op, NodeList* parameters, Scope* body)
       : op_(op), parameters_(parameters), body_(body) {}

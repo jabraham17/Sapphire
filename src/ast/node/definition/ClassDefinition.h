@@ -12,7 +12,7 @@ class ClassDefinition : public ASTNode {
   InitDefinition* deinitializer_;
 
 public:
-  ClassDefinition(long lineNumber, ClassType* classType);
+  ClassDefinition(long line, ClassType* classType);
   ClassDefinition(ClassType* classType);
   virtual ~ClassDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

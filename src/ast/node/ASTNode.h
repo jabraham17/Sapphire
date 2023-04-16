@@ -10,7 +10,7 @@ class ASTVisitor;
 namespace node {
 class ASTNode {
 private:
-  long lineNumber;
+  long line_;
 
 public:
   ASTNode();

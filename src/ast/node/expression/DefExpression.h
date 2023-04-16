@@ -8,44 +8,35 @@ namespace node {
 
 class DefExpression : public Expression {
   symbol::Symbol* symbol_;
-  Expression* assignValue_;
+  Expression* initialValue_;
 
 public:
   DefExpression(
-      long lineNumber,
+      long line,
       Type* type,
       symbol::Symbol* symbol,
-      Expression* assignValue)
-      : DefExpression(type, symbol, assignValue) {
-    setLine(lineNumber);
-  }
-  DefExpression(Type* type, symbol::Symbol* symbol, Expression* assignValue);
-  DefExpression(long lineNumber, Type* type, symbol::Symbol* symbol)
-      : DefExpression(type, symbol) {
-    setLine(lineNumber);
-  }
-  DefExpression(Type* type, symbol::Symbol* symbol);
+      Expression* initialValue = nullptr);
   DefExpression(
-      long lineNumber,
+      long line,
       symbol::Symbol* symbol,
-      Expression* assignValue)
-      : DefExpression(symbol, assignValue) {
-    setLine(lineNumber);
-  }
-  DefExpression(symbol::Symbol* symbol, Expression* assignValue);
-  DefExpression(long lineNumber, symbol::Symbol* symbol)
-      : DefExpression(symbol) {
-    setLine(lineNumber);
-  }
-  DefExpression(symbol::Symbol* symbol);
+      Expression* initialValue = nullptr);
+  DefExpression(
+      Type* type,
+      symbol::Symbol* symbol,
+      Expression* initialValue = nullptr);
+  DefExpression(symbol::Symbol* symbol, Expression* initialValue = nullptr);
+
   virtual ~DefExpression() = default;
-  virtual void setValue(Expression* value) { assignValue_ = value; }
   virtual void accept(visitor::ASTVisitor* ast) override;
-  symbol::Symbol* symbol() { return symbol_; }
+
+  symbol::Symbol* symbol();
+
   virtual Type* type() override;
   virtual void setType(Type* type) override;
+
+  void setInitialValue(Expression* value);
   bool hasInitialValue();
-  Expression* assignValue() { return assignValue_; }
+  Expression* initialValue();
 };
 } // namespace node
 } // namespace ast

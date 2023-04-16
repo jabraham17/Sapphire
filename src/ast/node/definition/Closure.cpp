@@ -10,12 +10,12 @@ namespace ast {
 namespace node {
 
 Closure::Closure(
-    long lineNumber,
+    long line,
     CallableType* type,
     NodeList* parameters,
     Scope* body)
     : Closure(type, parameters, body) {
-  setLine(lineNumber);
+  setLine(line);
 }
 Closure::Closure(CallableType* type, NodeList* parameters, Scope* body)
     : type_(type), parameters_(parameters), body_(body) {}

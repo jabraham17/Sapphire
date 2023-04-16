@@ -3,9 +3,9 @@
 #include "ast/symbol/symbol.h"
 namespace ast {
 namespace node {
-Parameter::Parameter(long lineNumber, symbol::Symbol* symbol, Type* type)
+Parameter::Parameter(long line, symbol::Symbol* symbol, Type* type)
     : Parameter(symbol, type) {
-  setLine(lineNumber);
+  setLine(line);
 }
 Parameter::Parameter(symbol::Symbol* symbol, Type* type) : symbol_(symbol) {
   symbol_->setType(type);

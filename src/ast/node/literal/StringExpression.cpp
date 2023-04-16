@@ -8,9 +8,9 @@
 namespace ast {
 namespace node {
 
-StringExpression::StringExpression(long lineNumber, const value_type& value)
+StringExpression::StringExpression(long line, const value_type& value)
     : StringExpression(value) {
-  setLine(lineNumber);
+  setLine(line);
 }
 StringExpression::StringExpression(const value_type& value) : value_(value) {}
 

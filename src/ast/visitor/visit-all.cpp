@@ -30,7 +30,7 @@ VISIT(Scope) { arg->statements()->accept(this); }
 VISIT(Expression) { arg->type()->accept(this); }
 VISIT(ExpressionStatement) { arg->expression()->accept(this); }
 VISIT(DefExpression) {
-  if(arg->hasInitialValue()) arg->assignValue()->accept(this);
+  if(arg->hasInitialValue()) arg->initialValue()->accept(this);
 }
 VISIT(ClassDefinition) {
   arg->classType()->accept(this);

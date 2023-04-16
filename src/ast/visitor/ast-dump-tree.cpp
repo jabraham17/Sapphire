@@ -79,7 +79,7 @@ VISIT(DefExpression) {
   strm << "<def-expr:" << arg->symbol()->toString() << ">" << strm.nl();
   strm.increaseIndent();
   if(arg->hasInitialValue()) {
-    arg->assignValue()->accept(this);
+    arg->initialValue()->accept(this);
   }
   strm.decreaseIndent();
 }

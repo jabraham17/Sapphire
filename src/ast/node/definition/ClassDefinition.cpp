@@ -9,9 +9,9 @@
 namespace ast {
 namespace node {
 
-ClassDefinition::ClassDefinition(long lineNumber, ClassType* classType)
+ClassDefinition::ClassDefinition(long line, ClassType* classType)
     : ClassDefinition(classType) {
-  setLine(lineNumber);
+  setLine(line);
 }
 ClassDefinition::ClassDefinition(ClassType* classType)
     : classType_(classType), variables_(new NodeList()),

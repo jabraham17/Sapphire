@@ -2,11 +2,6 @@
 #define SAPPHIRE_AST_NODE_DEFINITION_FUNCTIONPROTOTYPE_H_
 #include "ast/ast.h"
 
-// TODO: cahnge belongsTo from a default into multiple constructors
-// TODO: curioosuly recuovccuong template pattern to forward constructors
-// TODO: refactor initOperands to use fold expressions
-#include "ast/node/type/nodes.h"
-
 #include <string>
 
 namespace ast {
@@ -23,19 +18,19 @@ private:
 
 public:
   FunctionPrototype(
-      long lineNumber,
+      long line,
       const char* name,
       NodeList* parameters,
       Type* returnType,
-      bool isMangled = true,
-      Type* belongsTo = ast::node::Type::getUntypedType());
+      bool isMangled,
+      Type* belongsTo);
   FunctionPrototype(
       const char* name,
       NodeList* parameters,
       Type* returnType,
-      bool isMangled = true,
-      Type* belongsTo = ast::node::Type::getUntypedType());
-  // TODO: changer belongs to to default to
+      bool isMangled,
+      Type* belongsTo);
+
   virtual ~FunctionPrototype() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 

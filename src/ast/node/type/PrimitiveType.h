@@ -6,24 +6,20 @@
 
 namespace ast {
 namespace node {
-
+// todo: move to cpp definition stuff
 class PrimitiveType : public Type {
 
 private:
   PrimitiveTypeEnum primType;
 
 public:
-  PrimitiveType(long lineNumber, PrimitiveTypeEnum type) : PrimitiveType(type) {
-    setLine(lineNumber);
+  PrimitiveType(long line, PrimitiveTypeEnum type) : PrimitiveType(type) {
+    setLine(line);
   }
   PrimitiveType(PrimitiveTypeEnum type) : PrimitiveType(type, false, false) {}
-  PrimitiveType(
-      long lineNumber,
-      PrimitiveTypeEnum type,
-      bool isRef,
-      bool isNilable)
+  PrimitiveType(long line, PrimitiveTypeEnum type, bool isRef, bool isNilable)
       : PrimitiveType(type, isRef, isNilable) {
-    setLine(lineNumber);
+    setLine(line);
   }
   PrimitiveType(PrimitiveTypeEnum type, bool isRef, bool isNilable)
       : Type(isRef, isNilable), primType(type) {}

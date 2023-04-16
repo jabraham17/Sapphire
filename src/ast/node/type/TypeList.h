@@ -7,7 +7,8 @@
 namespace ast {
 namespace node {
 // TODO: make a specializeation of ASTList using CRTP
-
+// todo: move to cpp definition stuff
+// todo: cleanup templates to be consistent
 class TypeList : public ASTNode {
 public:
   using list_elm_type = Type*;
@@ -19,9 +20,9 @@ private:
 public:
   TypeList() : types() {}
   template <class InputIt>
-  TypeList(long lineNumber, InputIt typesBegin, InputIt typesEnd)
+  TypeList(long line, InputIt typesBegin, InputIt typesEnd)
       : TypeList(typesBegin, typesEnd) {
-    setLine(lineNumber);
+    setLine(line);
   }
   template <class InputIt>
   TypeList(InputIt typesBegin, InputIt typesEnd)

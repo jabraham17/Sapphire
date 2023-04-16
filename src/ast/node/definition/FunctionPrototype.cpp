@@ -13,14 +13,14 @@
 namespace ast {
 namespace node {
 FunctionPrototype::FunctionPrototype(
-    long lineNumber,
+    long line,
     const char* name,
     NodeList* parameters,
     Type* returnType,
     bool isMangled,
     Type* belongsTo)
     : FunctionPrototype(name, parameters, returnType, isMangled, belongsTo) {
-  setLine(lineNumber);
+  setLine(line);
 }
 FunctionPrototype::FunctionPrototype(
     const char* name,
@@ -30,7 +30,8 @@ FunctionPrototype::FunctionPrototype(
     Type* belongsTo)
     : belongsTo_(belongsTo), parameters_(parameters), funcSymbol_(nullptr),
       isMangled_(isMangled) {
-  if(belongsTo) {
+  if(!belongsTo->isUntypedType() && !belongsTo->isNilType() &&
+     !belongsTo->isAnyType()) {
     parameters->addFront(new Parameter(new symbol::Symbol("this"), belongsTo));
   }
   TypeList* parameterTypes = new TypeList();
