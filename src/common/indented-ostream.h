@@ -6,8 +6,8 @@ namespace common {
 class IndentedOStream {
 private:
   std::ostream& os;
-  const size_t indentLevel;
-  size_t currentIndent;
+  const std::size_t indentLevel;
+  std::size_t currentIndent;
   bool atLineStart;
 
 public:
@@ -19,7 +19,7 @@ public:
   std::string getIndent() { return std::string(currentIndent, ' '); }
 
 public:
-  IndentedOStream(std::ostream& os, size_t indentLevel = 2)
+  IndentedOStream(std::ostream& os, std::size_t indentLevel = 2)
       : os(os), indentLevel(indentLevel), currentIndent(0), atLineStart(true) {}
   ~IndentedOStream() = default;
   IndentedOStream(const IndentedOStream& other) = delete;

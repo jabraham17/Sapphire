@@ -1,5 +1,10 @@
 #include "scope-resolve.h"
 
+#include "ast/node/nodes.h"
+#include "ast/symbol/function-symbol.h"
+#include "ast/symbol/symbol.h"
+
+#include <cassert>
 #include <iostream>
 #include <unordered_map>
 
@@ -16,7 +21,7 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  virtual void visitImpl(ast::FunctionPrototype* proto) override {
+  virtual void visitImpl(ast::node::FunctionPrototype* proto) override {
 
     auto symbols = get<0>();
 
@@ -36,7 +41,7 @@ protected:
 };
 
 // traverse the node and find a symbol
-// static Symbol* getSymbol(ast::ASTNode* node) {
+// static Symbol* getSymbol(ast::node::ASTNode* node) {
 
 // }
 
@@ -54,7 +59,7 @@ public:
 
 protected:
   // on a def: add to table of vars
-  virtual void visitImpl(ast::DefExpression* def) override {
+  virtual void visitImpl(ast::node::DefExpression* def) override {
     // need a pointer so we update variables
     auto& symbols = get<1>();
 
@@ -76,7 +81,7 @@ protected:
     }
   }
   // on a use: resolve to the table of values if possible, otherwise error
-  virtual void visitImpl(ast::UseExpression* use) override {
+  virtual void visitImpl(ast::node::UseExpression* use) override {
     // need a pointer so we update symbols
     auto symbols = get<1>();
 
@@ -96,11 +101,11 @@ protected:
   }
 
   // on call expression, resolve the function call
-  virtual void visitImpl(ast::CallExpression* call) override {
+  virtual void visitImpl(ast::node::CallExpression* call) override {
     auto function_symbols = get<0>();
 
     switch(call->opType()) {
-      // case ast::OperatorType::FIELD_ACCESS: {
+      // case ast::node::OperatorType::FIELD_ACCESS: {
       //   // resolve op0
       //   auto op0 = ast::toExpressionNode(call->operands()->get(0));
       //   assert(op0 != nullptr);
@@ -112,11 +117,11 @@ protected:
 
       //   break;
       // }
-      case ast::OperatorType::FUNCTION: {
+      case ast::node::OperatorType::FUNCTION: {
         auto funcNode = call->operands()->get(0);
         auto callFuncExpr = ast::toExpressionNode(call->operands()->get(0));
         assert(callFuncExpr != nullptr);
-        ast::Symbol* callFuncSym = nullptr;
+        ast::symbol::Symbol* callFuncSym = nullptr;
         std::string callFuncName;
         // if its a use, directly get it
         if(ast::isUseExpressionNode(callFuncExpr)) {
@@ -124,7 +129,8 @@ protected:
           callFuncName = callFuncSym->name();
         } else if(auto fieldAccess = ast::toCallExpressionNode(callFuncExpr);
                   fieldAccess != nullptr &&
-                  fieldAccess->opType() == ast::OperatorType::FIELD_ACCESS) {
+                  fieldAccess->opType() ==
+                      ast::node::OperatorType::FIELD_ACCESS) {
           // if its a field access
           // TODO: to resolve this, I HAVE to know its type
           // that way i know which function to insert here
@@ -138,8 +144,9 @@ protected:
           assert(op0 != nullptr && op1 != nullptr);
 
           // construct a possible callFunc
-          callFuncSym =
-              new ast::FunctionSymbol(op1->symbol()->name(), op0->type());
+          callFuncSym = new ast::symbol::FunctionSymbol(
+              op1->symbol()->name(),
+              op0->type());
           // if this matches, we will need to modify
           // callFuncName
         } else {
@@ -155,7 +162,7 @@ protected:
         // assert(callFuncExpr != nullptr);
 
         // search through all functions
-        ast::FunctionSymbol* found = nullptr;
+        ast::symbol::FunctionSymbol* found = nullptr;
         for(auto funcSym : function_symbols) {
           if(callFuncName == funcSym.second->basename()) {
             found = funcSym.second;
@@ -184,7 +191,7 @@ protected:
   }
 
   // on another scope, call a new resolve one scope
-  virtual void visitImpl(ast::Scope* subScope) override {
+  virtual void visitImpl(ast::node::Scope* subScope) override {
     auto function_symbols = get<0>();
     auto symbols = get<1>();
     //  no changes to our symbols should occur, this subSAcope gets a copy
@@ -212,7 +219,7 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  void visitImpl(ast::FunctionDefinition* func) {
+  void visitImpl(ast::node::FunctionDefinition* func) {
     auto function_symbols = get<0>();
     SymbolMap symbols;
     auto funcName = func->functionPrototype()->name();

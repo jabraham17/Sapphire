@@ -1,7 +1,7 @@
 #ifndef SAPPHIRE_AST_NODE_DEFINITION_EXTERNDEFINITION_H_
 #define SAPPHIRE_AST_NODE_DEFINITION_EXTERNDEFINITION_H_
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
+
 namespace ast {
 namespace node {
 class ExternDefinition : public ASTNode {

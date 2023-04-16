@@ -9,12 +9,6 @@
 namespace ast {
 namespace visitor {
 
-struct ASTVisitorException : public ASTException {
-  ASTVisitorException()
-      : ASTVisitorException("Unknown AST Visitor Exception") {}
-  ASTVisitorException(std::string message) : ASTException(message) {}
-};
-
 class ASTVisitor {
 public:
   ASTVisitor() = default;
@@ -24,13 +18,7 @@ protected:                                                                     \
   virtual void visitImpl(node::type*) {}                                       \
                                                                                \
 public:                                                                        \
-  void visit(node::type* a) {                                                  \
-    if(!ast::is##type##Node(a)) {                                              \
-      throw ASTVisitorException(                                               \
-          "Unexpected " #type " in visitor " + std::string(__FUNCTION__));     \
-    }                                                                          \
-    visitImpl(a);                                                              \
-  }
+  void visit(node::type* a);
 #include "ast/ast-node.inc"
 };
 
@@ -77,9 +65,12 @@ template <class Visitor, class ParentVisitor, typename... ParameterTypes>
 class VisitorWithArgs : public ParentVisitor {
 protected:
   std::tuple<ParameterTypes...> parameterValues_;
-  // template <size_t idx> auto& get() { return std::get<idx>(parameterValues_);
+  // template <std::size_t idx> auto& get() { return
+  // std::get<idx>(parameterValues_);
   // }
-  template <size_t idx> auto& get() { return std::get<idx>(parameterValues_); }
+  template <std::size_t idx> auto& get() {
+    return std::get<idx>(parameterValues_);
+  }
 
 public:
   VisitorWithArgs(std::tuple<ParameterTypes...> params)

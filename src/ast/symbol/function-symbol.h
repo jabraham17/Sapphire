@@ -5,6 +5,8 @@
 
 #include "ast/ast.h"
 
+#include <string>
+
 namespace ast {
 
 namespace symbol {
@@ -27,10 +29,8 @@ public:
 
   virtual std::string name() override;
 
-  node::FunctionPrototype* prototype() { return prototype_; };
-  void setPrototype(node::FunctionPrototype* prototype) {
-    this->prototype_ = prototype;
-  }
+  node::FunctionPrototype* prototype();
+  void setPrototype(node::FunctionPrototype* prototype);
 };
 
 } // namespace symbol

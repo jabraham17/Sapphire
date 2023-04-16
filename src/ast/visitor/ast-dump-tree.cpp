@@ -1,5 +1,9 @@
 #include "ast-dump-tree.h"
 
+#include "ast/node/nodes.h"
+#include "ast/symbol/function-symbol.h"
+#include "ast/symbol/symbol.h"
+
 namespace ast {
 namespace visitor {
 
@@ -97,28 +101,34 @@ VISIT(ClassDefinition) {
 VISIT(OperatorDefinition) {
   strm << "<op-def>" << strm.nl();
   strm.increaseIndent();
-  strm << "<op:" << ast::getOperatorTypeString(arg->opType()) << ">"
+  strm << "<op:" << node::getOperatorTypeString(arg->opType()) << ">"
        << strm.nl();
   arg->parameters()->accept(this);
   arg->body()->accept(this);
-
   strm.decreaseIndent();
 }
 VISIT(Type) { strm << "<type>" << strm.nl(); }
 VISIT(PrimitiveType) {
-  strm << "<prim-type:" << Type::getTypeString(arg) << ">" << strm.nl();
+  strm << "<prim-type:" << arg->toString() << ">" << strm.nl();
 }
 VISIT(ArrayType) {
-  strm << "<array-type:" << Type::getTypeString(arg) << ">" << strm.nl();
+  strm << "<array-type:" << arg->toString() << ">" << strm.nl();
 }
 VISIT(TupleType) {
-  strm << "<tuple-type:" << Type::getTypeString(arg) << ">" << strm.nl();
+  strm << "<tuple-type:" << arg->toString() << ">" << strm.nl();
 }
 VISIT(CallableType) {
-  strm << "<callable-type:" << Type::getTypeString(arg) << ">" << strm.nl();
+  strm << "<callable-type:" << arg->toString() << ">" << strm.nl();
 }
 VISIT(ClassType) {
-  strm << "<class-type:" << Type::getTypeString(arg) << ">" << strm.nl();
+  strm << "<class-type:" << arg->toString() << ">" << strm.nl();
+}
+VISIT(TypeList) {
+  strm << "<type-list>" << strm.nl();
+  strm.increaseIndent();
+  for(auto e : arg->elementTypes())
+    e->accept(this);
+  strm.decreaseIndent();
 }
 VISIT(IfStatement) {
   strm << "<if>" << strm.nl();
@@ -164,14 +174,14 @@ VISIT(Closure) {
 VISIT(CallExpression) {
   strm << "<call-expr>" << strm.nl();
   strm.increaseIndent();
-  strm << "<op:" << ast::getOperatorTypeString(arg->opType()) << ">"
+  strm << "<op:" << node::getOperatorTypeString(arg->opType()) << ">"
        << strm.nl();
   arg->operands()->accept(this);
   strm.decreaseIndent();
 }
 VISIT(UseExpression) {
   strm << "<use-expr:(" << arg->symbol()->name() << ":"
-       << Type::getTypeString(arg->symbol()->type()) << ")>" << strm.nl();
+       << arg->symbol()->type()->toString() << ")>" << strm.nl();
 }
 VISIT(IntExpression) {
   strm << "<int-expr:" << arg->value() << ">" << strm.nl();

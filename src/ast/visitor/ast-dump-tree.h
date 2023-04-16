@@ -17,7 +17,7 @@ private:
   common::IndentedOStream strm;
 
 public:
-  ASTDumpTree(std::ostream& rawStrm, size_t indentLevel = 2)
+  ASTDumpTree(std::ostream& rawStrm, std::size_t indentLevel = 2)
       : strm(rawStrm, indentLevel) {}
   virtual ~ASTDumpTree() = default;
 

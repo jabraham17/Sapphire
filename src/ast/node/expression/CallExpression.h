@@ -1,7 +1,12 @@
 #ifndef SAPPHIRE_AST_NODE_EXPRESSION_CALLEXPRESSION_H_
 #define SAPPHIRE_AST_NODE_EXPRESSION_CALLEXPRESSION_H_
+#include "Expression.h"
+
 #include "ast/ast.h"
-#include "expression/Expression.h"
+#include "ast/node/NodeList.h"
+#include "ast/node/OperatorType.h"
+#include "ast/node/type/PrimitiveType.h"
+#include "ast/node/type/Type.h"
 namespace ast {
 namespace node {
 class CallExpression : public Expression {

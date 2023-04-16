@@ -3,6 +3,7 @@
 
 #include "ast/ast.h"
 
+#include <string>
 #include <vector>
 
 namespace parser {
@@ -12,17 +13,17 @@ private:
   std::vector<std::string> errorMessage_;
 
 public:
-  ast::ASTNode* ast;
+  ast::node::ASTNode* ast;
 
 public:
-  Context() : errorMessage_() {}
-  void addError(const char* s) { errorMessage_.push_back(s); }
-  void addError(const std::string& s) { errorMessage_.push_back(s); }
-  bool hasErrors() { return errorMessage_.size() > 0; }
-  auto errors() { return errorMessage_; }
+  Context();
+  void addError(const char* s);
+  void addError(const std::string& s);
+  bool hasErrors();
+  std::vector<std::string> errors();
 };
 
-ast::ASTNode* parse(FILE* fp);
+ast::node::ASTNode* parse(FILE* fp);
 
 } // namespace parser
 

@@ -1,5 +1,6 @@
 #include "symbol.h"
 
+#include "ast/node/type/PrimitiveType.h"
 #include "ast/node/type/Type.h"
 namespace ast {
 
@@ -25,7 +26,7 @@ void Symbol::setName(const std::string& name) { this->symbolName = name; }
 void Symbol::setType(node::Type* t) { this->type_ = t; }
 
 std::string Symbol::toString() {
-  return this->basename() + ": " + node::Type::getTypeString(this->type_);
+  return this->basename() + ": " + this->type_->toString();
 }
 
 } // namespace symbol

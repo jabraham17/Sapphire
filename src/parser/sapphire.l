@@ -4,7 +4,7 @@
     #include <stdlib.h>
     #include <string.h>
     #include "sapphire.yy.hpp"
-    size_t line_num = 1;
+    std::size_t line_num = 1;
     extern int yylex();
 %}
 

@@ -1,6 +1,10 @@
 #include "UIntExpression.h"
 
-#include "ast/node/Type.h"
+#include "ast/node/type/PrimitiveType.h"
+#include "ast/node/type/Type.h"
+
+#include <cassert>
+
 namespace ast {
 namespace node {
 
@@ -10,14 +14,12 @@ UIntExpression::UIntExpression(long lineNumber, value_type value)
 }
 UIntExpression::UIntExpression(value_type value) : value_(value) {}
 
-Type* UIntExpression::type() {
-  return new PrimitiveType(PrimitiveTypeEnum::UINT);
-}
-void UIntExpression::setType(Type* type) {
-  assert(false && "cannot set the type of an uint expression");
+Type* UIntExpression::type() { return Type::getType(PrimitiveTypeEnum::UINT); }
+void UIntExpression::setType([[maybe_unused]] Type* type) {
+  assert(false && "cannot set the type of an uint literal");
 }
 
-UIntExpression::value_type value() { return value_; }
+UIntExpression::value_type UIntExpression::value() { return this->value_; }
 
 } // namespace node
 } // namespace ast

@@ -1,5 +1,7 @@
 #ifndef SAPPHIRE_AST_NODE_STATEMENT_WHILESTATEMENT_H_
 #define SAPPHIRE_AST_NODE_STATEMENT_WHILESTATEMENT_H_
+#include "Statement.h"
+
 #include "ast/ast.h"
 namespace ast {
 namespace node {

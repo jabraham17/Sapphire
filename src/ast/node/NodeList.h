@@ -1,9 +1,9 @@
 #ifndef SAPPHIRE_AST_NODE_NODELIST_H_
 #define SAPPHIRE_AST_NODE_NODELIST_H_
-#include "ASTNode.h"
 
 #include "ast/ast.h"
 
+#include <deque>
 #include <type_traits>
 
 namespace ast {
@@ -15,6 +15,7 @@ private:
   using NodeType = ASTNode;
   std::deque<NodeType*> elms;
   using iter_type = decltype(elms)::iterator;
+  using const_iter_type = decltype(elms)::const_iterator;
 
 public:
   NodeList() : elms() {}
@@ -31,21 +32,19 @@ public:
   void addFront(NodeType* elm);
   void addBack(NodeType* elm);
 
-  NodeType* get(size_t idx) const;
-  size_t size() const;
-  iter_type begin() const;
-  iter_type end() const;
-  NodeType*& operator[](size_t idx) const;
+  NodeType* get(std::size_t idx) const;
+  std::size_t size() const;
+  const_iter_type begin() const;
+  const_iter_type end() const;
+  NodeType* operator[](std::size_t idx) const;
 
-  NodeType* get(size_t idx) {
+  NodeType* get(std::size_t idx) {
     return const_cast<const NodeList*>(this)->get(idx);
   }
-  size_t size() { return const_cast<const NodeList*>(this)->size(); }
-  iter_type begin() { return const_cast<const NodeList*>(this)->begin(); }
-  iter_type end() { return const_cast<const NodeList*>(this)->end(); }
-  NodeType*& operator[](size_t idx) {
-    return (*const_cast<const NodeList*>(this))[idx];
-  }
+  std::size_t size() { return const_cast<const NodeList*>(this)->size(); }
+  iter_type begin();
+  iter_type end();
+  NodeType*& operator[](std::size_t idx);
 };
 // } // namespace detail
 

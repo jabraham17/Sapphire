@@ -3,6 +3,8 @@
 
 #include "ast/ast.h"
 
+#include <string>
+
 namespace ast {
 
 namespace symbol {

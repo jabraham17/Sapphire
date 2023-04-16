@@ -26,7 +26,7 @@ std::string tolower(const std::string& str) {
 }
 std::vector<std::string> split(const std::string& str, const std::string& sep) {
   std::vector<std::string> tokens;
-  size_t pos_start = 0, pos_end, sep_len = sep.length();
+  std::size_t pos_start = 0, pos_end, sep_len = sep.length();
 
   while((pos_end = str.find(sep, pos_start)) != std::string::npos) {
     auto token = str.substr(pos_start, pos_end - pos_start);

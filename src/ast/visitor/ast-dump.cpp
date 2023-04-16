@@ -1,5 +1,9 @@
 #include "ast-dump.h"
 
+#include "ast/node/nodes.h"
+#include "ast/symbol/function-symbol.h"
+#include "ast/symbol/symbol.h"
+
 namespace ast {
 namespace visitor {
 
@@ -84,11 +88,19 @@ VISIT(ClassDefinition) {
   strm << strm.nl() << "}";
 }
 VISIT(OperatorDefinition) { strm << "unimp op def"; }
-VISIT(PrimitiveType) { strm << Type::getTypeString(arg); }
-VISIT(ArrayType) { strm << Type::getTypeString(arg); }
-VISIT(TupleType) { strm << Type::getTypeString(arg); }
-VISIT(CallableType) { strm << Type::getTypeString(arg); }
-VISIT(ClassType) { strm << Type::getTypeString(arg); }
+VISIT(PrimitiveType) { strm << arg->toString(); }
+VISIT(ArrayType) { strm << arg->toString(); }
+VISIT(TupleType) { strm << arg->toString(); }
+VISIT(CallableType) { strm << arg->toString(); }
+VISIT(ClassType) { strm << arg->toString(); }
+VISIT(TypeList) {
+  std::string sep;
+  for(auto t : arg->elementTypes()) {
+    strm << sep;
+    t->accept(this);
+    sep = ", ";
+  }
+}
 VISIT(IfStatement) {
 
   strm << "if ";
@@ -137,7 +149,7 @@ VISIT(ReturnStatement) {
 VISIT(Closure) { strm << "unimp closure"; }
 VISIT(CallExpression) {
   strm << "(";
-  strm << ast::getOperatorTypeString(arg->opType());
+  strm << node::getOperatorTypeString(arg->opType());
   for(auto e : *arg->operands()) {
     strm << ", ";
     e->accept(this);
@@ -146,7 +158,7 @@ VISIT(CallExpression) {
 }
 VISIT(UseExpression) {
   strm << "(" << arg->symbol()->name() << ":"
-       << Type::getTypeString(arg->symbol()->type()) << ")";
+       << arg->symbol()->type()->toString() << ")";
 }
 VISIT(IntExpression) { strm << arg->value(); }
 VISIT(UIntExpression) { strm << arg->value(); }

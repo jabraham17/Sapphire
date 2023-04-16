@@ -2,30 +2,31 @@
 #define SAPPHIRE_AST_NODE_LITERAL_STRINGEXPRESSION_H_
 #include "ast/ast.h"
 #include "ast/node/expression/Expression.h"
+
+#include <string>
+
 namespace ast {
 namespace node {
 
 class StringExpression : public Expression {
+public:
+  using value_type = std::string;
+
 private:
-  std::string str;
+  value_type value_;
 
 public:
-  StringExpression(long lineNumber, const std::string& value)
-      : StringExpression(value) {
-    setLine(lineNumber);
-  }
-  StringExpression(const std::string str) : str(str) {}
+  StringExpression(long lineNumber, const value_type& value);
+  StringExpression(const value_type& value);
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual Type* type() override {
-    return new PrimitiveType(PrimitiveTypeEnum::STRING);
-  }
-  virtual void setType(Type* type) override {
-    assert(false && "cannot set the type of a string expression");
-  }
-  std::string value() { return str; }
+
+  virtual Type* type() override;
+  virtual void setType(Type* type) override;
+
+  value_type value();
   //  return the string with all escapes resolved
-  std::string escapedValue();
+  value_type escapedValue();
 };
 
 } // namespace node

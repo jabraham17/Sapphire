@@ -1,7 +1,8 @@
 #ifndef SAPPHIRE_AST_NODE_DEFINITION_OPERATORDEFINITION_H_
 #define SAPPHIRE_AST_NODE_DEFINITION_OPERATORDEFINITION_H_
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
+#include "ast/node/OperatorType.h"
+
 namespace ast {
 namespace node {
 class OperatorDefinition : public ASTNode {

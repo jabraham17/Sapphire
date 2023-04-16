@@ -1,7 +1,7 @@
 #ifndef SAPPHIRE_AST_NODE_EXPRESSION_EXPRESSION_H_
 #define SAPPHIRE_AST_NODE_EXPRESSION_EXPRESSION_H_
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
+
 namespace ast {
 namespace node {
 class Expression : public ASTNode {

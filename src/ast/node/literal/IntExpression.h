@@ -2,27 +2,27 @@
 #define SAPPHIRE_AST_NODE_LITERAL_INTEXPRESSION_H_
 #include "ast/ast.h"
 #include "ast/node/expression/Expression.h"
+
 namespace ast {
 namespace node {
 
 class IntExpression : public Expression {
+public:
+  using value_type = long long;
+
 private:
-  long long value_;
+  value_type value_;
 
 public:
-  IntExpression(long lineNumber, long long value) : IntExpression(value) {
-    setLine(lineNumber);
-  }
-  IntExpression(long long value) : value_(value) {}
+  IntExpression(long lineNumber, value_type value);
+  IntExpression(value_type value);
   virtual ~IntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual Type* type() override {
-    return new PrimitiveType(PrimitiveTypeEnum::INT);
-  }
-  virtual void setType(Type* type) override {
-    assert(false && "cannot set the type of an int expression");
-  }
-  auto value() { return value_; }
+
+  virtual Type* type() override;
+  virtual void setType(Type* type) override;
+
+  value_type value();
 };
 } // namespace node
 } // namespace ast

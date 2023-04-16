@@ -14,7 +14,7 @@ template <typename Key, typename T> class ordered_map {
   // member types
 private:
   using value_type = std::pair<const Key, T>;
-  using size_type = std::size_t;
+  using std::size_type = std::size_t;
 
   std::unordered_map<Key, T> map_;
   std::vector<Key> insertion_order_;
@@ -66,7 +66,7 @@ public:
 
   // capacity
   bool empty() { return map_.empty(); }
-  size_type size() { return map_.size(); }
+  std::size_type size() { return map_.size(); }
 
   // modifers
   void clear() {
@@ -97,7 +97,7 @@ public:
       return insert(value_type(k, std::forward<M>(obj)));
     }
   }
-  size_type erase(const Key& key) {
+  std::size_type erase(const Key& key) {
     auto ret = map_.erase(key);
     auto insert_it =
         std::find(insertion_order_.begin(), insertion_order_.end(), key);
@@ -110,7 +110,7 @@ public:
   // ass T& at(const Key& key) { return map_.at(key); } const T& at(const Key&
   // key) const { return map_.at(key); } T& operator[](const Key& key) {
   // return map_[key]; }
-  size_type count(const Key& key) const { return map_.count(key); }
+  std::size_type count(const Key& key) const { return map_.count(key); }
   Iterator find(const Key& key) {
     if(map_.count(key)) {
       auto insert_it =

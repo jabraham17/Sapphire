@@ -11,16 +11,17 @@
 namespace pass {
 namespace resolution {
 
-using SymbolMap = std::unordered_map<std::string, ast::Symbol*>;
-using FunctionSymbolMap = std::unordered_map<std::string, ast::FunctionSymbol*>;
+using SymbolMap = std::unordered_map<std::string, ast::symbol::Symbol*>;
+using FunctionSymbolMap =
+    std::unordered_map<std::string, ast::symbol::FunctionSymbol*>;
 
 class ScopeResolve {
 private:
-  ast::ASTNode* root;
+  ast::node::ASTNode* root;
   std::vector<std::string> errors_;
 
 public:
-  ScopeResolve(ast::ASTNode* root) : root(root), errors_() {}
+  ScopeResolve(ast::node::ASTNode* root) : root(root), errors_() {}
   virtual ~ScopeResolve() = default;
   bool hasErrors() { return !errors_.empty(); }
   std::vector<std::string> errors() { return errors_; }

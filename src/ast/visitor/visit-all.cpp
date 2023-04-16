@@ -1,9 +1,15 @@
+#include "ast/node/nodes.h"
+
 #include "ast-visitor.h"
 
 #define VISIT(name) void ast::visitor::VisitAll::visitImpl(node::name* arg)
 
 VISIT(NodeList) {
   for(auto a : *arg)
+    a->accept(this);
+}
+VISIT(TypeList) {
+  for(auto a : arg->elementTypes())
     a->accept(this);
 }
 VISIT(FunctionPrototype) {

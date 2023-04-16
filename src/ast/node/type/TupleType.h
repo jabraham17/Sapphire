@@ -19,6 +19,11 @@ public:
   }
   template <class InputIt>
   TupleType(InputIt begin, InputIt end) : TupleType(begin, end, false, false) {}
+
+  TupleType(TypeList* tupleTypes) : TupleType(tupleTypes, false, false) {}
+  TupleType(long lineNumber, TypeList* tupleTypes) : TupleType(tupleTypes) {
+    setLine(lineNumber);
+  }
   template <class InputIt>
   TupleType(
       long lineNumber,
@@ -31,10 +36,12 @@ public:
   }
   template <class InputIt>
   TupleType(InputIt begin, InputIt end, bool isRef, bool isNilable)
-      : Type(isRef, isNilable), tupleTypes(begin, end) {}
+      : Type(isRef, isNilable), tupleTypes(new TypeList(begin, end)) {}
+  TupleType(TypeList* tupleTypes, bool isRef, bool isNilable)
+      : Type(isRef, isNilable), tupleTypes(tupleTypes) {}
   virtual ~TupleType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  TypeList::list elementTypes() { return tupleTypes->elementTypes; }
+  TypeList* elementTypes() { return tupleTypes; }
 };
 } // namespace node
 } // namespace ast

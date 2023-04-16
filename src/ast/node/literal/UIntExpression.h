@@ -1,13 +1,16 @@
 #ifndef SAPPHIRE_AST_NODE_LITERAL_UINTEXPRESSION_H_
 #define SAPPHIRE_AST_NODE_LITERAL_UINTEXPRESSION_H_
+
 #include "ast/ast.h"
 #include "ast/node/expression/Expression.h"
 
 namespace ast {
 namespace node {
 class UIntExpression : public Expression {
-private:
+public:
   using value_type = unsigned long long;
+
+private:
   value_type value_;
 
 public:

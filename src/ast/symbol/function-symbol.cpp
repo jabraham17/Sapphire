@@ -1,5 +1,6 @@
-#include "symbol.h"
+#include "function-symbol.h"
 
+#include "ast/node/definition/FunctionPrototype.h"
 #include "ast/node/type/Type.h"
 
 namespace ast {
@@ -25,7 +26,12 @@ FunctionSymbol::FunctionSymbol(const char* symbolName, node::Type* type)
     : FunctionSymbol(nullptr, symbolName, type) {}
 
 std::string FunctionSymbol::name() {
-  // TODO
+  std::string s;
+  if(prototype()->isMangled_) s += "spp_";
+  if(prototype()->belongsTo_ != nullptr)
+    s += prototype()->belongsTo_->toMangledString() + "_";
+  s += Symbol::name();
+  return s;
 }
 
 node::FunctionPrototype* FunctionSymbol::prototype() {

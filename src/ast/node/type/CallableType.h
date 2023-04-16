@@ -13,15 +13,15 @@ private:
   Type* returnType_;
 
 public:
-  CallableType(long lineNumber, NodeList* parameterTypes, Type* returnType)
+  CallableType(long lineNumber, TypeList* parameterTypes, Type* returnType)
       : CallableType(parameterTypes, returnType) {
     setLine(lineNumber);
   }
-  CallableType(NodeList* parameterTypes, Type* returnType)
+  CallableType(TypeList* parameterTypes, Type* returnType)
       : CallableType(parameterTypes, returnType, false, false) {}
   CallableType(
       long lineNumber,
-      NodeList* parameterTypes,
+      TypeList* parameterTypes,
       Type* returnType,
       bool isRef,
       bool isNilable)
@@ -29,7 +29,7 @@ public:
     setLine(lineNumber);
   }
   CallableType(
-      NodeList* parameterTypes,
+      TypeList* parameterTypes,
       Type* returnType,
       bool isRef,
       bool isNilable)

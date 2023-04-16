@@ -11,24 +11,29 @@
   #include "ast/ast.h"
   #include "parser/parser.h"
   using namespace ast;
+  using namespace ast::node;
+  using namespace ast::symbol;
 
   void yyerror(parser::Context* context, const char *s);
 %}
 
 %code requires {
   #include "parser/parser.h"
+  #include "ast/node/nodes.h"
+  #include "ast/symbol/symbol.h"
+  #include "ast/symbol/function-symbol.h"
 
   struct FunctionPrototypeWrapper {
     const char* name;
-    ast::NodeList* parameters;
-    ast::Type* returnType;
-    ast::Type* belongsTo;
+    ast::node::NodeList* parameters;
+    ast::node::Type* returnType;
+    ast::node::Type* belongsTo;
     bool isFFI;
     FunctionPrototypeWrapper(
       const char* name,
-      ast::NodeList* parameters,
-      ast::Type* returnType,
-      ast::Type* belongsTo = nullptr,
+      ast::node::NodeList* parameters,
+      ast::node::Type* returnType,
+      ast::node::Type* belongsTo = ast::node::Type::getUntypedType(),
       bool isFFI = false):
         name(name),
         parameters(parameters),
@@ -41,18 +46,19 @@
 %union {
   char* lexeme;
 
-  ast::ASTNode* node;
-  ast::Expression* expr;
+  ast::node::ASTNode* node;
+  ast::node::Expression* expr;
   FunctionPrototypeWrapper* funcPrototypeWrapper;
-  ast::FunctionPrototype* funcPrototype;
-  ast::Type* type;
-  ast::Statement* stmt;
-  ast::OperatorType op;
-  ast::Parameter* param;
-  ast::Scope* scope;
-  ast::Symbol* symbol;
+  ast::node::FunctionPrototype* funcPrototype;
+  ast::node::Type* type;
+  ast::node::Statement* stmt;
+  ast::node::OperatorType op;
+  ast::node::Parameter* param;
+  ast::node::Scope* scope;
+  ast::symbol::Symbol* symbol;
 
-  ast::NodeList* nodeList;
+  ast::node::NodeList* nodeList;
+  ast::node::TypeList* typeList;
 }
 
 %token FUNC VAR CLASS EXTERN FFI IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
@@ -81,7 +87,7 @@
 %token ERROR
 
 
-%type <nodeList> class_statement_list definition_list statement_list expression_list optional_expression_list type_list parameter_list parameter_list_
+%type <nodeList> class_statement_list definition_list statement_list expression_list optional_expression_list parameter_list parameter_list_
 %type <node> file class_statement definition function_definition extern_definition operator_definition class_definition init_definition
 %type <funcPrototype> function_prototype
 %type <funcPrototypeWrapper> function_prototype_base function_prototype_typebase function_prototype_ffi
@@ -89,6 +95,7 @@
 %type <stmt> statement control_flow_statement statement_ if_statement while_statement for_statement return_statement
 %type <expr> expression number if_condition closure_definition def_expression def_expression_with_value
 %type <type> type_specifier type type_ref_ type_nilable_ type_base return_type array_type tuple_type callable_type callable_return_type class_type
+%type <typeList> type_list
 %type <param> parameter
 %type <op> overloadable_op
 %type <lexeme> name
@@ -193,7 +200,7 @@ type_specifier:
   ;
 type_list:
   type {
-    $$ = new NodeList();
+    $$ = new TypeList();
     if($1) $$->addFront($1);
   }
   | type COMMA type_list {
@@ -247,7 +254,7 @@ callable_type:
     $$ = new CallableType(line_num, $3, $6);
   }
   | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 {
-    $$ = new CallableType(line_num, new NodeList(), $5);
+    $$ = new CallableType(line_num, new TypeList(), $5);
   }
   ;
 callable_return_type:

@@ -1,6 +1,6 @@
 #include "DefExpression.h"
 
-#include "ast/node/Type.h"
+#include "ast/node/type/Type.h"
 #include "ast/symbol/symbol.h"
 namespace ast {
 namespace node {
@@ -9,7 +9,7 @@ DefExpression::DefExpression(
     symbol::Symbol* symbol,
     Expression* assignValue)
     : symbol_(symbol), assignValue_(assignValue) {
-  if(Type::isUnknownType(symbol_->type())) {
+  if(symbol_->type()->isUnknownType()) {
     symbol_->setType(type);
   }
 }

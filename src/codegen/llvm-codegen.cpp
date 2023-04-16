@@ -1,6 +1,9 @@
 
 #include "codegen.h"
 
+#include "ast/node/nodes.h"
+#include "ast/symbol/function-symbol.h"
+#include "ast/symbol/symbol.h"
 #include "ast/visitor/ast-visitor.h"
 
 #include <iostream>
@@ -77,59 +80,59 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  virtual void visitImpl(ast::Type* arg) override {
-    std::cerr << "type not yet handled " << ast::Type::getTypeString(arg)
-              << "\n";
+  virtual void visitImpl(ast::node::Type* arg) override {
+    std::cerr << "type not yet handled " << arg->toString() << "\n";
     exit(1);
     set(nullptr);
   }
-  virtual void visitImpl(ast::PrimitiveType* arg) override {
+  virtual void visitImpl(ast::node::PrimitiveType* arg) override {
     auto Context = get<0>();
     switch(arg->primitiveType()) {
-      case ast::PrimitiveTypeEnum::INT:
-      case ast::PrimitiveTypeEnum::UINT:
+      case ast::node::PrimitiveTypeEnum::INT:
+      case ast::node::PrimitiveTypeEnum::UINT:
         set(llvm::Type::getInt64Ty(*Context));
         break;
-      case ast::PrimitiveTypeEnum::REAL:
+      case ast::node::PrimitiveTypeEnum::REAL:
         set(llvm::Type::getDoubleTy(*Context));
         break;
-      case ast::PrimitiveTypeEnum::STRING: set(StringType(Context)); break;
-      case ast::PrimitiveTypeEnum::BOOL:
+      case ast::node::PrimitiveTypeEnum::STRING:
+        set(StringType(Context));
+        break;
+      case ast::node::PrimitiveTypeEnum::BOOL:
         set(llvm::Type::getInt8Ty(*Context));
         break;
-      case ast::PrimitiveTypeEnum::BYTE:
+      case ast::node::PrimitiveTypeEnum::BYTE:
         set(llvm::Type::getInt8Ty(*Context));
         break;
-      case ast::PrimitiveTypeEnum::NIL:
+      case ast::node::PrimitiveTypeEnum::NIL:
         set(llvm::Type::getVoidTy(*Context));
         break;
-      case ast::PrimitiveTypeEnum::UNKNOWN:
-        std::cerr << "unknown type in conversion to LLVM\n";
+      case ast::node::PrimitiveTypeEnum::UNTYPED:
+      case ast::node::PrimitiveTypeEnum::ANY:
+      case ast::node::PrimitiveTypeEnum::UNKNOWN:
+        std::cerr << "cannot convert type to LLVM\n";
         exit(1);
         set(nullptr);
     }
   }
-  virtual void visitImpl(ast::ArrayType* arg) override {
+  virtual void visitImpl(ast::node::ArrayType* arg) override {
     auto Context = get<0>();
 
     // get element types LLVM type
     arg->elementType()->accept(this);
     auto elementType = this->returnValueAndClear();
 
-    set(ArrayType(
-        Context,
-        elementType,
-        ast::Type::getTypeString(arg->elementType())));
+    set(ArrayType(Context, elementType, arg->elementType()->toString()));
   }
 };
 
-static llvm::Type* getLLVMType(llvm::LLVMContext* Context, ast::Type* t) {
+static llvm::Type* getLLVMType(llvm::LLVMContext* Context, ast::node::Type* t) {
   TypeBuilder ltc(Context);
   t->accept(&ltc);
   return ltc.returnValue();
 }
 
-ast::Symbol* getSymbol(ast::ASTNode* ast) {
+ast::symbol::Symbol* getSymbol(ast::node::ASTNode* ast) {
   if(auto a = ast::toUseExpressionNode(ast); a != nullptr) return a->symbol();
   return nullptr;
 }
@@ -146,7 +149,7 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  virtual void visitImpl(ast::StringExpression* arg) override {
+  virtual void visitImpl(ast::node::StringExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
 
@@ -174,7 +177,7 @@ protected:
     // return string struct
     set(stringStructPtr);
   }
-  virtual void visitImpl(ast::IntExpression* arg) override {
+  virtual void visitImpl(ast::node::IntExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
 
@@ -191,7 +194,7 @@ protected:
     set(numConstantPtr);
   }
 
-  virtual void visitImpl(ast::ReturnStatement* arg) override {
+  virtual void visitImpl(ast::node::ReturnStatement* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
 
@@ -206,7 +209,7 @@ protected:
     set(ret);
   }
 
-  virtual void visitImpl(ast::ForStatement* arg) override {
+  virtual void visitImpl(ast::node::ForStatement* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
@@ -236,9 +239,9 @@ protected:
         "loopCount");
 
     // get a local for the array
-    ast::Type* astArrayType = arg->expr()->type();
+    auto astArrayType = arg->expr()->type();
     assert(ast::toArrayTypeNode(astArrayType) != nullptr);
-    ast::Type* astElmType = ast::toArrayTypeNode(astArrayType)->elementType();
+    auto astElmType = ast::toArrayTypeNode(astArrayType)->elementType();
     auto arrayType = getLLVMType(Context, astArrayType);
     auto elmType = getLLVMType(Context, astElmType);
 
@@ -295,7 +298,7 @@ protected:
     Builder->SetInsertPoint(BB3);
   }
 
-  virtual void visitImpl(ast::UseExpression* arg) override {
+  virtual void visitImpl(ast::node::UseExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
@@ -304,7 +307,7 @@ protected:
     // right now just gets var
 
     auto astSym = arg->symbol();
-    if(ast::Type::isCallableType(astSym->type())) {
+    if(astSym->type()->isCallableType()) {
       //  TODO: this doesnt yet handle mangling I dont think
       // TODO: also this if will never call because no type resolution :)
       auto F = Module->getFunction(astSym->name());
@@ -316,7 +319,7 @@ protected:
     }
   }
 
-  virtual void visitImpl(ast::DefExpression* arg) override {
+  virtual void visitImpl(ast::node::DefExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
@@ -335,13 +338,13 @@ protected:
     set(valPtr);
   }
 
-  virtual void visitImpl(ast::CallExpression* arg) override {
+  virtual void visitImpl(ast::node::CallExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
 
     switch(arg->opType()) {
-      case ast::OperatorType::FUNCTION: {
+      case ast::node::OperatorType::FUNCTION: {
 
         std::vector<llvm::Value*> functionArgs;
         // first operand is function name
@@ -374,7 +377,7 @@ protected:
         set(funcCall);
         break;
       }
-      case ast::OperatorType::ASSIGNMENT: {
+      case ast::node::OperatorType::ASSIGNMENT: {
         auto astLHS = arg->operands()->get(0);
         auto astRHS = ast::toExpressionNode(arg->operands()->get(1));
         assert(astRHS != nullptr);
@@ -391,7 +394,7 @@ protected:
         set(lhsPtr);
         break;
       }
-      case ast::OperatorType::SUBSCRIPT: {
+      case ast::node::OperatorType::SUBSCRIPT: {
         // TODO this will not work with tuples
         // TODO: a better solution may be to add different subscript ops for
         // array and tuples
@@ -407,7 +410,7 @@ protected:
         astIndex->accept(this);
         auto indexPtr = this->returnValueAndClear();
 
-        auto astArrayType = ast::Type::toArrayType(astArray->type());
+        auto astArrayType = astArray->type()->toArrayType();
         assert(astArrayType != nullptr);
         auto astElmType = astArrayType->elementType();
 
@@ -445,7 +448,7 @@ public:
   using VisitorWithArgs::VisitorWithArgs;
 
 protected:
-  virtual void visitImpl(ast::Scope* arg) override {
+  virtual void visitImpl(ast::node::Scope* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
@@ -468,7 +471,7 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  virtual void visitImpl(ast::FunctionPrototype* arg) override {
+  virtual void visitImpl(ast::node::FunctionPrototype* arg) override {
     auto Context = get<0>();
     auto Module = get<1>();
     // function type
@@ -500,7 +503,7 @@ protected:
         Module);
 
     // set arg names to the names for the params
-    size_t i = 0;
+    std::size_t i = 0;
     for(auto& a : F->args()) {
       a.setName(paramNames[i]);
       i++;
@@ -519,7 +522,7 @@ public:
   using VisitorWithArgs::VisitorWithArgs;
 
 protected:
-  virtual void visitImpl(ast::ExternDefinition* arg) override {
+  virtual void visitImpl(ast::node::ExternDefinition* arg) override {
     auto Context = get<0>();
     auto Module = get<2>();
     //  need to generate the prototype for externs
@@ -527,7 +530,7 @@ protected:
     arg->functionPrototype()->accept(&fpb);
   }
 
-  virtual void visitImpl(ast::FunctionDefinition* arg) override {
+  virtual void visitImpl(ast::node::FunctionDefinition* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
     auto Module = get<2>();
@@ -549,7 +552,7 @@ protected:
     LLVMCodegen::SymbolMap variables;
     auto params = arg->functionPrototype()->parameters();
     assert((F->arg_size()) == params->size());
-    for(size_t i = 0; i < params->size(); i++) {
+    for(std::size_t i = 0; i < params->size(); i++) {
       if(auto param = ast::toParameterNode((*params)[i]); param != nullptr) {
         auto Arg = F->getArg(i);
         auto Sym = param->symbol();
@@ -578,7 +581,7 @@ protected:
   }
 };
 
-std::string LLVMCodegen::doCodegen(ast::ASTNode* ast) {
+std::string LLVMCodegen::doCodegen(ast::node::ASTNode* ast) {
 
   // build all functions
   FunctionBuilder fb(Context.get(), Builder.get(), Module.get());

@@ -1,7 +1,7 @@
 #ifndef SAPPHIRE_AST_NODE_DEFINITION_CLASSDEFINITION_H_
 #define SAPPHIRE_AST_NODE_DEFINITION_CLASSDEFINITION_H_
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
+
 namespace ast {
 namespace node {
 class ClassDefinition : public ASTNode {

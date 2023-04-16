@@ -1,4 +1,11 @@
 #include "ClassDefinition.h"
+
+#include "FunctionDefinition.h"
+#include "InitDefinition.h"
+
+#include "ast/node/NodeList.h"
+#include "ast/node/expression/DefExpression.h"
+#include "ast/node/statement/Scope.h"
 namespace ast {
 namespace node {
 

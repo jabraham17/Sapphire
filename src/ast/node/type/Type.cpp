@@ -1,31 +1,40 @@
 #include "Type.h"
 
 #include "ArrayType.h"
+#include "CallableType.h"
+#include "ClassType.h"
+#include "PrimitiveType.h"
+#include "TupleType.h"
+#include "TypeList.h"
 
 #include <array>
+#include <cassert>
+#include <string>
 #include <unordered_map>
 namespace ast {
 namespace node {
-bool Type::isNilable() { return this->isNilable(); }
-bool Type::isRef() { return t->isRef(); }
 
 bool Type::isNilType() {
-  auto pt = toPrimitiveType(this);
+  auto pt = this->toPrimitiveType();
   return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::NIL;
 }
 bool Type::isUnknownType() {
-  auto pt = toPrimitiveType(this);
+  auto pt = this->toPrimitiveType();
   return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::UNKNOWN;
 }
 bool Type::isAnyType() {
-  auto pt = toPrimitiveType(this);
+  auto pt = this->toPrimitiveType();
   return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::ANY;
+}
+bool Type::isUntypedType() {
+  auto pt = this->toPrimitiveType();
+  return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::UNTYPED;
 }
 
 bool Type::isPrimitiveType() { return this->toPrimitiveType() != nullptr; }
 bool Type::isArrayType() { return this->toArrayType() != nullptr; }
-bool Type::isTupleType() { return this->toTupleType(t) != nullptr; }
-bool Type::isCallableType() { return this->toCallableType(t) != nullptr; }
+bool Type::isTupleType() { return this->toTupleType() != nullptr; }
+bool Type::isCallableType() { return this->toCallableType() != nullptr; }
 
 PrimitiveType* Type::toPrimitiveType() {
   return dynamic_cast<PrimitiveType*>(this);
@@ -37,10 +46,10 @@ CallableType* Type::toCallableType() {
 }
 ClassType* Type::toClassType() { return dynamic_cast<ClassType*>(this); }
 
-std::string Type::toMangledString(Type* t) {
+std::string Type::toMangledString() {
   std::string s;
-  s += (t->isRef() ? "ref_" : "");
-  if(auto pt = toPrimitiveType(t); pt != nullptr) {
+  s += (this->isRef() ? "ref_" : "");
+  if(auto pt = this->toPrimitiveType(); pt != nullptr) {
     switch(pt->primitiveType()) {
       case PrimitiveTypeEnum::INT: s += "int"; break;
       case PrimitiveTypeEnum::UINT: s += "uint"; break;
@@ -51,39 +60,40 @@ std::string Type::toMangledString(Type* t) {
       case PrimitiveTypeEnum::NIL: s += "nil"; break;
       case PrimitiveTypeEnum::UNKNOWN: s += "unknown"; break;
       case PrimitiveTypeEnum::ANY: s += "any"; break;
+      case PrimitiveTypeEnum::UNTYPED: s += "untyped"; break;
     }
-  } else if(auto at = toArrayType(t); at != nullptr) {
-    s += "arr_" + getPlainTypeString(at->elementType());
-  } else if(auto tt = toTupleType(t); tt != nullptr) {
+  } else if(auto at = this->toArrayType(); at != nullptr) {
+    s += "arr_" + at->elementType()->toString();
+  } else if(auto tt = this->toTupleType(); tt != nullptr) {
     s += "tup_";
     std::string sep;
-    for(auto e : *tt->elementTypes()) {
-      s += sep + getPlainTypeString(toTypeNode(e));
+    for(auto e : tt->elementTypes()->elementTypes()) {
+      s += sep + toTypeNode(e)->toString();
       sep = "_";
     }
-  } else if(auto ct = toCallableType(t); ct != nullptr) {
+  } else if(auto ct = this->toCallableType(); ct != nullptr) {
     s += "func_";
     std::string sep;
-    for(auto e : *ct->parameterTypes()) {
-      s += sep + getPlainTypeString(toTypeNode(e));
+    for(auto e : ct->parameterTypes()->elementTypes()) {
+      s += sep + e->toString();
       sep = "_";
     }
-    s += getPlainTypeString(ct->returnType());
-  } else if(auto ct = toClassType(t); ct != nullptr) {
+    s += ct->returnType()->toString();
+  } else if(auto ct = this->toClassType(); ct != nullptr) {
     s += ct->className();
   } else {
     s += "t";
   }
-  s += (t->isNilable() ? "_nil" : "");
+  s += (this->isNilable() ? "_nil" : "");
   return s;
 
   return s;
 }
 
-std::string Type::toString(Type* t) {
+std::string Type::toString() {
   std::string s;
-  s += (t->isRef() ? "ref " : "");
-  if(auto pt = toPrimitiveType(t); pt != nullptr) {
+  s += (this->isRef() ? "ref " : "");
+  if(auto pt = this->toPrimitiveType(); pt != nullptr) {
     switch(pt->primitiveType()) {
       case PrimitiveTypeEnum::INT: s += "int"; break;
       case PrimitiveTypeEnum::UINT: s += "uint"; break;
@@ -94,31 +104,32 @@ std::string Type::toString(Type* t) {
       case PrimitiveTypeEnum::NIL: s += "nil"; break;
       case PrimitiveTypeEnum::UNKNOWN: s += "unknown"; break;
       case PrimitiveTypeEnum::ANY: s += "any"; break;
+      case PrimitiveTypeEnum::UNTYPED: s += "untyped"; break;
     }
-  } else if(auto at = toArrayType(t); at != nullptr) {
-    s += "[" + getTypeString(at->elementType()) + "]";
-  } else if(auto tt = toTupleType(t); tt != nullptr) {
+  } else if(auto at = this->toArrayType(); at != nullptr) {
+    s += "[" + at->elementType()->toString() + "]";
+  } else if(auto tt = this->toTupleType(); tt != nullptr) {
     s += "(";
     std::string sep;
-    for(auto e : *tt->elementTypes()) {
-      s += sep + getTypeString(toTypeNode(e));
+    for(auto e : tt->elementTypes()->elementTypes()) {
+      s += sep + e->toString();
       sep = ", ";
     }
     s += ")";
-  } else if(auto ct = toCallableType(t); ct != nullptr) {
+  } else if(auto ct = this->toCallableType(); ct != nullptr) {
     s += "((";
     std::string sep;
-    for(auto e : *ct->parameterTypes()) {
-      s += sep + getTypeString(toTypeNode(e));
+    for(auto e : ct->parameterTypes()->elementTypes()) {
+      s += sep + toTypeNode(e)->toString();
       sep = ", ";
     }
-    s += ") -> " + getTypeString(ct->returnType()) + ")";
-  } else if(auto ct = toClassType(t); ct != nullptr) {
+    s += ") -> " + ct->returnType()->toString() + ")";
+  } else if(auto ct = this->toClassType(); ct != nullptr) {
     s += "class " + ct->className();
   } else {
     s += "t";
   }
-  s += (t->isNilable() ? "?" : "");
+  s += (this->isNilable() ? "?" : "");
   return s;
 
   return s;
@@ -128,33 +139,33 @@ std::string Type::toString(Type* t) {
 bool Type::isSameBaseType(Type* t1, Type* t2) {
 
   {
-    PrimitiveType* pt1 = Type::toPrimitiveType(t1);
-    PrimitiveType* pt2 = Type::toPrimitiveType(t2);
+    PrimitiveType* pt1 = t1->toPrimitiveType();
+    PrimitiveType* pt2 = t2->toPrimitiveType();
     return pt1 != nullptr && pt2 != nullptr &&
            pt1->primitiveType() == pt2->primitiveType();
   }
   {
-    ArrayType* pt1 = Type::toArrayType(t1);
-    ArrayType* pt2 = Type::toArrayType(t2);
+    ArrayType* pt1 = t1->toArrayType();
+    ArrayType* pt2 = t2->toArrayType();
     return pt1 != nullptr && pt2 != nullptr &&
            isSameType(pt1->elementType(), pt2->elementType());
   }
   {
-    TupleType* pt1 = Type::toTupleType(t1);
-    TupleType* pt2 = Type::toTupleType(t2);
+    TupleType* pt1 = t1->toTupleType();
+    TupleType* pt2 = t2->toTupleType();
     return pt1 != nullptr && pt2 != nullptr &&
            isSameType(pt1->elementTypes(), pt2->elementTypes());
   }
   {
-    CallableType* pt1 = Type::toCallableType(t1);
-    CallableType* pt2 = Type::toCallableType(t2);
+    CallableType* pt1 = t1->toCallableType();
+    CallableType* pt2 = t2->toCallableType();
     return pt1 != nullptr && pt2 != nullptr &&
            isSameType(pt1->returnType(), pt2->returnType()) &&
            isSameType(pt1->parameterTypes(), pt2->parameterTypes());
   }
   {
-    ClassType* pt1 = Type::toClassType(t1);
-    ClassType* pt2 = Type::toClassType(t2);
+    ClassType* pt1 = t1->toClassType();
+    ClassType* pt2 = t2->toClassType();
     return pt1 != nullptr && pt2 != nullptr &&
            pt1->className() == pt2->className();
   }
@@ -167,8 +178,8 @@ bool Type::isSameType(Type* t1, Type* t2) {
 }
 
 bool Type::isSameType(TypeList* t1, TypeList* t2) {
-  if(t1->elementTypes().size() == t2elementTypes().size()) {
-    for(size_t i = 0; i < t1->size(); i++) {
+  if(t1->elementTypes().size() == t2->elementTypes().size()) {
+    for(std::size_t i = 0; i < t1->elementTypes().size(); i++) {
       if(!isSameType(t1->elementTypes()[i], t2->elementTypes()[i]))
         return false;
     }
@@ -178,7 +189,7 @@ bool Type::isSameType(TypeList* t1, TypeList* t2) {
   return false;
 }
 
-std::array<PrimitiveType> primitiveTypes = {
+std::array<PrimitiveType, 10> primitiveTypes = {
     PrimitiveType(PrimitiveTypeEnum::INT),
     PrimitiveType(PrimitiveTypeEnum::UINT),
     PrimitiveType(PrimitiveTypeEnum::REAL),
@@ -188,21 +199,22 @@ std::array<PrimitiveType> primitiveTypes = {
     PrimitiveType(PrimitiveTypeEnum::NIL),
     PrimitiveType(PrimitiveTypeEnum::UNKNOWN),
     PrimitiveType(PrimitiveTypeEnum::ANY),
+    PrimitiveType(PrimitiveTypeEnum::UNTYPED),
 };
 
 size_t primToIndex(PrimitiveTypeEnum pte) {
   switch(pte) {
-    case:
-    PrimitiveTypeEnum::INT : return 0 case:
-    PrimitiveTypeEnum::UINT : return 1 case:
-    PrimitiveTypeEnum::REAL : return 2 case:
-    PrimitiveTypeEnum::STRING : return 3 case:
-    PrimitiveTypeEnum::BOOL : return 4 case:
-    PrimitiveTypeEnum::BYTE : return 5 case:
-    PrimitiveTypeEnum::NIL : return 6 case:
-    PrimitiveTypeEnum::UNKNOWN : return 7 case:
-      PrimitiveTypeEnum::ANY : return 8 default
-          : assert(false && "Invalid Primitive Type");
+    case PrimitiveTypeEnum::INT: return 0;
+    case PrimitiveTypeEnum::UINT: return 1;
+    case PrimitiveTypeEnum::REAL: return 2;
+    case PrimitiveTypeEnum::STRING: return 3;
+    case PrimitiveTypeEnum::BOOL: return 4;
+    case PrimitiveTypeEnum::BYTE: return 5;
+    case PrimitiveTypeEnum::NIL: return 6;
+    case PrimitiveTypeEnum::UNKNOWN: return 7;
+    case PrimitiveTypeEnum::ANY: return 8;
+    case PrimitiveTypeEnum::UNTYPED: return 9;
+    default: assert(false && "Invalid Primitive Type");
   }
 }
 
@@ -211,6 +223,9 @@ PrimitiveType* Type::getUnknownType() {
   return getType(PrimitiveTypeEnum::UNKNOWN);
 }
 PrimitiveType* Type::getAnyType() { return getType(PrimitiveTypeEnum::ANY); }
+PrimitiveType* Type::getUntypedType() {
+  return getType(PrimitiveTypeEnum::UNTYPED);
+}
 PrimitiveType* Type::getType(PrimitiveTypeEnum pte) {
   return &primitiveTypes[primToIndex(pte)];
 }
@@ -220,7 +235,8 @@ std::unordered_map<Type*, ArrayType> arrayTypes;
 ArrayType* Type::getArrayType(Type* elementType) {
   if(auto it = arrayTypes.find(elementType); it == arrayTypes.end()) {
     // does not exist, construct and return
-    auto entry = arrayTypes.emplace({elementType, ArrayType(elementType)});
+    auto entry =
+        arrayTypes.emplace(std::make_pair(elementType, ArrayType(elementType)));
     return &entry.first->second;
   } else {
     // exists, return it
@@ -236,16 +252,14 @@ TupleType* Type::getTupleType(TypeList* types) {
 CallableType*
 Type::getCallableType(Type* returnType, TypeList* parameterTypes) {
   //  TODO: implement mapping
-  return new CallableType(
-      returnType,
-      types->elementTypes().begin(),
-      types->elementTypes().end());
+  return new CallableType(parameterTypes, returnType);
 }
 std::unordered_map<std::string, ClassType> classTypes;
-ClassType* Type::getClassType(const std::string& className) {
+ClassType* Type::getClassType(const char* className) {
   if(auto it = classTypes.find(className); it == classTypes.end()) {
     // does not exist, construct and return
-    auto entry = classTypes.emplace({className, ClassType(className)});
+    auto entry =
+        classTypes.emplace(std::make_pair(className, ClassType(className)));
     return &entry.first->second;
   } else {
     // exists, return it

@@ -1,7 +1,12 @@
 #ifndef SAPPHIRE_AST_NODE_ASTNODE_H_
 #define SAPPHIRE_AST_NODE_ASTNODE_H_
 #include "ast/ast.h"
+
 namespace ast {
+namespace visitor {
+class ASTVisitor;
+}
+
 namespace node {
 class ASTNode {
 private:

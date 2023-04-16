@@ -1,16 +1,29 @@
 #ifndef SAPPHIRE_AST_NODE_TYPE_TYPE_H_
 #define SAPPHIRE_AST_NODE_TYPE_TYPE_H_
-#include "PrimitiveType.h"
+
 #include "TypeList.h"
 
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
 
-#include <iterator_traits>
+#include <array>
+#include <iterator>
 #include <type_traits>
 
 namespace ast {
 namespace node {
+
+enum class PrimitiveTypeEnum {
+  INT,
+  UINT,
+  REAL,
+  STRING,
+  BOOL,
+  BYTE,
+  NIL,
+  UNTYPED,
+  ANY,
+  UNKNOWN
+};
 
 class Type : public ASTNode {
 private:
@@ -36,11 +49,9 @@ public:
     this->isUserSpecified_ = isUserSpecified;
   }
 
-  bool isNilable();
-  bool isRef();
-
   bool isNilType();
   bool isUnknownType();
+  bool isUntypedType();
   bool isAnyType();
 
   bool isPrimitiveType();
@@ -56,8 +67,8 @@ public:
   ClassType* toClassType();
 
   // get plain string using [a-zA-Z0-9_]
-  std::string toMangledString(Type* t);
-  static std::string toString(Type* t);
+  std::string toMangledString();
+  std::string toString();
 
   // same type, just the base
   static bool isSameBaseType(Type* t1, Type* t2);
@@ -67,33 +78,29 @@ public:
 
   static PrimitiveType* getNilType();
   static PrimitiveType* getAnyType();
+  static PrimitiveType* getUntypedType();
   static PrimitiveType* getUnknownType();
 
   static PrimitiveType* getType(PrimitiveTypeEnum);
   static ArrayType* getArrayType(Type* elementType);
 
-  static ArrayType* getTypeList
-
-      template <class... Ts>
-      static TupleType* getTupleType(Ts&&... types) {
+  template <typename... Ts> static TupleType* getTupleType(Ts&&... types) {
     static_assert(
-        std::conjunction <
-            std::bool_constant<(
-                std::is_pointer_v<Ts> &&
-                std::is_base_of_v<Type, std::remove_pointer_t<Ts.type()>>)...>::
-                value,
+        std::conjunction<std::bool_constant<(
+            (std::is_pointer_v<Ts> &&
+             std::is_base_of_v<Type, std::remove_pointer_t<Ts>>),
+            ...)>>::value,
         "");
     std::array<Type*, sizeof...(Ts)> arrayOfTypes;
-    size_t idx = 0;
-    (
-        [&] {
-          arrayOfTypes[idx] = types;
-          id++;
-        }(),
-        ...);
+    std::size_t idx = 0;
+    (([&] {
+       arrayOfTypes[idx] = types;
+       idx++;
+     }()),
+     ...);
     return getTupleType(arrayOfTypes.begin(), arrayOfTypes.end());
   }
-  template <class InputIt>
+  template <typename InputIt>
   static TupleType* getTupleType(InputIt typesBegin, InputIt typesEnd) {
     static_assert(
         std::is_same_v<
@@ -104,28 +111,27 @@ public:
     return getTupleType(&ty);
   }
   static TupleType* getTupleType(TypeList* types);
-  template <class... Ts>
+  template <typename... Ts>
   static TupleType* getCallableType(Type* returnType, Ts&&... types) {
     static_assert(
-        std::conjunction <
-            std::bool_constant<(
-                std::is_pointer_v<Ts> &&
-                std::is_base_of_v<Type, std::remove_pointer_t<Ts.type()>>)...>::
-                value,
+        std::conjunction<std::bool_constant<(
+            (std::is_pointer_v<Ts> &&
+             std::is_base_of_v<Type, std::remove_pointer_t<Ts>>),
+            ...)>>::value,
         "");
     std::array<Type*, sizeof...(Ts)> arrayOfTypes;
-    size_t idx = 0;
-    (
-        [&] {
-          arrayOfTypes[idx] = types;
-          id++;
-        }(),
-        ...);
+    std::size_t idx = 0;
+    (([&] {
+       arrayOfTypes[idx] = types;
+       idx++;
+     }()),
+     ...);
     return getCallableType(
         returnType,
         arrayOfTypes.begin(),
         arrayOfTypes.end());
   }
+  template <typename InputIt>
   static CallableType* getCallableType(
       Type* returnType,
       InputIt parameterTypesBegin,
@@ -140,7 +146,7 @@ public:
   }
   static CallableType*
   getCallableType(Type* returnType, TypeList* parameterTypes);
-  static ClassType* getClassType(const std::string& className);
+  static ClassType* getClassType(const char* className);
 };
 
 } // namespace node

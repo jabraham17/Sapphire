@@ -24,14 +24,13 @@ def filterName(name: str):
     name = name.upper()
     return name
 
-def main():
 
+def main():
     args = ap.ArgumentParser()
     args.add_argument("--fix", action="store_true")
     args = args.parse_args()
 
     fix = args.fix
-
 
     return_code = 0
 
@@ -68,6 +67,6 @@ def main():
 
     return return_code
 
+
 if __name__ == "__main__":
     exit(main())
-

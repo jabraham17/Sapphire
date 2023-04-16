@@ -1,20 +1,11 @@
 #ifndef SAPPHIRE_AST_NODE_TYPE_PRIMITIVETYPE_H_
 #define SAPPHIRE_AST_NODE_TYPE_PRIMITIVETYPE_H_
+#include "Type.h"
+
 #include "ast/ast.h"
+
 namespace ast {
 namespace node {
-
-enum class PrimitiveTypeEnum {
-  INT,
-  UINT,
-  REAL,
-  STRING,
-  BOOL,
-  BYTE,
-  NIL,
-  ANY,
-  UNKNOWN
-};
 
 class PrimitiveType : public Type {
 
@@ -38,6 +29,7 @@ public:
       : Type(isRef, isNilable), primType(type) {}
   virtual ~PrimitiveType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+
   PrimitiveTypeEnum primitiveType() { return primType; }
 };
 } // namespace node

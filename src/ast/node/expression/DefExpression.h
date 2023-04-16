@@ -1,7 +1,8 @@
 #ifndef SAPPHIRE_AST_NODE_EXPRESSION_DEFEXPRESSION_H_
 #define SAPPHIRE_AST_NODE_EXPRESSION_DEFEXPRESSION_H_
+#include "Expression.h"
+
 #include "ast/ast.h"
-#include "expression/Expression.h"
 namespace ast {
 namespace node {
 

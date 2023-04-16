@@ -19,7 +19,7 @@ class Codegen {
 public:
   Codegen() = default;
   virtual ~Codegen() = default;
-  virtual std::string doCodegen(ast::ASTNode* ast) = 0;
+  virtual std::string doCodegen(ast::node::ASTNode* ast) = 0;
 };
 
 class LLVMCodegen : Codegen {
@@ -29,8 +29,8 @@ class LLVMCodegen : Codegen {
   std::unique_ptr<llvm::Module> Module;
 
 public:
-  using SymbolMap =
-      std::unordered_map<ast::Symbol*, std::pair<llvm::Type*, llvm::Value*>>;
+  using SymbolMap = std::
+      unordered_map<ast::symbol::Symbol*, std::pair<llvm::Type*, llvm::Value*>>;
 
 public:
   LLVMCodegen()
@@ -45,7 +45,7 @@ public:
     return str;
   }
 
-  virtual std::string doCodegen(ast::ASTNode* ast) override;
+  virtual std::string doCodegen(ast::node::ASTNode* ast) override;
 };
 } // namespace codegen
 

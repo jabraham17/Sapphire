@@ -1,6 +1,9 @@
 #ifndef SAPPHIRE_AST_AST_H_
 #define SAPPHIRE_AST_AST_H_
 
+// only include the root
+#include "ast/node/ASTNode.h"
+
 namespace ast {
 
 namespace visitor {
@@ -13,7 +16,7 @@ class FunctionSymbol;
 } // namespace symbol
 
 namespace node {
-class ASTNode
+class ASTNode;
 #define ast_node_def(type) class type;
 #include "ast-node.inc"
 } // namespace node

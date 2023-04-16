@@ -2,27 +2,36 @@
 #define SAPPHIRE_AST_NODE_TYPE_TYPELIST_H_
 
 #include "ast/ast.h"
-#include "ast/node/ASTNode.h"
 
-#include <vector>
+#include <deque>
 namespace ast {
 namespace node {
+// TODO: make a specializeation of ASTList using CRTP
+
 class TypeList : public ASTNode {
-  using list = std::vector<Type*>;
+public:
+  using list_elm_type = Type*;
+  using list_type = std::deque<list_elm_type>;
 
 private:
-  list types;
+  list_type types;
 
 public:
+  TypeList() : types() {}
   template <class InputIt>
   TypeList(long lineNumber, InputIt typesBegin, InputIt typesEnd)
-      : types(typesBegin, typesEnd) {
+      : TypeList(typesBegin, typesEnd) {
     setLine(lineNumber);
   }
+  template <class InputIt>
+  TypeList(InputIt typesBegin, InputIt typesEnd)
+      : types(typesBegin, typesEnd) {}
   virtual ~TypeList() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  list elementTypes() { return types; }
+  list_type elementTypes() { return types; }
+  void addBack(list_elm_type elm) { types.push_back(elm); }
+  void addFront(list_elm_type elm) { types.push_front(elm); }
 };
 } // namespace node
 } // namespace ast
