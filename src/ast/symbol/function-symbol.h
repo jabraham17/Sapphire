@@ -12,25 +12,42 @@ namespace ast {
 namespace symbol {
 
 class FunctionSymbol : public Symbol {
+  node::Type* belongsTo_;
   node::FunctionPrototype* prototype_;
 
 public:
   FunctionSymbol(
       node::FunctionPrototype* prototype,
       const std::string& symbolName,
+      node::Type* belongsTo,
       node::Type* type);
   FunctionSymbol(
       node::FunctionPrototype* prototype,
       const char* symbolName,
+      node::Type* belongsTo,
       node::Type* type);
   FunctionSymbol(const std::string& symbolName, node::Type* type);
   FunctionSymbol(const char* symbolName, node::Type* type);
   virtual ~FunctionSymbol() = default;
 
-  virtual std::string name() override;
+  virtual std::string name() const override;
 
-  node::FunctionPrototype* prototype();
+  virtual std::string
+  toString(bool typed = false, bool showFlags = false) override;
+
+  node::FunctionPrototype* prototype() const;
+  node::FunctionPrototype* prototype() {
+    return const_cast<const FunctionSymbol*>(this)->prototype();
+  }
   void setPrototype(node::FunctionPrototype* prototype);
+
+  node::Type* belongsTo() const;
+  node::Type* belongsTo() {
+    return const_cast<const FunctionSymbol*>(this)->belongsTo();
+  }
+  void setBelongsTo(node::Type* belongsTo);
+
+  bool operator==(const FunctionSymbol& other);
 };
 
 } // namespace symbol

@@ -14,34 +14,28 @@ private:
   TypeList* parameterTypes_;
   Type* returnType_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  CallableType(long line, TypeList* parameterTypes, Type* returnType)
-      : CallableType(parameterTypes, returnType) {
-    setLine(line);
-  }
-  CallableType(TypeList* parameterTypes, Type* returnType)
-      : CallableType(parameterTypes, returnType, false, false) {}
+  CallableType(long line, TypeList* parameterTypes, Type* returnType);
+  CallableType(TypeList* parameterTypes, Type* returnType);
   CallableType(
       long line,
       TypeList* parameterTypes,
       Type* returnType,
       bool isRef,
-      bool isNilable)
-      : CallableType(parameterTypes, returnType, isRef, isNilable) {
-    setLine(line);
-  }
+      bool isNilable);
   CallableType(
       TypeList* parameterTypes,
       Type* returnType,
       bool isRef,
-      bool isNilable)
-      : Type(isRef, isNilable), parameterTypes_(parameterTypes),
-        returnType_(returnType) {}
+      bool isNilable);
   virtual ~CallableType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  TypeList* parameterTypes() { return parameterTypes_; }
-  Type* returnType() { return returnType_; }
+  TypeList* parameterTypes();
+  Type* returnType();
 };
 } // namespace node
 } // namespace ast

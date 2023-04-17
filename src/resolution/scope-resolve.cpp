@@ -16,27 +16,29 @@ class BuildFunctionSymbols final
           BuildFunctionSymbols,
           ast::visitor::VisitAll,
           std::vector<std::string>,
-          FunctionSymbolMap*> {
+          FunctionSymbolList*> {
 public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
   virtual void visitImpl(ast::node::FunctionPrototype* proto) override {
 
-    auto symbols = get<0>();
+    auto function_symbols = get<0>();
 
     auto sym = proto->symbol();
-    auto name = sym->name();
+    auto name = sym->basename();
 
-    // TODO: we can probably do insert_or_assign
-    if(auto existing = symbols->find(name); existing == symbols->end()) {
-      // does not exist already, no error add it
-      symbols->insert({name, sym});
-    } else {
-      this->returnValue_.push_back(
-          "cannot redefine function '" + name + "' on line " +
-          std::to_string(proto->line()));
+    for(auto func : *function_symbols) {
+      if(*sym == *func) {
+        this->returnValue_.push_back(
+            "cannot redefine function '" + name + "' on line " +
+            std::to_string(proto->line()));
+        return;
+      }
     }
+
+    // no error, insert to table
+    function_symbols->push_back(sym);
   }
 };
 
@@ -52,7 +54,7 @@ class ResolveOneScope final : public ast::visitor::VisitorWithArgsAndReturn<
                                   ResolveOneScope,
                                   ast::visitor::VisitAll,
                                   std::vector<std::string>,
-                                  FunctionSymbolMap,
+                                  FunctionSymbolList,
                                   SymbolMap> {
 public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
@@ -105,6 +107,12 @@ protected:
     auto function_symbols = get<0>();
 
     switch(call->opType()) {
+      // field access, either its a function of a type or a field of a type.
+      // TODO: handle fields of the type
+      // a function gets resolved from (exp.sym) to (call sym, exp, ...)
+      // we can handle the call expression as a curry, then whoever uses this
+      // has to handle the currying
+
       // case ast::node::OperatorType::FIELD_ACCESS: {
       //   // resolve op0
       //   auto op0 = ast::toExpressionNode(call->operands()->get(0));
@@ -127,31 +135,33 @@ protected:
         if(ast::isUseExpressionNode(callFuncExpr)) {
           callFuncSym = ast::toUseExpressionNode(callFuncExpr)->symbol();
           callFuncName = callFuncSym->name();
-        } else if(auto fieldAccess = ast::toCallExpressionNode(callFuncExpr);
-                  fieldAccess != nullptr &&
-                  fieldAccess->opType() ==
-                      ast::node::OperatorType::FIELD_ACCESS) {
-          // if its a field access
-          // TODO: to resolve this, I HAVE to know its type
-          // that way i know which function to insert here
-          // but type resolution happes after
-          // maybe after i scope resolve each statment, i immediatly type
-          // resolve it? leapfrogging.
-
-          // field access is a expr DOT useexpr
-          auto op0 = ast::toExpressionNode(call->operands()->get(0));
-          auto op1 = ast::toUseExpressionNode(call->operands()->get(1));
-          assert(op0 != nullptr && op1 != nullptr);
-
-          // construct a possible callFunc
-          callFuncSym = new ast::symbol::FunctionSymbol(
-              op1->symbol()->name(),
-              op0->type());
-          // if this matches, we will need to modify
-          // callFuncName
-        } else {
-          assert(false);
         }
+
+        // if(auto fieldAccess = ast::toCallExpressionNode(callFuncExpr);
+        //           fieldAccess != nullptr &&
+        //           fieldAccess->opType() ==
+        //               ast::node::OperatorType::FIELD_ACCESS) {
+        //   // if its a field access
+        //   // TODO: to resolve this, I HAVE to know its type
+        //   // that way i know which function to insert here
+        //   // but type resolution happes after
+        //   // maybe after i scope resolve each statment, i immediatly type
+        //   // resolve it? leapfrogging.
+
+        //   // field access is a expr DOT useexpr
+        //   // auto op0 = ast::toExpressionNode(call->operands()->get(0));
+        //   // auto op1 = ast::toUseExpressionNode(call->operands()->get(1));
+        //   // assert(op0 != nullptr && op1 != nullptr);
+
+        //   // // construct a possible callFunc
+        //   // callFuncSym = new ast::symbol::FunctionSymbol(
+        //   //     op1->symbol()->name(),
+        //   //     op0->type());
+        //   // if this matches, we will need to modify
+        //   // callFuncName
+        // } else {
+        //   assert(false);
+        // }
         // auto callFuncExpr =
         // ast::toUseExpressionNode(call->operands()->get(0)); if(callFuncExpr
         // == nullptr) {
@@ -164,10 +174,14 @@ protected:
         // search through all functions
         ast::symbol::FunctionSymbol* found = nullptr;
         for(auto funcSym : function_symbols) {
-          if(callFuncName == funcSym.second->basename()) {
-            found = funcSym.second;
-            break;
-          }
+          // they are the same if
+          // 1. they have the same name
+          // 2. the number and types of the call expression match the prototype
+
+          // if(callFuncName == funcSym) {
+          //   found = funcSym.second;
+          //   break;
+          // }
         }
         if(found) {
           assert(ast::isUseExpressionNode(callFuncExpr));
@@ -214,7 +228,7 @@ class ResolveFunctions final : public ast::visitor::VisitorWithArgsAndReturn<
                                    ResolveFunctions,
                                    ast::visitor::VisitAll,
                                    std::vector<std::string>,
-                                   FunctionSymbolMap> {
+                                   FunctionSymbolList> {
 public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
@@ -255,27 +269,21 @@ protected:
   }
 };
 
-void ScopeResolve::resolve() {
-  FunctionSymbolMap function_symbols;
+bool ScopeResolve::resolve() {
+  FunctionSymbolList function_symbols;
   {
     BuildFunctionSymbols bfs(&function_symbols);
-    root->accept(&bfs);
+    ast->accept(&bfs);
     auto functionErrors = bfs.returnValueAndClear();
-    this->errors_.insert(
-        this->errors_.end(),
-        functionErrors.begin(),
-        functionErrors.end());
+    addErrors(functionErrors.begin(), functionErrors.end());
   }
   {
     ResolveFunctions rf(function_symbols);
-    root->accept(&rf);
+    ast->accept(&rf);
     auto functionErrors = rf.returnValueAndClear();
-
-    this->errors_.insert(
-        this->errors_.end(),
-        functionErrors.begin(),
-        functionErrors.end());
+    addErrors(functionErrors.begin(), functionErrors.end());
   }
+  return this->hasErrors();
 }
 } // namespace resolution
 } // namespace pass

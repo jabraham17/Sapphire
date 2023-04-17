@@ -1,26 +1,16 @@
 #ifndef SAPPHIRE_RESOLUTION_TYPE_RESOLVE_H_
 #define SAPPHIRE_RESOLUTION_TYPE_RESOLVE_H_
 
-#include "ast/ast.h"
-#include "ast/visitor/ast-visitor.h"
-
-#include <string>
-#include <vector>
+#include "resolve-base.h"
 
 namespace pass {
 namespace resolution {
 
-class TypeResolve {
-private:
-  ast::node::ASTNode* root;
-  std::vector<std::string> errors_;
-
+class TypeResolve : public ResolveBase {
 public:
-  TypeResolve(ast::node::ASTNode* root) : root(root), errors_() {}
+  TypeResolve(ast::node::ASTNode* ast) : ResolveBase(ast) {}
   virtual ~TypeResolve() = default;
-  bool hasErrors() { return !errors_.empty(); }
-  std::vector<std::string> errors() { return errors_; }
-  void resolve();
+  virtual bool resolve() override;
 };
 
 } // namespace resolution

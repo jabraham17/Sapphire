@@ -10,24 +10,21 @@ private:
   Scope* body_;
   bool isInit_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  InitDefinition(long line, NodeList* parameters, Scope* body)
-      : InitDefinition(parameters, body) {
-    setLine(line);
-  }
-  InitDefinition(NodeList* parameters, Scope* body)
-      : parameters_(parameters), body_(body), isInit_(true) {}
-  InitDefinition(long line, Scope* body) : InitDefinition(body) {
-    setLine(line);
-  }
-  InitDefinition(Scope* body)
-      : parameters_(nullptr), body_(body), isInit_(false) {}
+  InitDefinition(long line, NodeList* parameters, Scope* body);
+  InitDefinition(NodeList* parameters, Scope* body);
+  InitDefinition(long line, Scope* body);
+  InitDefinition(Scope* body);
   virtual ~InitDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  bool isDeinit() { return !isInit_; }
-  bool isInit() { return isInit_; }
-  NodeList* parameters() { return parameters_; }
-  Scope* body() { return body_; }
+
+  bool isDeinit();
+  bool isInit();
+  NodeList* parameters();
+  Scope* body();
 };
 
 } // namespace node

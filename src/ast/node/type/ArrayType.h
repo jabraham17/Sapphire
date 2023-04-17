@@ -11,20 +11,20 @@ class ArrayType : public Type {
 private:
   Type* elementType_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  ArrayType(long line, Type* elementType) : ArrayType(elementType) {
-    setLine(line);
-  }
-  ArrayType(Type* elementType) : ArrayType(elementType, false, false) {}
+  ArrayType(long line, Type* elementType);
+  ArrayType(Type* elementType);
   ArrayType(long line, Type* elementType, bool isRef, bool isNilable)
       : ArrayType(elementType, isRef, isNilable) {
     setLine(line);
   }
-  ArrayType(Type* elementType, bool isRef, bool isNilable)
-      : Type(isRef, isNilable), elementType_(elementType) {}
+  ArrayType(Type* elementType, bool isRef, bool isNilable);
   virtual ~ArrayType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  Type* elementType() { return elementType_; }
+  Type* elementType();
 };
 
 } // namespace node

@@ -5,6 +5,15 @@
 namespace ast {
 namespace node {
 
+void DefExpression::replaceNode(ASTNode* old, ASTNode* replacement) {
+  if(initialValue_ == old) {
+    replacement->parent() = this;
+    initialValue_ =
+        toNodeType<std::remove_pointer_t<decltype(initialValue_)>>(replacement);
+    return;
+  }
+}
+
 DefExpression::DefExpression(
     long line,
     Type* type,
@@ -28,6 +37,7 @@ DefExpression::DefExpression(
   if(symbol_->type()->isUnknownType()) {
     symbol_->setType(type);
   }
+  initialValue_->parent() = this;
 }
 DefExpression::DefExpression(symbol::Symbol* symbol, Expression* initialValue)
     : DefExpression((Type*)Type::getUnknownType(), symbol, initialValue) {}
@@ -39,6 +49,7 @@ void DefExpression::setType(Type* type) { this->symbol()->setType(type); }
 
 void DefExpression::setInitialValue(Expression* value) {
   this->initialValue_ = value;
+  this->initialValue_->parent() = this;
 }
 bool DefExpression::hasInitialValue() { return this->initialValue_ != nullptr; }
 Expression* DefExpression::initialValue() { return this->initialValue_; }

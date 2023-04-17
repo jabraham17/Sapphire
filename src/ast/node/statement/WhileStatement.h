@@ -12,17 +12,17 @@ class WhileStatement : public Statement {
   Expression* expr_;
   Scope* body_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  WhileStatement(long line, Expression* expr, Scope* body)
-      : WhileStatement(expr, body) {
-    setLine(line);
-  }
-  WhileStatement(Expression* expr, Scope* body) : expr_(expr), body_(body) {}
+  WhileStatement(long line, Expression* expr, Scope* body);
+  WhileStatement(Expression* expr, Scope* body);
   virtual ~WhileStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  Expression* expr() { return expr_; }
-  Scope* body() { return body_; }
+  Expression* expr();
+  Scope* body();
 };
 } // namespace node
 } // namespace ast

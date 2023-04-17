@@ -120,13 +120,14 @@ protected:
   }
 };
 
-void TypeResolve::resolve() {
+bool TypeResolve::resolve() {
   {
     ResolveTypes rce;
-    root->accept(&rce);
+    ast->accept(&rce);
     auto errors = rce.returnValueAndClear();
-    this->errors_.insert(this->errors_.end(), errors.begin(), errors.end());
+    addErrors(errors.begin(), errors.end());
   }
+  return this->hasErrors();
 }
 } // namespace resolution
 } // namespace pass

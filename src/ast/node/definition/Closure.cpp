@@ -1,6 +1,7 @@
 #include "Closure.h"
 
 #include "ast/node/NodeList.h"
+#include "ast/node/statement/Scope.h"
 #include "ast/node/type/CallableType.h"
 #include "ast/node/type/Type.h"
 #include "ast/node/type/TypeList.h"
@@ -8,6 +9,25 @@
 #include <cassert>
 namespace ast {
 namespace node {
+
+void Closure::replaceNode(ASTNode* old, ASTNode* replacement) {
+  if(type_ == old) {
+    replacement->parent() = this;
+    type_ = toNodeType<std::remove_pointer_t<decltype(type_)>>(replacement);
+    return;
+  }
+  if(parameters_ == old) {
+    replacement->parent() = this;
+    parameters_ =
+        toNodeType<std::remove_pointer_t<decltype(parameters_)>>(replacement);
+    return;
+  }
+  if(body_ == old) {
+    replacement->parent() = this;
+    body_ = toNodeType<std::remove_pointer_t<decltype(body_)>>(replacement);
+    return;
+  }
+}
 
 Closure::Closure(
     long line,
@@ -18,16 +38,22 @@ Closure::Closure(
   setLine(line);
 }
 Closure::Closure(CallableType* type, NodeList* parameters, Scope* body)
-    : type_(type), parameters_(parameters), body_(body) {}
+    : type_(type), parameters_(parameters), body_(body) {
+  type_->parent() = this;
+  parameters_->parent() = this;
+  body_->parent() = this;
+}
 
 Type* Closure::type() { return this->type_; }
 void Closure::setType(Type* type) {
   auto callableType = type->toCallableType();
   assert(callableType != nullptr && "type must be a callable type");
   this->type_ = callableType;
+  this->type_->parent() = this;
 }
 
-TypeList* getParameterTypes(const NodeList& params) {
+// TODO: make this clone or it will destroy the parent
+TypeList* copyParameterTypes(const NodeList& params) {
   auto types = new TypeList();
   for(auto p : params) {
     auto pt = toTypeNode(p);
@@ -45,13 +71,13 @@ CallableType* Closure::determineClosureType(
   // exactly and return type must match ( if specified, otherwise we can infer
   // it)
   if(type_specifier->isNilType())
-    return new CallableType(getParameterTypes(parameters), returnType);
+    return new CallableType(copyParameterTypes(parameters), returnType);
   CallableType* callableType = type_specifier->toCallableType();
 
   if(callableType == nullptr) return nullptr;
 
   auto callableParamTypes = callableType->parameterTypes();
-  auto paramTypes = getParameterTypes(parameters);
+  auto paramTypes = copyParameterTypes(parameters);
   bool paramTypesMatch = Type::isSameType(callableParamTypes, paramTypes);
 
   if(paramTypesMatch &&

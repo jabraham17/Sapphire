@@ -13,6 +13,9 @@ class TupleType : public Type {
 private:
   TypeList* tupleTypes;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   template <class InputIt>
   TupleType(long line, InputIt begin, InputIt end) : TupleType(begin, end) {
@@ -33,11 +36,11 @@ public:
   template <class InputIt>
   TupleType(InputIt begin, InputIt end, bool isRef, bool isNilable)
       : Type(isRef, isNilable), tupleTypes(new TypeList(begin, end)) {}
-  TupleType(TypeList* tupleTypes, bool isRef, bool isNilable)
-      : Type(isRef, isNilable), tupleTypes(tupleTypes) {}
+  TupleType(TypeList* tupleTypes, bool isRef, bool isNilable);
   virtual ~TupleType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  TypeList* elementTypes() { return tupleTypes; }
+
+  TypeList* elementTypes();
 };
 } // namespace node
 } // namespace ast

@@ -553,7 +553,8 @@ protected:
     auto params = arg->functionPrototype()->parameters();
     assert((F->arg_size()) == params->size());
     for(std::size_t i = 0; i < params->size(); i++) {
-      if(auto param = ast::toParameterNode((*params)[i]); param != nullptr) {
+      if(auto param = ast::toParameterNode((*params).get(i));
+         param != nullptr) {
         auto Arg = F->getArg(i);
         auto Sym = param->symbol();
         auto llvmType = Arg->getType();

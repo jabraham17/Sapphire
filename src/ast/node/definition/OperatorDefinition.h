@@ -10,23 +10,24 @@ class OperatorDefinition : public ASTNode {
   NodeList* parameters_;
   Scope* body_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   OperatorDefinition(
       long line,
       OperatorType op,
       NodeList* parameters,
-      Scope* body)
-      : OperatorDefinition(op, parameters, body) {
-    setLine(line);
-  }
-  OperatorDefinition(OperatorType op, NodeList* parameters, Scope* body)
-      : op_(op), parameters_(parameters), body_(body) {}
+      Scope* body);
+
+  OperatorDefinition(OperatorType op, NodeList* parameters, Scope* body);
+
   virtual ~OperatorDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  OperatorType opType() { return op_; }
-  NodeList* parameters() { return parameters_; }
-  Scope* body() { return body_; }
+  OperatorType opType();
+  NodeList* parameters();
+  Scope* body();
 };
 } // namespace node
 } // namespace ast

@@ -6,8 +6,43 @@
 #include "ast/node/NodeList.h"
 #include "ast/node/expression/DefExpression.h"
 #include "ast/node/statement/Scope.h"
+#include "ast/node/type/ClassType.h"
 namespace ast {
 namespace node {
+
+void ClassDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
+  if(classType_ == old) {
+    replacement->parent() = this;
+    classType_ =
+        toNodeType<std::remove_pointer_t<decltype(classType_)>>(replacement);
+    return;
+  }
+  if(variables_ == old) {
+    replacement->parent() = this;
+    variables_ =
+        toNodeType<std::remove_pointer_t<decltype(variables_)>>(replacement);
+    return;
+  }
+  if(functions_ == old) {
+    replacement->parent() = this;
+    functions_ =
+        toNodeType<std::remove_pointer_t<decltype(functions_)>>(replacement);
+    return;
+  }
+  if(initializers_ == old) {
+    replacement->parent() = this;
+    initializers_ =
+        toNodeType<std::remove_pointer_t<decltype(initializers_)>>(replacement);
+    return;
+  }
+  if(deinitializer_ == old) {
+    replacement->parent() = this;
+    deinitializer_ =
+        toNodeType<std::remove_pointer_t<decltype(deinitializer_)>>(
+            replacement);
+    return;
+  }
+}
 
 ClassDefinition::ClassDefinition(long line, ClassType* classType)
     : ClassDefinition(classType) {
@@ -16,7 +51,13 @@ ClassDefinition::ClassDefinition(long line, ClassType* classType)
 ClassDefinition::ClassDefinition(ClassType* classType)
     : classType_(classType), variables_(new NodeList()),
       functions_(new NodeList()), initializers_(new NodeList()),
-      deinitializer_(nullptr) {}
+      deinitializer_(nullptr) {
+  classType_->parent() = this;
+  variables_->parent() = this;
+  functions_->parent() = this;
+  initializers_->parent() = this;
+  if(deinitializer_ != nullptr) deinitializer_->parent() = this;
+}
 
 ClassDefinition*
 ClassDefinition::buildClass(ClassType* classType, NodeList* defs) {
@@ -35,6 +76,7 @@ ClassDefinition::buildClass(ClassType* classType, NodeList* defs) {
   }
   if(c->deinitializer_ == nullptr) {
     c->deinitializer_ = new InitDefinition(new Scope(new NodeList()));
+    c->deinitializer_->parent() = c;
   }
   return c;
 }

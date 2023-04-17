@@ -8,16 +8,15 @@ class ExternDefinition : public ASTNode {
 private:
   FunctionPrototype* functionPrototype_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  ExternDefinition(long line, FunctionPrototype* functionPrototype)
-      : ExternDefinition(functionPrototype) {
-    setLine(line);
-  }
-  ExternDefinition(FunctionPrototype* functionPrototype)
-      : functionPrototype_(functionPrototype) {}
+  ExternDefinition(long line, FunctionPrototype* functionPrototype);
+  ExternDefinition(FunctionPrototype* functionPrototype);
   virtual ~ExternDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  FunctionPrototype* functionPrototype() { return functionPrototype_; }
+  FunctionPrototype* functionPrototype();
 };
 } // namespace node
 } // namespace ast

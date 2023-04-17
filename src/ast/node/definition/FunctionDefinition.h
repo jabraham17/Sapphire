@@ -9,22 +9,21 @@ private:
   FunctionPrototype* functionPrototype_;
   Scope* body_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   FunctionDefinition(
       long line,
       FunctionPrototype* functionPrototype,
-      Scope* body)
-      : FunctionDefinition(functionPrototype, body) {
-    setLine(line);
-  }
-  FunctionDefinition(FunctionPrototype* functionPrototype, Scope* body)
-      : functionPrototype_(functionPrototype), body_(body) {}
+      Scope* body);
+  FunctionDefinition(FunctionPrototype* functionPrototype, Scope* body);
+
   virtual ~FunctionDefinition() = default;
-  // virtual std::string toString() override;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  FunctionPrototype* functionPrototype() { return functionPrototype_; }
-  Scope* body() { return body_; }
+  FunctionPrototype* functionPrototype();
+  Scope* body();
 };
 } // namespace node
 } // namespace ast

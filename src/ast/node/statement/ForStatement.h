@@ -5,25 +5,24 @@
 #include "ast/ast.h"
 namespace ast {
 namespace node {
-// todo: move to cpp definition stuff
 
 class ForStatement : public Statement {
   DefExpression* var_;
   Expression* expr_;
   Scope* body_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  ForStatement(long line, DefExpression* var, Expression* expr, Scope* body)
-      : ForStatement(var, expr, body) {
-    setLine(line);
-  }
-  ForStatement(DefExpression* var, Expression* expr, Scope* body)
-      : var_(var), expr_(expr), body_(body) {}
+  ForStatement(long line, DefExpression* var, Expression* expr, Scope* body);
+  ForStatement(DefExpression* var, Expression* expr, Scope* body);
   virtual ~ForStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  DefExpression* variable() { return var_; }
-  Expression* expr() { return expr_; }
-  Scope* body() { return body_; }
+
+  DefExpression* variable();
+  Expression* expr();
+  Scope* body();
 };
 } // namespace node
 } // namespace ast

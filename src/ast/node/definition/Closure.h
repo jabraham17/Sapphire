@@ -10,6 +10,9 @@ class Closure : public Expression {
   NodeList* parameters_;
   Scope* body_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   Closure(long line, CallableType* type, NodeList* parameters, Scope* body);
   Closure(CallableType* type, NodeList* parameters, Scope* body);

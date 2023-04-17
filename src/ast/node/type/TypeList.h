@@ -17,6 +17,9 @@ public:
 private:
   list_type types;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   TypeList() : types() {}
   template <class InputIt>
@@ -25,14 +28,18 @@ public:
     setLine(line);
   }
   template <class InputIt>
-  TypeList(InputIt typesBegin, InputIt typesEnd)
-      : types(typesBegin, typesEnd) {}
+  TypeList(InputIt typesBegin, InputIt typesEnd) : types() {
+    // loop through and add each elm, this will update the parent
+    for(auto it = typesBegin; it != typesEnd; it++) {
+      addBack(*it);
+    }
+  }
   virtual ~TypeList() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
 
-  list_type elementTypes() { return types; }
-  void addBack(list_elm_type elm) { types.push_back(elm); }
-  void addFront(list_elm_type elm) { types.push_front(elm); }
+  list_type elementTypes();
+  void addBack(list_elm_type elm);
+  void addFront(list_elm_type elm);
 };
 } // namespace node
 } // namespace ast

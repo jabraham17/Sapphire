@@ -12,23 +12,21 @@ class IfStatement : public Statement {
   Scope* ifBody_;
   // can be nullptr
   Statement* elseBody_; // either Scope or IfStatement
+
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  IfStatement(long line, Expression* expr, Scope* ifBody, Statement* elseBody)
-      : IfStatement(expr, ifBody, elseBody) {
-    setLine(line);
-  }
-  IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody)
-      : expr_(expr), ifBody_(ifBody), elseBody_(elseBody) {}
-  IfStatement(long line, Expression* expr, Scope* ifBody)
-      : IfStatement(expr, ifBody) {
-    setLine(line);
-  }
-  IfStatement(Expression* expr, Scope* ifBody)
-      : IfStatement(expr, ifBody, nullptr) {}
+  IfStatement(long line, Expression* expr, Scope* ifBody, Statement* elseBody);
+  IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody);
+  IfStatement(long line, Expression* expr, Scope* ifBody);
+  IfStatement(Expression* expr, Scope* ifBody);
   virtual ~IfStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  Expression* expr() { return expr_; }
-  Scope* ifBody() { return ifBody_; }
+
+  Expression* expr();
+  Scope* ifBody();
+
   bool hasElseBody();
   bool hasPlainElse();
   bool hasElseIf();

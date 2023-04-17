@@ -6,8 +6,7 @@
 
 #define DEBUG_CATAGORIES(F)                                                    \
   F(NONE, 0x0)                                                                 \
-  F(LOG, 0x1)                                                                  \
-  F(PARSER, 0x2)
+  F(LOG, 0x1)
 
 namespace common {
 namespace debug {
@@ -152,22 +151,20 @@ template <typename... Args> void logln(Args... args) {
   details::LogHelper::log(DebugType::LOG, std::cout, args..., "\n");
 }
 
-class CancelableOStream {
+class CancelableOStream : public std::ostream {
 private:
   bool isEnabled;
-  std::ostream& os;
 
 public:
   CancelableOStream(bool isEnabled, std::ostream& os)
-      : isEnabled(isEnabled), os(os) {}
+      : std::ostream(os.rdbuf()), isEnabled(isEnabled) {}
   ~CancelableOStream() = default;
   CancelableOStream(const CancelableOStream& other) = delete;
-  CancelableOStream(CancelableOStream&& other) noexcept = default;
   CancelableOStream& operator=(const CancelableOStream& other) = delete;
   CancelableOStream& operator=(CancelableOStream&& other) noexcept = delete;
 
   template <typename T> CancelableOStream& operator<<(T&& x) {
-    if(isEnabled) os << std::forward<T>(x);
+    if(isEnabled) *this << std::forward<T>(x);
     return *this;
   }
 
@@ -175,7 +172,7 @@ public:
   using OStreamType = std::basic_ostream<char, std::char_traits<char>>;
   using OStreamManip = OStreamType& (*)(OStreamType&);
   CancelableOStream& operator<<(OStreamManip manip) {
-    if(isEnabled) manip(os);
+    if(isEnabled) manip(*this);
     return *this;
   }
 };

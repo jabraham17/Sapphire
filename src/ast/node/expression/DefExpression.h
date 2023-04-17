@@ -10,6 +10,9 @@ class DefExpression : public Expression {
   symbol::Symbol* symbol_;
   Expression* initialValue_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   DefExpression(
       long line,

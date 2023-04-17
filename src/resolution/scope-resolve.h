@@ -2,30 +2,28 @@
 #define SAPPHIRE_RESOLUTION_SCOPE_RESOLVE_H_
 
 #include "ast/ast.h"
-#include "ast/visitor/ast-visitor.h"
+#include "ast/node/type/nodes.h"
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
+
+#include "resolve-base.h"
 
 namespace pass {
 namespace resolution {
 
 using SymbolMap = std::unordered_map<std::string, ast::symbol::Symbol*>;
-using FunctionSymbolMap =
-    std::unordered_map<std::string, ast::symbol::FunctionSymbol*>;
+// using FunctionSymbolMap =
+// std::unordered_map<ast::Ty, ast::symbol::FunctionSymbol*>;
+using FunctionSymbolList = std::vector<ast::symbol::FunctionSymbol*>;
 
-class ScopeResolve {
-private:
-  ast::node::ASTNode* root;
-  std::vector<std::string> errors_;
-
+class ScopeResolve : public ResolveBase {
 public:
-  ScopeResolve(ast::node::ASTNode* root) : root(root), errors_() {}
+  ScopeResolve(ast::node::ASTNode* ast) : ResolveBase(ast) {}
   virtual ~ScopeResolve() = default;
-  bool hasErrors() { return !errors_.empty(); }
-  std::vector<std::string> errors() { return errors_; }
-  void resolve();
+  virtual bool resolve() override;
 };
 
 } // namespace resolution

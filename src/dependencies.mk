@@ -4,7 +4,7 @@ ast=
 parser=
 codegen=
 resolution=
-sapphire=common codegen parser resolution ast
+sapphire=codegen parser resolution ast common
 
 define make_depen
 $(eval $1: $($1))

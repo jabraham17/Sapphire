@@ -11,14 +11,15 @@ namespace node {
 class ExpressionStatement : public Statement {
   Expression* expression_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  ExpressionStatement(long line, Expression* expr) : ExpressionStatement(expr) {
-    setLine(line);
-  }
-  ExpressionStatement(Expression* expr) : expression_(expr) {}
+  ExpressionStatement(long line, Expression* expr);
+  ExpressionStatement(Expression* expr);
   virtual ~ExpressionStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  Expression* expression() { return expression_; }
+  Expression* expression();
 };
 } // namespace node
 } // namespace ast

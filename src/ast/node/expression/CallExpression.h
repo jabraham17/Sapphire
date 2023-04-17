@@ -17,6 +17,9 @@ class CallExpression : public Expression {
   NodeList* operands_;
   Type* type_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   template <typename... Ts>
   CallExpression(long line, OperatorType opType, Ts&&... operands)

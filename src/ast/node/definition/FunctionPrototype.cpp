@@ -12,6 +12,16 @@
 
 namespace ast {
 namespace node {
+
+void FunctionPrototype::replaceNode(ASTNode* old, ASTNode* replacement) {
+  if(parameters_ == old) {
+    replacement->parent() = this;
+    parameters_ =
+        toNodeType<std::remove_pointer_t<decltype(parameters_)>>(replacement);
+    return;
+  }
+}
+
 FunctionPrototype::FunctionPrototype(
     long line,
     const char* name,
@@ -28,11 +38,11 @@ FunctionPrototype::FunctionPrototype(
     Type* returnType,
     bool isMangled,
     Type* belongsTo)
-    : belongsTo_(belongsTo), parameters_(parameters), funcSymbol_(nullptr),
-      isMangled_(isMangled) {
+    : parameters_(parameters), funcSymbol_(nullptr), isMangled_(isMangled) {
+  parameters_->parent() = this;
   if(!belongsTo->isUntypedType() && !belongsTo->isNilType() &&
      !belongsTo->isAnyType()) {
-    parameters->addFront(new Parameter(new symbol::Symbol("this"), belongsTo));
+    parameters_->addFront(new Parameter(new symbol::Symbol("this"), belongsTo));
   }
   TypeList* parameterTypes = new TypeList();
   // add a this parameter
@@ -42,7 +52,8 @@ FunctionPrototype::FunctionPrototype(
     parameterTypes->addBack(pp->symbol()->type());
   }
   Type* funcSymbolType = new CallableType(parameterTypes, returnType);
-  funcSymbol_ = new symbol::FunctionSymbol(this, name, funcSymbolType);
+  funcSymbol_ =
+      new symbol::FunctionSymbol(this, name, belongsTo, funcSymbolType);
 }
 
 std::string FunctionPrototype::name() { return this->symbol()->name(); }
@@ -56,5 +67,6 @@ symbol::FunctionSymbol* FunctionPrototype::symbol() {
   return this->funcSymbol_;
 }
 
+bool FunctionPrototype::isMangled() { return this->isMangled_; }
 } // namespace node
 } // namespace ast

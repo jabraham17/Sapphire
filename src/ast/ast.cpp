@@ -10,9 +10,9 @@ namespace ast {
 // defines the conversions
 #define ast_node_def(type)                                                     \
   node::type* to##type##Node(node::ASTNode* a) {                               \
-    return dynamic_cast<node::type*>(a);                                       \
+    return toNodeType<node::type>(a);                                          \
   }                                                                            \
-  bool is##type##Node(node::ASTNode* a) { return to##type##Node(a) != nullptr; }
+  bool is##type##Node(node::ASTNode* a) { return isNodeType<node::type>(a); }
 #include "ast-node.inc"
 
 // defines all the accepts

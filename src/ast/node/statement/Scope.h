@@ -11,12 +11,15 @@ namespace node {
 class Scope : public Statement {
   NodeList* statements_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
-  Scope(long line, NodeList* statements) : Scope(statements) { setLine(line); };
-  Scope(NodeList* statements) : statements_(statements){};
+  Scope(long line, NodeList* statements);
+  Scope(NodeList* statements);
   virtual ~Scope() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  NodeList* statements() { return statements_; }
+  NodeList* statements();
 };
 } // namespace node
 } // namespace ast

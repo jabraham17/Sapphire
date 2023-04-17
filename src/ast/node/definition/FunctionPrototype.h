@@ -8,13 +8,12 @@ namespace ast {
 namespace node {
 class FunctionPrototype : public ASTNode {
 private:
-  // which type this function belongs to
-  Type* belongsTo_;
   NodeList* parameters_;
   symbol::FunctionSymbol* funcSymbol_;
   bool isMangled_;
 
-  friend symbol::FunctionSymbol;
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
 
 public:
   FunctionPrototype(
@@ -38,6 +37,7 @@ public:
   NodeList* parameters();
   CallableType* type();
   symbol::FunctionSymbol* symbol();
+  bool isMangled();
 };
 } // namespace node
 } // namespace ast

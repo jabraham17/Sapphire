@@ -11,6 +11,9 @@ class ClassDefinition : public ASTNode {
   NodeList* initializers_;
   InitDefinition* deinitializer_;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   ClassDefinition(long line, ClassType* classType);
   ClassDefinition(ClassType* classType);

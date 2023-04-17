@@ -17,6 +17,9 @@ private:
   using iter_type = decltype(elms)::iterator;
   using const_iter_type = decltype(elms)::const_iterator;
 
+protected:
+  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+
 public:
   NodeList() : elms() {}
   // template <
@@ -36,7 +39,6 @@ public:
   std::size_t size() const;
   const_iter_type begin() const;
   const_iter_type end() const;
-  NodeType* operator[](std::size_t idx) const;
 
   NodeType* get(std::size_t idx) {
     return const_cast<const NodeList*>(this)->get(idx);
@@ -44,7 +46,6 @@ public:
   std::size_t size() { return const_cast<const NodeList*>(this)->size(); }
   iter_type begin();
   iter_type end();
-  NodeType*& operator[](std::size_t idx);
 };
 // } // namespace detail
 
