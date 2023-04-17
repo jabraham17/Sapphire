@@ -32,6 +32,7 @@ public:
 
   virtual ~FunctionPrototype() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   std::string name();
   NodeList* parameters();

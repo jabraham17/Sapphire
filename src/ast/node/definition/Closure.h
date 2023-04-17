@@ -18,6 +18,7 @@ public:
   Closure(CallableType* type, NodeList* parameters, Scope* body);
   virtual ~Closure() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;

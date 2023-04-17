@@ -19,6 +19,7 @@ public:
   ClassDefinition(ClassType* classType);
   virtual ~ClassDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   static ClassDefinition* buildClass(ClassType* classType, NodeList* defs);
 

@@ -38,6 +38,7 @@ public:
       : isRef_(isRef), isNilable_(isNilable), isUserSpecified_(false) {}
   virtual ~Type() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   bool isRef() { return isRef_; }
   bool isNilable() { return isNilable_; }

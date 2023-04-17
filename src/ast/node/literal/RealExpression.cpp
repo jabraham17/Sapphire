@@ -7,6 +7,8 @@
 
 namespace ast {
 namespace node {
+
+ASTNode* RealExpression::clone() { return new RealExpression(value_); }
 RealExpression::RealExpression(long line, value_type value)
     : RealExpression(value) {
   setLine(line);

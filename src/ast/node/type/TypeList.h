@@ -36,6 +36,7 @@ public:
   }
   virtual ~TypeList() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   list_type elementTypes();
   void addBack(list_elm_type elm);

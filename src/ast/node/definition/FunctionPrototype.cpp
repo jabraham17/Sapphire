@@ -13,6 +13,11 @@
 namespace ast {
 namespace node {
 
+ASTNode* FunctionPrototype::clone() {
+  assert(false && "function prototype clone is unimplemented");
+  return nullptr;
+}
+
 void FunctionPrototype::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(parameters_ == old) {
     replacement->parent() = this;

@@ -7,8 +7,15 @@
 #include "ast/node/expression/DefExpression.h"
 #include "ast/node/statement/Scope.h"
 #include "ast/node/type/ClassType.h"
+
+#include <cassert>
 namespace ast {
 namespace node {
+
+ASTNode* ClassDefinition::clone() {
+  assert(false && "class def clone is unimplemented");
+  return nullptr;
+}
 
 void ClassDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(classType_ == old) {

@@ -4,6 +4,13 @@
 #include "ast/node/statement/Scope.h"
 namespace ast {
 namespace node {
+
+ASTNode* InitDefinition::clone() {
+  return new InitDefinition(
+      toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
+          parameters_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
 void InitDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(parameters_ == old) {
     replacement->parent() = this;

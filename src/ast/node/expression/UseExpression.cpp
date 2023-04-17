@@ -3,6 +3,9 @@
 #include "ast/symbol/symbol.h"
 namespace ast {
 namespace node {
+
+// TODO: symbol is not being cloned
+ASTNode* UseExpression::clone() { return new UseExpression(symbol_); }
 UseExpression::UseExpression(long line, symbol::Symbol* symbol)
     : UseExpression(symbol) {
   setLine(line);

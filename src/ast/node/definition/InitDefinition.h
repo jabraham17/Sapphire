@@ -20,6 +20,7 @@ public:
   InitDefinition(Scope* body);
   virtual ~InitDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   bool isDeinit();
   bool isInit();

@@ -1,6 +1,13 @@
 #include "CallExpression.h"
+
+#include <cassert>
 namespace ast {
 namespace node {
+
+ASTNode* CallExpression::clone() {
+  assert(false && "call expr clone is unimplemented");
+  return nullptr;
+}
 
 void CallExpression::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(operands_ == old) {

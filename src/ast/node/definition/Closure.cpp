@@ -10,6 +10,14 @@
 namespace ast {
 namespace node {
 
+ASTNode* Closure::clone() {
+  return new Closure(
+      toNodeType<std::remove_pointer_t<decltype(type_)>>(type_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
+          parameters_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
+
 void Closure::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(type_ == old) {
     replacement->parent() = this;
@@ -56,7 +64,7 @@ void Closure::setType(Type* type) {
 TypeList* copyParameterTypes(const NodeList& params) {
   auto types = new TypeList();
   for(auto p : params) {
-    auto pt = toTypeNode(p);
+    auto pt = toTypeNode(p->clone());
     assert(pt != nullptr);
     types->addBack(pt);
   }

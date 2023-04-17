@@ -39,6 +39,7 @@ public:
   TupleType(TypeList* tupleTypes, bool isRef, bool isNilable);
   virtual ~TupleType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   TypeList* elementTypes();
 };

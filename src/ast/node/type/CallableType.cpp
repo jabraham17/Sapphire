@@ -7,6 +7,16 @@
 namespace ast {
 namespace node {
 
+ASTNode* CallableType::clone() {
+  return new CallableType(
+      toNodeType<std::remove_pointer_t<decltype(parameterTypes_)>>(
+          parameterTypes_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(returnType_)>>(
+          returnType_->clone()),
+      this->isRef(),
+      this->isNilable());
+}
+
 void CallableType::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(parameterTypes_ == old) {
     replacement->parent() = this;

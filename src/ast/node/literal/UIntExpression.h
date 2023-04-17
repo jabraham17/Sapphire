@@ -18,6 +18,7 @@ public:
   UIntExpression(value_type value);
   virtual ~UIntExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;

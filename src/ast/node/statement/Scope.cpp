@@ -4,6 +4,11 @@
 namespace ast {
 namespace node {
 
+ASTNode* Scope::clone() {
+  return new Scope(toNodeType<std::remove_pointer_t<decltype(statements_)>>(
+      statements_->clone()));
+}
+
 void Scope::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(statements_ == old) {
     replacement->parent() = this;

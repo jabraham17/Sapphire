@@ -6,6 +6,14 @@
 namespace ast {
 namespace node {
 
+ASTNode* TypeList::clone() {
+  auto x = new TypeList();
+  for(auto elm : this->types) {
+    x->addBack(toNodeType<std::remove_pointer_t<decltype(elm)>>(elm->clone()));
+  }
+  return x;
+}
+
 void TypeList::replaceNode(ASTNode* old, ASTNode* replacement) {
   for(list_elm_type& elm : this->types) {
     if(elm == old) {

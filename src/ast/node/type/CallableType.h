@@ -33,6 +33,7 @@ public:
       bool isNilable);
   virtual ~CallableType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   TypeList* parameterTypes();
   Type* returnType();

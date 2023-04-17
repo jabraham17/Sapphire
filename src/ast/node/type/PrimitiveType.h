@@ -25,6 +25,7 @@ public:
       : Type(isRef, isNilable), primType(type) {}
   virtual ~PrimitiveType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   PrimitiveTypeEnum primitiveType() { return primType; }
 };

@@ -16,6 +16,8 @@ public:
   ExternDefinition(FunctionPrototype* functionPrototype);
   virtual ~ExternDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
+
   FunctionPrototype* functionPrototype();
 };
 } // namespace node

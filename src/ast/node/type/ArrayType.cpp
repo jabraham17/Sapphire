@@ -2,6 +2,13 @@
 namespace ast {
 namespace node {
 
+ASTNode* ArrayType::clone() {
+  auto xElmType = toNodeType<std::remove_pointer_t<decltype(elementType_)>>(
+      elementType_->clone());
+  auto x = new ArrayType(xElmType, this->isRef(), this->isNilable());
+  return x;
+}
+
 void ArrayType::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(elementType_ == old) {
     replacement->parent() = this;

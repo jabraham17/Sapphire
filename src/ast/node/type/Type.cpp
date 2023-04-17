@@ -14,6 +14,12 @@
 namespace ast {
 namespace node {
 
+ASTNode* Type::clone() {
+  auto x = new Type(isRef_, isNilable_);
+  x->isUserSpecified_ = isUserSpecified_;
+  return x;
+}
+
 bool Type::isNilType() {
   auto pt = this->toPrimitiveType();
   return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::NIL;

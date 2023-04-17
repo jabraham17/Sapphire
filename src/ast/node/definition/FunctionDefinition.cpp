@@ -6,6 +6,13 @@
 namespace ast {
 namespace node {
 
+ASTNode* FunctionDefinition::clone() {
+  return new FunctionDefinition(
+      toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
+          functionPrototype_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
+
 void FunctionDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(functionPrototype_ == old) {
     replacement->parent() = this;

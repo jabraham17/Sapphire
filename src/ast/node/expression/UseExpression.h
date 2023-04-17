@@ -14,6 +14,7 @@ public:
   UseExpression(symbol::Symbol* symbol);
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   symbol::Symbol* symbol();
   virtual Type* type() override;

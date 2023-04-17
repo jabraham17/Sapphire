@@ -25,6 +25,8 @@ public:
 
   virtual ~ClassType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
+
   std::string className() { return className_; }
 };
 } // namespace node

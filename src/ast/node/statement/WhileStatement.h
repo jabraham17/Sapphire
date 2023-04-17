@@ -20,6 +20,7 @@ public:
   WhileStatement(Expression* expr, Scope* body);
   virtual ~WhileStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   Expression* expr();
   Scope* body();

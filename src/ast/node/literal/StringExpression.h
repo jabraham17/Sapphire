@@ -20,6 +20,7 @@ public:
   StringExpression(const value_type& value);
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;

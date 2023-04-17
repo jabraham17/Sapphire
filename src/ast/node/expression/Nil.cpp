@@ -7,6 +7,12 @@
 
 namespace ast {
 namespace node {
+
+ASTNode* Nil::clone() {
+  auto x = new Nil();
+  x->isUserSpecified_ = isUserSpecified_;
+  return x;
+}
 Nil::Nil(long line) : Nil() { setLine(line); }
 Nil::Nil() : Nil(false) {}
 Nil::Nil(long line, bool isUserSpecified) : Nil(isUserSpecified) {

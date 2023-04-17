@@ -6,6 +6,12 @@
 namespace ast {
 namespace node {
 
+ASTNode* WhileStatement::clone() {
+  return new WhileStatement(
+      toNodeType<std::remove_pointer_t<decltype(expr_)>>(expr_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
+
 void WhileStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(expr_ == old) {
     replacement->parent() = this;

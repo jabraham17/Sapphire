@@ -3,8 +3,15 @@
 #include "Scope.h"
 
 #include "ast/node/expression/Expression.h"
+
+#include <cassert>
 namespace ast {
 namespace node {
+
+ASTNode* IfStatement::clone() {
+  assert(false && "if statement clone is unimplemented");
+  return nullptr;
+}
 
 void IfStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(expr_ == old) {

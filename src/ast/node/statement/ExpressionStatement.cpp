@@ -4,6 +4,12 @@
 namespace ast {
 namespace node {
 
+ASTNode* ExpressionStatement::clone() {
+  return new ExpressionStatement(
+      toNodeType<std::remove_pointer_t<decltype(expression_)>>(
+          expression_->clone()));
+}
+
 void ExpressionStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(expression_ == old) {
     replacement->parent() = this;

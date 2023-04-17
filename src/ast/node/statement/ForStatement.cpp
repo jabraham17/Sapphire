@@ -8,6 +8,13 @@
 namespace ast {
 namespace node {
 
+ASTNode* ForStatement::clone() {
+  return new ForStatement(
+      toNodeType<std::remove_pointer_t<decltype(var_)>>(var_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(expr_)>>(expr_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
+
 void ForStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(var_ == old) {
     replacement->parent() = this;

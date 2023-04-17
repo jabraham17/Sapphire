@@ -3,6 +3,11 @@
 #include "ast/node/expression/Expression.h"
 namespace ast {
 namespace node {
+
+ASTNode* ReturnStatement::clone() {
+  return new ReturnStatement(
+      toNodeType<std::remove_pointer_t<decltype(expr_)>>(expr_->clone()));
+}
 void ReturnStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(expr_ == old) {
     replacement->parent() = this;

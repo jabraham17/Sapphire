@@ -8,6 +8,8 @@
 namespace ast {
 namespace node {
 
+ASTNode* UIntExpression::clone() { return new UIntExpression(value_); }
+
 UIntExpression::UIntExpression(long line, value_type value)
     : UIntExpression(value) {
   setLine(line);

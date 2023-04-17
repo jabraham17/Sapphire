@@ -13,6 +13,7 @@ public:
   Parameter(symbol::Symbol* symbol, Type* type);
   virtual ~Parameter() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   symbol::Symbol* symbol();
 };

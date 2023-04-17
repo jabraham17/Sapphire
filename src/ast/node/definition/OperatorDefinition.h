@@ -24,6 +24,7 @@ public:
 
   virtual ~OperatorDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   OperatorType opType();
   NodeList* parameters();

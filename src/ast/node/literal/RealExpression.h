@@ -17,6 +17,7 @@ public:
   RealExpression(double value);
   virtual ~RealExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;

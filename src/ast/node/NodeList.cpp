@@ -2,6 +2,14 @@
 namespace ast {
 namespace node {
 
+ASTNode* NodeList::clone() {
+  auto x = new NodeList();
+  for(auto elm : this->elms) {
+    x->addBack(toNodeType<std::remove_pointer_t<decltype(elm)>>(elm->clone()));
+  }
+  return x;
+}
+
 void NodeList::replaceNode(ASTNode* old, ASTNode* replacement) {
   for(auto& elm : this->elms) {
     if(elm == old) {

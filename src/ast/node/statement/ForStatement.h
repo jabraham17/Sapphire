@@ -19,6 +19,7 @@ public:
   ForStatement(DefExpression* var, Expression* expr, Scope* body);
   virtual ~ForStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   DefExpression* variable();
   Expression* expr();

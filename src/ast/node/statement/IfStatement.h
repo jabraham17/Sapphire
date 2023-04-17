@@ -23,6 +23,7 @@ public:
   IfStatement(Expression* expr, Scope* ifBody);
   virtual ~IfStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   Expression* expr();
   Scope* ifBody();

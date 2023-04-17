@@ -5,6 +5,17 @@
 namespace ast {
 namespace node {
 
+// TODO: clone the symbol
+ASTNode* DefExpression::clone() {
+  return new DefExpression(
+      toNodeType<std::remove_pointer_t<decltype(type())>>(type()->clone()),
+      symbol_,
+      initialValue_
+          ? toNodeType<std::remove_pointer_t<decltype(initialValue_)>>(
+                initialValue_->clone())
+          : nullptr);
+}
+
 void DefExpression::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(initialValue_ == old) {
     replacement->parent() = this;

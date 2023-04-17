@@ -19,6 +19,8 @@ public:
   Scope(NodeList* statements);
   virtual ~Scope() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
+
   NodeList* statements();
 };
 } // namespace node

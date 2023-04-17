@@ -31,6 +31,7 @@ public:
 
   virtual ~NodeList() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   void addFront(NodeType* elm);
   void addBack(NodeType* elm);

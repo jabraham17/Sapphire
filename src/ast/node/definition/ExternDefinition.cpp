@@ -4,6 +4,12 @@
 namespace ast {
 namespace node {
 
+ASTNode* ExternDefinition::clone() {
+  return new ExternDefinition(
+      toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
+          functionPrototype_->clone()));
+}
+
 void ExternDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(functionPrototype_ == old) {
     replacement->parent() = this;

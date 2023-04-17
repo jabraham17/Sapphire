@@ -51,6 +51,7 @@ public:
   DIAGNOSTIC_POP
   virtual ~CallExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;

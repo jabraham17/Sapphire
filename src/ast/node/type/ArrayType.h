@@ -24,6 +24,8 @@ public:
   ArrayType(Type* elementType, bool isRef, bool isNilable);
   virtual ~ArrayType() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
+
   Type* elementType();
 };
 

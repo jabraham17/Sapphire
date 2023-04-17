@@ -5,6 +5,14 @@
 namespace ast {
 namespace node {
 
+ASTNode* OperatorDefinition::clone() {
+  return new OperatorDefinition(
+      op_,
+      toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
+          parameters_->clone()),
+      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+}
+
 void OperatorDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
   if(parameters_ == old) {
     replacement->parent() = this;

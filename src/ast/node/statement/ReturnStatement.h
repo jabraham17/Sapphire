@@ -18,6 +18,8 @@ public:
   ReturnStatement(Expression* expr);
   virtual ~ReturnStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
+
   Expression* expression();
 };
 } // namespace node

@@ -21,6 +21,7 @@ public:
 
   virtual ~FunctionDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
+  virtual ASTNode* clone() override;
 
   FunctionPrototype* functionPrototype();
   Scope* body();
