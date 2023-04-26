@@ -3,45 +3,45 @@
 extern ffi print(x: string): nil;
 
 
-func foo(): string {
-  var s: string;
-  s = "hewo";
-  return s;
-}
+// func foo(): string {
+//   var s: string;
+//   s = "hewo";
+//   return s;
+// }
 
-func getLocalInt(): int {
-  var args: [int];
-  return args[0];
-}
+// func getLocalInt(): int {
+//   var args: [int];
+//   return args[0];
+// }
 
-func get(): int {
-  var x:int;
-  x = 10;
-  return x;
-}
+// func get(): int {
+//   var x:int;
+//   x = 10;
+//   return x;
+// }
 
 
-func getParamInt(args: [int]): int {
-  return args[0];
-}
-func getParamInt2(args: [int], index: int): int {
-  return args[index];
-}
+// func getParamInt(args: [int]): int {
+//   return args[0];
+// }
+// func getParamInt2(args: [int], index: int): int {
+//   return args[index];
+// }
 
-func getLocal(): string {
-  var args: [string];
-  return args[0];
-}
-func getParam(args: [string]): string {
-  return args[0];
-}
+// func getLocal(): string {
+//   var args: [string];
+//   return args[0];
+// }
+// func getParam(args: [string]): string {
+//   return args[0];
+// }
 
-func withTemp(): string {
-  var args: [string];
-  var ret: string;
-  ret = args[0];
-  return ret;
-}
+// func withTemp(): string {
+//   var args: [string];
+//   var ret: string;
+//   ret = args[0];
+//   return ret;
+// }
 
 func main(args: [string]): int {
   var s: string;

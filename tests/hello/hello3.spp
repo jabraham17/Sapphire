@@ -2,10 +2,14 @@
 
 extern ffi print(x: string): nil;
 
+func println(x: string): nil {
+  print(x);
+  print("\n");
+}
+
 func main(args: [string]): int {
   for var a: string in args {
-    print(a);
-    print("\n");
+    println(a);
   }
   return 0;
 }

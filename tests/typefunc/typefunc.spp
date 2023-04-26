@@ -6,20 +6,34 @@ func println(x: string): nil {
   print("\n");
 }
 
-func string.concat(x: string): string {
-  println("concat");
-  println(this);
-  println(x);
-  return x;
-}
+extern ffi string.concat(x: string): string;
+
+// func string.concat(x: string): string {
+//   println(this);
+//   println(x);
+//   return this;
+// }
+
+extern ffi [string].size(): int;
+extern ffi string.size(): int;
+extern ffi int.toString(): string;
 
 func main(args: [string]): int {
+  var nArgs: int;
+  var s: string;
+  nArgs = args.size();
+  s = nArgs.toString();
+  print("There are ");
+  println(s);
+  
+  s = "";
   for var a: string in args {
     println(a);
+    s = s.concat(a);
   }
-  var s:string = "str";
-  s = s.concat("cat");
+  print("concated: ");
   println(s);
+
   return 0;
 }
 

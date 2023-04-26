@@ -1,0 +1,29 @@
+extern ffi print(x: string): nil;
+
+
+func println(x: string): nil {
+  print(x);
+  print("\n");
+}
+
+
+extern ffi [any].size(): int;
+extern ffi string.size(): int;
+extern ffi int.toString(): string;
+
+func main(args: [string]): int {
+  var nArgs: int = args.size();
+  print("there are ");
+  print(nArgs.toString());
+  println(" args");
+  for var a in args {
+    print("'");
+    print(a)
+    print("' is ");
+    print(a.size().toString());
+    println(" characters");
+  }
+
+  return 0;
+}
+

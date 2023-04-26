@@ -46,7 +46,7 @@ for d in "${DIRS[@]}"; do
   done
 done
 
-DIRS=("src" "scripts")
+DIRS=("src" "scripts" "tests/driver")
 for d in "${DIRS[@]}"; do
   (find $SAPPHIRE_HOME/$d -ipath '*.py' -type f -exec bash -c 'check_format_python "$0" && test $? -eq 0 || echo $(echo $0 | sed "s;$SAPPHIRE_HOME/;;g") needs to be formatted' {} \; )
 done

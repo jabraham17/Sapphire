@@ -34,7 +34,7 @@ for d in "${DIRS[@]}"; do
   done
 done
 
-DIRS=("src" "scripts")
+DIRS=("src" "scripts" "tests/driver")
 for d in "${DIRS[@]}"; do
   (set -x && find $SAPPHIRE_HOME/$d -ipath '*.py' -type f -exec python3 -m black --quiet {} +)
 done

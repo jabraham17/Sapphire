@@ -36,7 +36,8 @@ git diff --cached --name-only --diff-filter=d \
   while read file
   do
     check_format $file
-    if [ $? -ne 0 ]; then
+    ret=$?
+    if [ $ret -ne 0 ]; then
       echo "Error: Cannot commit '$file': has not passed the formatting checks"
       echo "Run scripts/format.sh to resolve this"
       exit 1
@@ -47,8 +48,9 @@ git diff --cached --name-only --diff-filter=d \
 -- "*.py" | \
   while read file
   do
-    check_format $file
-    if [ $? -eq 0 ]; then
+    check_format_python $file
+    ret=$?
+    if [ $ret -ne 0 ]; then
       echo "Error: Cannot commit '$file': has not passed the formatting checks"
       echo "Run scripts/format.sh to resolve this"
       exit 1
