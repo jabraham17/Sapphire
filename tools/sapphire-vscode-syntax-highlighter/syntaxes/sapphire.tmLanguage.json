@@ -87,7 +87,7 @@
     "types": {
       "patterns": [
         {
-          "match": "\\b((int)|(string)|(uint)|(bool)|(byte)|(real))\\b",
+          "match": "\\b((int)|(string)|(uint)|(bool)|(byte)|(real)|(any))\\b",
           "name": "entity.name.type.spp"
         },
         {
