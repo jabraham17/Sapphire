@@ -2,6 +2,7 @@ from __future__ import annotations
 import functools
 import shlex
 import sys
+import textwrap
 import util.FileHelper as FileHelper
 from typing import Any, Dict, Generator, List, Set, Tuple, Union
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from args import arguments
 import util.util as util
 from util.StringMatcher import StringMatcher
 import subprocess as sp
+import util.color as color
 
 
 @util.static_vars(
@@ -442,9 +444,9 @@ class TestInstance:
     """instance of test, continues information to run and check the output of a test"""
 
     config: TestConfiguration
-    showDiff: bool = False
     cleanup: bool = False
     verbose: bool = False
+    color: bool = False
 
     _log: List[str] = field(default_factory=list, init=False)
 
@@ -520,22 +522,31 @@ class TestInstance:
 
         return (True, exec_output)
 
-    # TODO: instead of execing `diff` in quiet, this should capture the differences and log them so we can show a report to the user
-    def _check_testcase(self, output: TestFile) -> bool:
+    def _check_testcase(self, output: TestFile) -> Tuple[bool, TestFile]:
         exp = self.config.expected_file
-        cmd = ["diff", "-q", exp, output]
+        cmd = ["diff", "-y", exp, output]
         self._verbose_print_cmd("Checking", cmd)
-        ret = TestInstance._execute(cmd)
-        return ret == 0
+        diff_file = TestFile.create(self.config.expected_file.getPath() + ".diff")
+        ret = TestInstance._execute(cmd, diff_file)
+        succ = ret == 0
+        return (succ, diff_file)
 
     def _verbose_print_cmd(self, prefix: str, cmd: List):
-        if self.verbose:
-            cmd_s = [c.prettyPath() if isinstance(c, TestFile) else c for c in cmd]
-            self._log.append("[" + prefix + " '" + " ".join(cmd_s) + "']")
+        cmd_s = [c.prettyPath() if isinstance(c, TestFile) else c for c in cmd]
+        s = (
+            "["
+            + color.YELLOW(self.color, bright=True)
+            + prefix
+            + color.RESET(self.color)
+            + " '"
+            + " ".join(cmd_s)
+            + "']"
+        )
+        self._verbose_print(s)
 
     def _verbose_print(self, text: str):
         if self.verbose:
-            self._log.append("[" + text + "]")
+            self._log.append(text)
 
     def _dump_log(self):
         if self.verbose:
@@ -560,25 +571,50 @@ class TestInstance:
         if not exec_success:
             return TestResult(self.config, build_output, execute_output, [exec_res[2]])
 
-        success = self._check_testcase(execute_output)
+        (success, diff_output) = self._check_testcase(execute_output)
+
         if not success:
+            self._verbose_print("Diff")
+            lines = open(diff_output.getPath()).readlines()
+            for l in lines:
+                self._verbose_print("  " + l.strip())
+            if self.cleanup:
+                diff_output.clean()
             return TestResult(
                 self.config,
                 build_output,
                 execute_output,
                 ["Output did not match"],
             )
+        else:
+            if self.cleanup:
+                diff_output.clean()
 
         return TestResult(self.config, build_output, execute_output, [])
 
-    def run(self, env: Dict[str, Any]) -> TestResult:
+    def run(self, env: Dict[str, Any], lock=None) -> TestResult:
         r = self._run(env)
 
         if r.execution_output == None:
-            self._verbose_print("Failed to build")
+            self._verbose_print(
+                color.RED(self.color, bold=True)
+                + "Failed to build"
+                + color.RESET(self.color)
+            )
         elif not r.isSuccess():
-            self._verbose_print("Failed to execute")
+            self._verbose_print(
+                color.RED(self.color, bold=True)
+                + "Failed to execute"
+                + color.RESET(self.color)
+            )
+        self._verbose_print("=" * 80)
+
+        # use lock if available to make coherent printing
+        if lock:
+            lock.acquire()
         self._dump_log()
+        if lock:
+            lock.release()
 
         return r
 

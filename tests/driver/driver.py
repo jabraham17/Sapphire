@@ -85,12 +85,17 @@ def main(args: List[str], env: Dict[str, str]) -> int:
         print_list(tests)
     else:
         test_instances = [
-            TestDefinition.TestInstance(t, a.diff, not a.keep, a.verbose) for t in tests
+            TestDefinition.TestInstance(t, not a.keep, a.verbose, a.color)
+            for t in tests
         ]
 
-        env_run_func = functools.partial(TestDefinition.TestInstance.run, env=env)
         test_results: List[TestDefinition.TestResult]
         with mp.Pool() as pool:
+            manager = mp.Manager()
+            print_lock = manager.Lock()
+            env_run_func = functools.partial(
+                TestDefinition.TestInstance.run, env=env, lock=print_lock
+            )
             test_results = pool.map(env_run_func, test_instances)
 
         print_summary(test_results, env, a.color)

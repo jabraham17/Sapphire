@@ -40,13 +40,6 @@ def arguments(args: List[str], env: Dict[str, str]) -> ap.Namespace:
     )
 
     a.add_argument(
-        "--diff",
-        default=False,
-        action=ap.BooleanOptionalAction,
-        help="show diff of failing tests",
-    )
-
-    a.add_argument(
         "--list",
         default=False,
         action="store_true",
