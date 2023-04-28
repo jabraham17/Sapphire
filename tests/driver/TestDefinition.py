@@ -435,10 +435,6 @@ class TestConfiguration:
         return test_configurations
 
 
-TestBuildSuccess = Tuple[TestFile, TestFile]
-TestBuildFailure = Tuple[TestFile, str]
-
-
 @dataclass
 class TestInstance:
     """instance of test, continues information to run and check the output of a test"""
@@ -454,7 +450,7 @@ class TestInstance:
     def _execute(cls, cmd: List[str], output_file: TestFile = None) -> int:
         cmd = [c.getPath() if isinstance(c, TestFile) else c for c in cmd]
         if output_file:
-            with output_file("w") as output_fd:
+            with output_file("a") as output_fd:
                 p = sp.Popen(cmd, stdout=output_fd, stderr=output_fd)
                 p.communicate()
                 return p.returncode
@@ -464,21 +460,16 @@ class TestInstance:
             return p.returncode
 
     def _build_testcase(
-        self, env: Dict[str, Any]
-    ) -> Tuple[bool, Union[TestBuildSuccess, TestBuildFailure]]:
+        self, log_file: TestFile, env: Dict[str, Any]
+    ) -> Tuple[bool, Union[TestFile, None]]:
         """if build success, returns (success, object)
-        object on success is (build_output, executable)
-        object on failure is (build_output, reason)"""
+        object on success is executable
+        object on failure is reason"""
         test_name = self.config.name()
         compile_options = self.config.compile_options.options
         source_file = self.config.source_file
         executable_file = TestFile(
             test_name + ".out", generated=True, prefix=TestFile.default_prefix()
-        )
-        build_output = TestFile(
-            test_name + ".build",
-            generated=True,
-            prefix=TestFile.default_prefix(),
         )
 
         compiler_build_path = env["BUILD_DIRECTORY"]
@@ -493,34 +484,27 @@ class TestInstance:
         )
         self._verbose_print_cmd("Building", cmd)
 
-        ret = TestInstance._execute(cmd, build_output)
+        ret = TestInstance._execute(cmd, log_file)
 
         if ret == 0:
-            return (True, (build_output, executable_file))
+            return (True, executable_file)
         else:
-            return (False, (build_output, "Failed to build"))
+            return (False, None)
 
     def _execute_testcase(
-        self, executable: TestFile, env: Dict[str, Any]
-    ) -> Union[Tuple[bool, TestFile], Tuple[bool, TestFile, str]]:
-        """runs executable and returns on success (True, output_file)
-        on an error returns (False, msg)
+        self, executable: TestFile, log_file: TestFile, env: Dict[str, Any]
+    ) -> Tuple[bool, Union[str, None]]:
+        """runs executable and returns on success bool
         Note this function does NOT check return code of the testcase"""
-        test_name = self.config.name()
         exec_options = self.config.exec_options.options
-        exec_output = TestFile(
-            test_name + ".output",
-            generated=True,
-            prefix=TestFile.default_prefix(),
-        )
 
         cmd = [executable] + shlex.split(exec_options)
         self._verbose_print_cmd("Executing", cmd)
 
         # intentionally not checking return code, this has no bearing on test case result
-        TestInstance._execute(cmd, exec_output)
+        TestInstance._execute(cmd, log_file)
 
-        return (True, exec_output)
+        return True
 
     def _check_testcase(self, output: TestFile) -> Tuple[bool, TestFile]:
         exp = self.config.expected_file
@@ -557,56 +541,46 @@ class TestInstance:
     def _run(self, env: Dict[str, Any]) -> TestResult:
         """run a test case and generate the result"""
 
-        (build_success, build_object) = self._build_testcase(env)
-        if not build_success:
-            return TestResult(self.config, build_object[0], None, [build_object[1]])
-        build_output = build_object[0]
-        executable = build_object[1]
+        test_name = self.config.name()
+        output = TestFile.create(test_name + ".output")
 
-        exec_res = self._execute_testcase(executable, env)
-        if self.cleanup:
-            executable.clean()
-        exec_success = exec_res[0]
-        execute_output = exec_res[1]
-        if not exec_success:
-            return TestResult(self.config, build_output, execute_output, [exec_res[2]])
-
-        (success, diff_output) = self._check_testcase(execute_output)
-
-        if not success:
-            self._verbose_print("Diff")
-            lines = open(diff_output.getPath()).readlines()
-            for l in lines:
-                self._verbose_print("  " + l.strip())
+        (build_success, executable) = self._build_testcase(output, env)
+        if build_success:
+            # if we can build, try and execute
+            exec_success = self._execute_testcase(executable, output, env)
             if self.cleanup:
-                diff_output.clean()
-            return TestResult(
-                self.config,
-                build_output,
-                execute_output,
-                ["Output did not match"],
-            )
-        else:
-            if self.cleanup:
-                diff_output.clean()
+                executable.clean()
 
-        return TestResult(self.config, build_output, execute_output, [])
+        (success, diff_output) = self._check_testcase(output)
+
+        return TestResult(
+            self.config,
+            success,
+            output,
+            diff_output,
+        )
 
     def run(self, env: Dict[str, Any], lock=None) -> TestResult:
         r = self._run(env)
 
-        if r.execution_output == None:
+        if not r.isSuccess():
             self._verbose_print(
-                color.RED(self.color, bold=True)
-                + "Failed to build"
-                + color.RESET(self.color)
+                color.RED(self.color, bold=True) + "Failure:" + color.RESET(self.color)
             )
-        elif not r.isSuccess():
-            self._verbose_print(
-                color.RED(self.color, bold=True)
-                + "Failed to execute"
-                + color.RESET(self.color)
-            )
+            # if we have a diff, print that. else just print the output
+            if r.diff:
+                self._verbose_print("  " + "Diff".center(78, "~"))
+                lines = open(r.diff.getPath()).readlines()
+                for l in lines:
+                    self._verbose_print("  " + l.rstrip())
+                self._verbose_print("  " + "~" * 78)
+            else:
+                self._verbose_print("  " + "Output".center(78, "~"))
+                lines = open(r.output.getPath()).readlines()
+                for l in lines:
+                    self._verbose_print("  " + l.rstrip())
+                self._verbose_print("  " + "~" * 78)
+
         self._verbose_print("=" * 80)
 
         # use lock if available to make coherent printing
@@ -622,27 +596,21 @@ class TestInstance:
 @dataclass
 class TestResult:
     test: TestConfiguration
-
-    compilation_output: Union[TestFile, None]
-    execution_output: Union[TestFile, None]
-
-    msgs: List[str] = field(default_factory=list)
+    success: bool
+    output: Union[TestFile, None]
+    diff: Union[TestFile, None]
 
     def name(self, pretty=False, env: Dict[str, Any] = dict()):
         return self.test.name(pretty=pretty, env=env)
 
     def isSuccess(self):
-        return (
-            self.compilation_output is not None
-            and self.execution_output is not None
-            and len(self.msgs) == 0
-        )
+        return self.success
 
     def clean(self):
-        if self.compilation_output:
-            self.compilation_output.clean()
-        if self.execution_output:
-            self.execution_output.clean()
+        if self.output:
+            self.output.clean()
+        if self.diff:
+            self.diff.clean()
         if self.test.expected_file:
             self.test.expected_file.clean()
         if self.test.source_file:

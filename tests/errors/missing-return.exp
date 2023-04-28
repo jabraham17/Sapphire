@@ -1,0 +1,3 @@
+Errors:
+  function 'spp_foo' on line 1 should have a return statement
+  function 'spp_bar' on line 4 should not have a return statement

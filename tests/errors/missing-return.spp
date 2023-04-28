@@ -1,0 +1,9 @@
+func foo(): int {
+
+}
+func bar(): nil {
+  return 1;
+}
+func foobar(): int {
+  return 1;
+}
