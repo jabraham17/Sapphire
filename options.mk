@@ -79,6 +79,12 @@ endif
 COMPILE_FLAGS_+= -masm=intel
 COMPILE_FLAGS_+= -Wall -Wextra
 
+# add runtime lib path
+COMPILE_FLAGS_+= -DRUNTIME_LINKER_PATH=\"$(CC_1)\"
+COMPILE_FLAGS_+= -DRUNTIME_LINKER_ARGS=\"\"
+COMPILE_FLAGS_+= -DRUNTIME_LIBRARY_DIR=\"$(ROOT_PROJECT_DIRECTORY)runtime/\"
+COMPILE_FLAGS_+= -DRUNTIME_LIBRARY_NAME=\"runtime\"
+
 ifdef LINKER
 LINK_FLAGS_+= -fuse-ld=$(LINKER)
 endif
@@ -86,11 +92,17 @@ endif
 LLVM=1
 LLVM_COMPILE_FLAGS=
 LLVM_LINK_FLAGS=
-LLVM_INSTALL=/usr
+LLVM_INSTALL=$(ROOT_PROJECT_DIRECTORY)third-party/llvm
 ifeq ($(LLVM),1)
+LLVM_CONFIG=$(LLVM_INSTALL)/bin/llvm-config
+LLVM_VERSION=$(shell $(LLVM_CONFIG) --version | sed -E 's/^([0-9]+)\..+$$/\1/')
+ifeq ($(shell test $(LLVM_VERSION) -lt 16; echo $$?),0)
+$(error "Insufficent LLVM version, requires 16+")
+endif
 # dont use c++ flags, use c preprocessor flags to get includes and macros
-LLVM_COMPILE_FLAGS=$(shell $(LLVM_INSTALL)/bin/llvm-config --cppflags)
-LLVM_LINK_FLAGS=-Wl,-rpath=$(shell $(LLVM_INSTALL)/bin/llvm-config --libdir) $(shell $(LLVM_INSTALL)/bin/llvm-config --ldflags --system-libs --libs core)
+# use -isystem for the include to silence warnings from llvm
+LLVM_COMPILE_FLAGS= -isystem $(shell $(LLVM_CONFIG) --includedir) $(shell $(LLVM_CONFIG) --cppflags)
+LLVM_LINK_FLAGS=-Wl,-rpath=$(shell $(LLVM_CONFIG) --libdir) $(shell $(LLVM_CONFIG) --ldflags --system-libs --libs core)
 endif
 COMPILE_FLAGS_+= $(LLVM_COMPILE_FLAGS)
 LINK_FLAGS_+= $(LLVM_LINK_FLAGS)

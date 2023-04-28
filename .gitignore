@@ -9,3 +9,4 @@ build/
 ._*
 __pycache__
 debug/
+third-party/*
