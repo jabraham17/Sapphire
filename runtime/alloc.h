@@ -3,6 +3,6 @@
 
 #include <stdlib.h>
 
-void* alloc(long size) { return malloc(size); }
+static void* alloc(long size) { return malloc(size); }
 
 #endif
