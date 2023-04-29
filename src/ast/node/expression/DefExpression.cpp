@@ -48,7 +48,7 @@ DefExpression::DefExpression(
   if(symbol_->type()->isUnknownType()) {
     symbol_->setType(type);
   }
-  initialValue_->parent() = this;
+  if(initialValue_) initialValue_->parent() = this;
 }
 DefExpression::DefExpression(symbol::Symbol* symbol, Expression* initialValue)
     : DefExpression((Type*)Type::getUnknownType(), symbol, initialValue) {}
@@ -60,7 +60,7 @@ void DefExpression::setType(Type* type) { this->symbol()->setType(type); }
 
 void DefExpression::setInitialValue(Expression* value) {
   this->initialValue_ = value;
-  this->initialValue_->parent() = this;
+  if(this->initialValue_) this->initialValue_->parent() = this;
 }
 bool DefExpression::hasInitialValue() { return this->initialValue_ != nullptr; }
 Expression* DefExpression::initialValue() { return this->initialValue_; }

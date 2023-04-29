@@ -64,7 +64,7 @@
 %token FUNC VAR CLASS EXTERN FFI IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
 %token INIT DEINIT THIS
 %token ARROW COLON COMMA SEMICOLON
-%token BOOL BYTE INT UINT REAL STRING
+%token BOOL BYTE INT UINT REAL STRING ANY
 %token LPAREN RPAREN LCURLY RCURLY LSQUARE RSQUARE
 %token <lexeme> ID INTEGER_LITERAL HEX_LITERAL BINARY_LITERAL REAL_LITERAL STRING_LITERAL
 
@@ -238,6 +238,7 @@ type_base:
   | STRING        { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::STRING); }
   | BOOL          { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::BOOL); }
   | BYTE          { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::BYTE); }
+  | ANY           { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::ANY); }
   | array_type    { $$ = $1; }
   | tuple_type    { $$ = $1; }
   | callable_type { $$ = $1; }

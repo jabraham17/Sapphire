@@ -147,33 +147,33 @@ bool Type::isSameBaseType(Type* t1, Type* t2) {
   {
     PrimitiveType* pt1 = t1->toPrimitiveType();
     PrimitiveType* pt2 = t2->toPrimitiveType();
-    return pt1 != nullptr && pt2 != nullptr &&
-           pt1->primitiveType() == pt2->primitiveType();
+    if(pt1 != nullptr && pt2 != nullptr)
+      return pt1->primitiveType() == pt2->primitiveType();
   }
   {
     ArrayType* pt1 = t1->toArrayType();
     ArrayType* pt2 = t2->toArrayType();
-    return pt1 != nullptr && pt2 != nullptr &&
-           isSameType(pt1->elementType(), pt2->elementType());
+    if(pt1 != nullptr && pt2 != nullptr)
+      return isSameType(pt1->elementType(), pt2->elementType());
   }
   {
     TupleType* pt1 = t1->toTupleType();
     TupleType* pt2 = t2->toTupleType();
-    return pt1 != nullptr && pt2 != nullptr &&
-           isSameType(pt1->elementTypes(), pt2->elementTypes());
+    if(pt1 != nullptr && pt2 != nullptr)
+      return isSameType(pt1->elementTypes(), pt2->elementTypes());
   }
   {
     CallableType* pt1 = t1->toCallableType();
     CallableType* pt2 = t2->toCallableType();
-    return pt1 != nullptr && pt2 != nullptr &&
-           isSameType(pt1->returnType(), pt2->returnType()) &&
-           isSameType(pt1->parameterTypes(), pt2->parameterTypes());
+    if(pt1 != nullptr && pt2 != nullptr)
+      return isSameType(pt1->returnType(), pt2->returnType()) &&
+             isSameType(pt1->parameterTypes(), pt2->parameterTypes());
   }
   {
     ClassType* pt1 = t1->toClassType();
     ClassType* pt2 = t2->toClassType();
-    return pt1 != nullptr && pt2 != nullptr &&
-           pt1->className() == pt2->className();
+    if(pt1 != nullptr && pt2 != nullptr)
+      return pt1->className() == pt2->className();
   }
   return false;
 }

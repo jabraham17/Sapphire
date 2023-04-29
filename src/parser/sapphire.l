@@ -89,7 +89,8 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 "int"    { return INT; }
 "uint"   { return UINT; }
 "real"   { return REAL; }
-"string" {return STRING; }
+"string" { return STRING; }
+"any"    { return ANY; }
 
 
     /* grouping */

@@ -3,13 +3,12 @@
 
 #include "ast/ast.h"
 #include "ast/node/type/nodes.h"
+#include "passes/ast-pass.h"
 
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "resolve-base.h"
 
 namespace pass {
 namespace resolution {
@@ -19,11 +18,11 @@ using SymbolMap = std::unordered_map<std::string, ast::symbol::Symbol*>;
 // std::unordered_map<ast::Ty, ast::symbol::FunctionSymbol*>;
 using FunctionSymbolList = std::vector<ast::symbol::FunctionSymbol*>;
 
-class ScopeResolve : public ResolveBase {
+class ScopeResolve : public ASTPass {
 public:
-  ScopeResolve(ast::node::ASTNode* ast) : ResolveBase(ast) {}
+  ScopeResolve(ast::node::ASTNode* ast) : ASTPass(ast) {}
   virtual ~ScopeResolve() = default;
-  virtual bool resolve() override;
+  virtual bool run() override;
 };
 
 } // namespace resolution

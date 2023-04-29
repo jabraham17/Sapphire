@@ -31,7 +31,8 @@ FunctionSymbol::FunctionSymbol(const char* symbolName, node::Type* type)
 std::string FunctionSymbol::name() const {
   std::string s;
   if(prototype()->isMangled()) s += "spp_";
-  if(belongsTo() != nullptr) s += belongsTo()->toMangledString() + "_";
+  if(!this->belongsTo()->isUntypedType() && !this->belongsTo()->isUnknownType())
+    s += belongsTo()->toMangledString() + "_";
   s += Symbol::name();
   return s;
 }

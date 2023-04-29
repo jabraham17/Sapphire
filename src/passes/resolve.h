@@ -1,20 +1,20 @@
 #ifndef SAPPHIRE_RESOLUTION_RESOLVE_H_
 #define SAPPHIRE_RESOLUTION_RESOLVE_H_
 
-#include "resolve-base.h"
+#include "ast-pass.h"
 
 namespace pass {
 namespace resolution {
 
-class Resolve : public ResolveBase {
+class Resolve : public ASTPass {
 private:
   std::size_t recursiveDepth = 2;
 
 public:
   Resolve(ast::node::ASTNode* ast, std::size_t recursiveDepth = 2)
-      : ResolveBase(ast), recursiveDepth(recursiveDepth) {}
+      : ASTPass(ast), recursiveDepth(recursiveDepth) {}
   virtual ~Resolve() = default;
-  virtual bool resolve() override;
+  virtual bool run() override;
 };
 
 } // namespace resolution

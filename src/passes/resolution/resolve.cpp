@@ -1,4 +1,4 @@
-#include "resolve.h"
+#include "passes/resolve.h"
 
 #if defined(DEBUG) && DEBUG == 1
   #include "ast/visitor/ast-dump-tree.h"
@@ -12,7 +12,7 @@
 
 namespace pass {
 namespace resolution {
-bool Resolve::resolve() {
+bool Resolve::run() {
 
 #if defined(DEBUG) && DEBUG == 1
   std::cerr << "Initial AST\n";
@@ -23,11 +23,15 @@ bool Resolve::resolve() {
 
   for(std::size_t i = 0; i < recursiveDepth; i++) {
 
+#if defined(DEBUG) && DEBUG == 1
+    std::cerr << "Resolve Pass " << i << "\n";
+#endif
+
     // resolve scopes
     {
       pass::resolution::ScopeResolve sr(ast);
 
-      if(!sr.resolve()) {
+      if(sr.run()) {
         addErrors(sr.errors().begin(), sr.errors().end());
 
 #if defined(DEBUG) && DEBUG == 1
@@ -37,7 +41,7 @@ bool Resolve::resolve() {
         std::cerr << std::string(80, '=') << std::endl;
 #endif
 
-        return 1;
+        return hasErrors();
       }
     }
 
@@ -45,7 +49,7 @@ bool Resolve::resolve() {
     {
       pass::resolution::TypeResolve tr(ast);
 
-      if(!tr.resolve()) {
+      if(tr.run()) {
         addErrors(tr.errors().begin(), tr.errors().end());
 
 #if defined(DEBUG) && DEBUG == 1
@@ -55,7 +59,7 @@ bool Resolve::resolve() {
         std::cerr << std::string(80, '=') << std::endl;
 #endif
 
-        return 1;
+        return hasErrors();
       }
     }
   }

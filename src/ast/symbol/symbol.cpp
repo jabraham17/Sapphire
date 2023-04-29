@@ -20,7 +20,7 @@ Symbol::Symbol(const std::string& symbolName, node::Type* type)
 Symbol::Symbol(const char* symbolName, node::Type* type)
     : symbolName(symbolName), type_(type) {}
 
-std::string Symbol::basename() const { return name(); }
+std::string Symbol::basename() const { return symbolName; }
 std::string Symbol::name() const { return symbolName; }
 node::Type* Symbol::type() const { return type_; }
 

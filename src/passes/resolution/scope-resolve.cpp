@@ -42,11 +42,6 @@ protected:
   }
 };
 
-// traverse the node and find a symbol
-// static Symbol* getSymbol(ast::node::ASTNode* node) {
-
-// }
-
 // returns any errors
 // takes a map of function_symbols and symbols
 // this is modified as we execute, but it does not affect the outside scope
@@ -108,96 +103,103 @@ protected:
 
     switch(call->opType()) {
       // field access, either its a function of a type or a field of a type.
-      // TODO: handle fields of the type
+      // TODO: handle fields of the type, not yet handled
       // a function gets resolved from (exp.sym) to (call sym, exp, ...)
-      // we can handle the call expression as a curry, then whoever uses this
-      // has to handle the currying
+      // TODO: handle what if the next operands is not a call?
 
       // case ast::node::OperatorType::FIELD_ACCESS: {
-      //   // resolve op0
-      //   auto op0 = ast::toExpressionNode(call->operands()->get(0));
-      //   assert(op0 != nullptr);
-      //   op0->accept(this);
-
-      //   // get op1, it MUST be a useExpression
-      //   auto op1 = ast::toUseExpressionNode(call->operands()->get(1));
-      //   assert(op1 != nullptr);
 
       //   break;
       // }
       case ast::node::OperatorType::FUNCTION: {
-        auto funcNode = call->operands()->get(0);
-        auto callFuncExpr = ast::toExpressionNode(call->operands()->get(0));
-        assert(callFuncExpr != nullptr);
-        ast::symbol::Symbol* callFuncSym = nullptr;
-        std::string callFuncName;
+        ast::node::UseExpression* callFuncExpr = nullptr;
         // if its a use, directly get it
-        if(ast::isUseExpressionNode(callFuncExpr)) {
-          callFuncSym = ast::toUseExpressionNode(callFuncExpr)->symbol();
-          callFuncName = callFuncSym->name();
-        }
+        if(ast::isUseExpressionNode(call->operands()->get(0))) {
+          callFuncExpr = ast::toUseExpressionNode(call->operands()->get(0));
+        } else if(auto fieldAccess =
+                      ast::toCallExpressionNode(call->operands()->get(0));
+                  fieldAccess != nullptr &&
+                  fieldAccess->opType() ==
+                      ast::node::OperatorType::FIELD_ACCESS) {
+          // if the "symbol" is actually a field access, we replace it with its
+          // components resolve op0
+          auto op0 = ast::toExpressionNode(fieldAccess->operands()->get(0));
+          assert(op0 != nullptr);
+          op0->accept(this);
+          // resolve op1, it MUST be a useExpression
+          auto op1 = ast::toUseExpressionNode(fieldAccess->operands()->get(1));
+          assert(op1 != nullptr);
 
-        // if(auto fieldAccess = ast::toCallExpressionNode(callFuncExpr);
-        //           fieldAccess != nullptr &&
-        //           fieldAccess->opType() ==
-        //               ast::node::OperatorType::FIELD_ACCESS) {
-        //   // if its a field access
-        //   // TODO: to resolve this, I HAVE to know its type
-        //   // that way i know which function to insert here
-        //   // but type resolution happes after
-        //   // maybe after i scope resolve each statment, i immediatly type
-        //   // resolve it? leapfrogging.
+          // add 'op1, op0' to operands, do this by adding to the front and
+          // replacing
+          call->operands()->get(0)->replaceWith(op0);
+          call->operands()->addFront(op1);
 
-        //   // field access is a expr DOT useexpr
-        //   // auto op0 = ast::toExpressionNode(call->operands()->get(0));
-        //   // auto op1 = ast::toUseExpressionNode(call->operands()->get(1));
-        //   // assert(op0 != nullptr && op1 != nullptr);
+          // now we have a symbol that can be resolved
+          callFuncExpr = ast::toUseExpressionNode(call->operands()->get(0));
 
-        //   // // construct a possible callFunc
-        //   // callFuncSym = new ast::symbol::FunctionSymbol(
-        //   //     op1->symbol()->name(),
-        //   //     op0->type());
-        //   // if this matches, we will need to modify
-        //   // callFuncName
-        // } else {
-        //   assert(false);
-        // }
-        // auto callFuncExpr =
-        // ast::toUseExpressionNode(call->operands()->get(0)); if(callFuncExpr
-        // == nullptr) {
-        //   // not a use expr, try and resolve and then try again
-        //   call->operands()->get(0)->accept(this);
-
-        // }
-        // assert(callFuncExpr != nullptr);
-
-        // search through all functions
-        ast::symbol::FunctionSymbol* found = nullptr;
-        for(auto funcSym : function_symbols) {
-          // they are the same if
-          // 1. they have the same name
-          // 2. the number and types of the call expression match the prototype
-
-          // if(callFuncName == funcSym) {
-          //   found = funcSym.second;
-          //   break;
-          // }
-        }
-        if(found) {
-          assert(ast::isUseExpressionNode(callFuncExpr));
-          ast::toUseExpressionNode(callFuncExpr)->setSymbol(found);
         } else {
-          this->returnValue_.push_back(
-              "unable to resolve function '" + callFuncName + "' on line " +
-              std::to_string(call->line()));
+          assert(false);
         }
 
+        // we need to resolve the other operands to make this work nicely
         // resolve remaining operands
         for(auto it = call->operands()->begin() + 1;
             it != call->operands()->end();
             it++) {
           (*it)->accept(this);
         }
+
+        // search through all functions
+        auto callFuncSym = callFuncExpr->symbol();
+        ast::symbol::FunctionSymbol* found = nullptr;
+        for(auto funcSym : function_symbols) {
+          // std::cerr << "cmp " << funcSym->basename() << " "
+          //           << callFuncSym->basename() << "\n";
+          // they are the same if
+          // 1. they have the same name
+          // 2. the number and types of the call expression match the prototype
+
+          if(funcSym->basename() == callFuncSym->basename()) {
+            // std::cerr << funcSym->basename() << "\n";
+            auto funcSig = funcSym->type()->toCallableType();
+            auto funcParamTypes = funcSig->parameterTypes();
+            if(funcParamTypes->elementTypes().size() !=
+               (call->operands()->size() - 1))
+              continue;
+            bool matched = true;
+            for(auto it = call->operands()->begin() + 1;
+                it != call->operands()->end();
+                it++) {
+              auto idx = (it - call->operands()->begin()) - 1;
+              auto operand = ast::toExpressionNode(*it);
+              assert(operand != nullptr);
+              // std::cerr << "    cmp " <<
+              // funcParamTypes->elementTypes().at(idx)->toString() << " "
+              // << operand->type()->toString() << "\n";
+              if(!ast::node::Type::isSameType(
+                     operand->type(),
+                     funcParamTypes->elementTypes().at(idx))) {
+                matched = false;
+              }
+            }
+            // std::cerr << "did we match" << matched << "\n";
+            if(!matched) continue;
+            // std::cerr << "found it \n";
+            // we found a match!
+            found = funcSym;
+            break;
+          }
+        }
+        if(found) {
+          assert(ast::isUseExpressionNode(callFuncExpr));
+          ast::toUseExpressionNode(callFuncExpr)->setSymbol(found);
+        } else {
+          this->returnValue_.push_back(
+              "unable to resolve function call to '" + callFuncSym->toString() +
+              "' on line " + std::to_string(call->line()));
+        }
+
         break;
       }
       default: call->operands()->accept(this); break;
@@ -236,7 +238,7 @@ protected:
   void visitImpl(ast::node::FunctionDefinition* func) {
     auto function_symbols = get<0>();
     SymbolMap symbols;
-    auto funcName = func->functionPrototype()->name();
+    auto funcName = func->functionPrototype()->symbol()->basename();
 
     for(auto elm : *func->functionPrototype()->parameters()) {
       if(auto param = ast::toParameterNode(elm); param != nullptr) {
@@ -269,7 +271,7 @@ protected:
   }
 };
 
-bool ScopeResolve::resolve() {
+bool ScopeResolve::run() {
   FunctionSymbolList function_symbols;
   {
     BuildFunctionSymbols bfs(&function_symbols);
@@ -277,6 +279,14 @@ bool ScopeResolve::resolve() {
     auto functionErrors = bfs.returnValueAndClear();
     addErrors(functionErrors.begin(), functionErrors.end());
   }
+#if defined(DEBUG) && DEBUG == 1
+  std::cerr << std::string(80, '=') << "\n";
+  std::cerr << "Function symbol table\n";
+  for(auto func : function_symbols) {
+    std::cerr << "  " << func->toString(true) << "\n";
+  }
+  std::cerr << std::string(80, '=') << "\n";
+#endif
   {
     ResolveFunctions rf(function_symbols);
     ast->accept(&rf);

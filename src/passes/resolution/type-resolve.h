@@ -1,16 +1,16 @@
 #ifndef SAPPHIRE_RESOLUTION_TYPE_RESOLVE_H_
 #define SAPPHIRE_RESOLUTION_TYPE_RESOLVE_H_
 
-#include "resolve-base.h"
+#include "passes/ast-pass.h"
 
 namespace pass {
 namespace resolution {
 
-class TypeResolve : public ResolveBase {
+class TypeResolve : public ASTPass {
 public:
-  TypeResolve(ast::node::ASTNode* ast) : ResolveBase(ast) {}
+  TypeResolve(ast::node::ASTNode* ast) : ASTPass(ast) {}
   virtual ~TypeResolve() = default;
-  virtual bool resolve() override;
+  virtual bool run() override;
 };
 
 } // namespace resolution

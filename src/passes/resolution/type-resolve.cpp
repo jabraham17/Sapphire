@@ -46,6 +46,15 @@ protected:
     call->operands()->accept(this);
 
     switch(call->opType()) {
+      case ast::node::OperatorType::FUNCTION: {
+        auto func = ast::toUseExpressionNode(call->operands()->get(0));
+        assert(func != nullptr);
+        auto funcType = func->type()->toCallableType();
+        assert(funcType != nullptr);
+        // call type is ret type
+        call->setType(funcType->returnType());
+        break;
+      }
       case ast::node::OperatorType::PLUS: {
         // if num types, string types, or array types, OF THE SAME TYPE, return
         // the same type
@@ -76,7 +85,7 @@ protected:
           op0->setType(op1->type());
           call->setType(op0->type());
         } else if(ast::node::Type::isSameType(op0->type(), op1->type())) {
-          // no need to do anything
+          call->setType(op0->type());
         } else {
           errors.push_back(
               "type mismatch on '" + op0->type()->toString() + " = " +
@@ -99,6 +108,8 @@ protected:
           // if the call type is unknown, we can set it
           if(call->type()->isUnknownType()) {
             call->setType(elmType);
+          } else if(ast::node::Type::isSameType(call->type(), elmType)) {
+            // already resolved
           } else {
             // user wrote a type mismatch
             errors.push_back(
@@ -120,7 +131,7 @@ protected:
   }
 };
 
-bool TypeResolve::resolve() {
+bool TypeResolve::run() {
   {
     ResolveTypes rce;
     ast->accept(&rce);

@@ -17,9 +17,9 @@ VISIT(NodeList) {
     a->accept(this);
   }
 }
-VISIT(Parameter) { strm << arg->symbol()->toString(); }
+VISIT(Parameter) { strm << arg->symbol()->toString(true); }
 VISIT(FunctionPrototype) {
-  strm << arg->name() << "(";
+  strm << arg->symbol()->basename() << "(";
   std::string sep;
   for(auto p : *arg->parameters()) {
     strm << sep;
@@ -64,7 +64,7 @@ VISIT(Scope) { arg->statements()->accept(this); }
 VISIT(ExpressionStatement) { arg->expression()->accept(this); }
 
 VISIT(DefExpression) {
-  strm << arg->symbol()->toString();
+  strm << "var " << arg->symbol()->toString(true);
   if(arg->hasInitialValue()) {
     strm << " = ";
     arg->initialValue()->accept(this);
@@ -154,10 +154,10 @@ VISIT(CallExpression) {
     strm << ", ";
     e->accept(this);
   }
-  strm << ")";
+  strm << "):" + arg->type()->toString();
 }
 VISIT(UseExpression) {
-  strm << "(" << arg->symbol()->name() << ":"
+  strm << "(" << arg->symbol()->basename() << ":"
        << arg->symbol()->type()->toString() << ")";
 }
 VISIT(IntExpression) { strm << arg->value(); }

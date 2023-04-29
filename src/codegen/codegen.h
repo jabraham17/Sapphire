@@ -2,6 +2,7 @@
 #define SAPPHIRE_CODEGEN_CODEGEN_H_
 
 #include "ast/ast.h"
+#include "passes/ast-pass.h"
 
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
@@ -15,14 +16,7 @@
 
 namespace codegen {
 
-class Codegen {
-public:
-  Codegen() = default;
-  virtual ~Codegen() = default;
-  virtual std::string doCodegen(ast::node::ASTNode* ast) = 0;
-};
-
-class LLVMCodegen : Codegen {
+class LLVMCodegen : public pass::ASTPass {
 
   std::unique_ptr<llvm::LLVMContext> Context;
   std::unique_ptr<llvm::IRBuilder<>> Builder;
@@ -33,8 +27,8 @@ public:
       unordered_map<ast::symbol::Symbol*, std::pair<llvm::Type*, llvm::Value*>>;
 
 public:
-  LLVMCodegen()
-      : Context(std::make_unique<llvm::LLVMContext>()),
+  LLVMCodegen(ast::node::ASTNode* ast)
+      : ASTPass(ast), Context(std::make_unique<llvm::LLVMContext>()),
         Builder(std::make_unique<llvm::IRBuilder<>>(*Context)),
         Module(std::make_unique<llvm::Module>("test", *Context)) {}
 
@@ -45,7 +39,13 @@ public:
     return str;
   }
 
-  virtual std::string doCodegen(ast::node::ASTNode* ast) override;
+private:
+  void buildObjectFile(const std::string& filename);
+
+public:
+  void buildExecutable(const std::string& filename);
+
+  bool run() override;
 };
 } // namespace codegen
 

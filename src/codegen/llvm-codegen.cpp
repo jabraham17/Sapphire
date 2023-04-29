@@ -108,11 +108,14 @@ protected:
         set(llvm::Type::getVoidTy(*Context));
         break;
       case ast::node::PrimitiveTypeEnum::UNTYPED:
-      case ast::node::PrimitiveTypeEnum::ANY:
-      case ast::node::PrimitiveTypeEnum::UNKNOWN:
-        std::cerr << "cannot convert type to LLVM\n";
+        std::cerr << "cannot convert UNTYPED type to LLVM\n";
         exit(1);
-        set(nullptr);
+      case ast::node::PrimitiveTypeEnum::ANY:
+        std::cerr << "cannot convert ANY type to LLVM\n";
+        exit(1);
+      case ast::node::PrimitiveTypeEnum::UNKNOWN:
+        std::cerr << "cannot convert UNKNOWN type to LLVM\n";
+        exit(1);
     }
   }
   virtual void visitImpl(ast::node::ArrayType* arg) override {
@@ -368,13 +371,25 @@ protected:
           argExp->accept(this);
           auto valPtr = this->returnValueAndClear();
           auto valType = getLLVMType(Context, argExp->type());
-          // load the result of the call
+
+          // load param and store it
           auto val = Builder->CreateLoad(valType, valPtr);
           functionArgs.push_back(val);
         }
 
-        auto funcCall = Builder->CreateCall(funcToCall, functionArgs);
-        set(funcCall);
+        auto funcCallRes = Builder->CreateCall(funcToCall, functionArgs);
+        // store result to the stack if not void
+        if(!funcToCall->getReturnType()->isVoidTy()) {
+          auto resultPtr = StackLocal(
+              Context,
+              Builder,
+              funcToCall->getReturnType(),
+              funcCallRes);
+
+          set(resultPtr);
+        } else {
+          set(nullptr); // no return value
+        }
         break;
       }
       case ast::node::OperatorType::ASSIGNMENT: {
@@ -512,14 +527,15 @@ protected:
   }
 };
 
-class FunctionBuilder final : public ast::visitor::VisitorWithArgs<
+class FunctionBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
                                   FunctionBuilder,
                                   ast::visitor::VisitAll,
+                                  std::vector<std::string>,
                                   llvm::LLVMContext*,
                                   llvm::IRBuilder<>*,
                                   llvm::Module*> {
 public:
-  using VisitorWithArgs::VisitorWithArgs;
+  using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
   virtual void visitImpl(ast::node::ExternDefinition* arg) override {
@@ -563,8 +579,9 @@ protected:
 
         variables[Sym] = {llvmType, local};
       } else {
-        std::cerr << "error in codegen: type mismatch on param\n";
-        exit(1);
+        this->returnValue_.push_back(
+            "error in codegen: type mismatch on param\n");
+        return;
       }
     }
 
@@ -576,18 +593,25 @@ protected:
     }
 
     // verify the body
-    if(llvm::verifyFunction(*F, &llvm::errs())) {
-      std::cerr << "\nERROR in function\n";
+    std::string errors;
+    llvm::raw_string_ostream strm(errors);
+    if(llvm::verifyFunction(*F, &strm)) {
+      this->returnValue_.push_back(
+          "ERROR in '" + arg->functionPrototype()->name());
+      this->returnValue_.push_back(errors);
+      return;
     }
   }
 };
 
-std::string LLVMCodegen::doCodegen(ast::node::ASTNode* ast) {
+bool LLVMCodegen::run() {
 
   // build all functions
   FunctionBuilder fb(Context.get(), Builder.get(), Module.get());
-  ast->accept(&fb);
+  this->ast->accept(&fb);
+  auto errors = fb.returnValue();
+  this->addErrors(errors.begin(), errors.end());
 
-  return getIR();
+  return this->hasErrors();
 }
 } // namespace codegen
