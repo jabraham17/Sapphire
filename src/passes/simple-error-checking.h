@@ -1,5 +1,5 @@
-#ifndef PP
-#define PP
+#ifndef SAPPHIRE_PASSES_SIMPLE_ERROR_CHECKING_H_
+#define SAPPHIRE_PASSES_SIMPLE_ERROR_CHECKING_H_
 
 #include "ast-pass.h"
 

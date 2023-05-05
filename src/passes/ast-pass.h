@@ -1,5 +1,5 @@
-#ifndef PPP
-#define PPP
+#ifndef SAPPHIRE_PASSES_AST_PASS_H_
+#define SAPPHIRE_PASSES_AST_PASS_H_
 
 #include "ast/ast.h"
 #include "ast/visitor/ast-visitor.h"

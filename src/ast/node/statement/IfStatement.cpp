@@ -8,29 +8,10 @@
 namespace ast {
 namespace node {
 
-ASTNode* IfStatement::clone() {
-  assert(false && "if statement clone is unimplemented");
-  return nullptr;
-}
-
-void IfStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(expr_ == old) {
-    replacement->parent() = this;
-    expr_ = toNodeType<std::remove_pointer_t<decltype(expr_)>>(replacement);
-    return;
-  }
-  if(ifBody_ == old) {
-    replacement->parent() = this;
-    ifBody_ = toNodeType<std::remove_pointer_t<decltype(ifBody_)>>(replacement);
-    return;
-  }
-  if(elseBody_ == old) {
-    replacement->parent() = this;
-    elseBody_ =
-        toNodeType<std::remove_pointer_t<decltype(elseBody_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* IfStatement::clone() {
+//   assert(false && "if statement clone is unimplemented");
+//   return nullptr;
+// }
 
 IfStatement::IfStatement(
     long line,
@@ -46,25 +27,31 @@ IfStatement::IfStatement(long line, Expression* expr, Scope* ifBody)
 }
 IfStatement::IfStatement(Expression* expr, Scope* ifBody)
     : IfStatement(expr, ifBody, nullptr) {}
-IfStatement::IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody)
-    : expr_(expr), ifBody_(ifBody), elseBody_(elseBody) {
-  expr_->parent() = this;
-  ifBody_->parent() = this;
-  if(elseBody_) elseBody_->parent() = this;
+IfStatement::IfStatement(Expression* expr, Scope* ifBody, Statement* elseBody) {
+  this->exprIdx_ = this->addChild(expr);
+  this->ifBodyIdx_ = this->addChild(ifBody);
+  if(elseBody) this->elseBodyIdx_ = this->addChild(elseBody);
+  else this->elseBodyIdx_ = -1;
 }
 
-Expression* IfStatement::expr() { return expr_; }
-Scope* IfStatement::ifBody() { return ifBody_; }
+Expression* IfStatement::expr() {
+  return child(this->exprIdx_)->toExpression();
+}
+Scope* IfStatement::ifBody() { return child(this->ifBodyIdx_)->toScope(); }
+Statement* IfStatement::elseBody() {
+  if(hasElseBody()) return child(this->elseBodyIdx_)->toStatement();
+  else return nullptr;
+}
 
-bool IfStatement::hasElseBody() { return elseBody_ != nullptr; }
+bool IfStatement::hasElseBody() { return this->elseBodyIdx_ != -1; }
 bool IfStatement::hasPlainElse() {
-  return hasElseBody() && isScopeNode(elseBody_);
+  return hasElseBody() && elseBody()->isScope();
 }
 bool IfStatement::hasElseIf() {
-  return hasElseBody() && isIfStatementNode(elseBody_);
+  return hasElseBody() && elseBody()->isIfStatement();
 }
-Scope* IfStatement::plainElseBody() { return toScopeNode(elseBody_); }
-IfStatement* IfStatement::elseIfBody() { return toIfStatementNode(elseBody_); }
+Scope* IfStatement::plainElseBody() { return elseBody()->toScope(); }
+IfStatement* IfStatement::elseIfBody() { return elseBody()->toIfStatement(); }
 
 } // namespace node
 } // namespace ast

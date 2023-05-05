@@ -25,13 +25,13 @@
 
   struct FunctionPrototypeWrapper {
     const char* name;
-    ast::node::NodeList* parameters;
+    ast::node::ASTList parameters;
     ast::node::Type* returnType;
     ast::node::Type* belongsTo;
     bool isFFI;
     FunctionPrototypeWrapper(
       const char* name,
-      ast::node::NodeList* parameters,
+      ast::node::ASTList parameters,
       ast::node::Type* returnType,
       ast::node::Type* belongsTo = ast::node::Type::getUntypedType(),
       bool isFFI = false):
@@ -41,6 +41,21 @@
         belongsTo(belongsTo),
         isFFI(isFFI) {}
   };
+
+  struct ASTListWrapper {
+    ast::node::ASTList* list_;
+    ASTListWrapper(): list_(new ast::node::ASTList()) {}
+    void addFront(ast::node::ASTList::value_type elm) {
+      list_->insert(list_->begin(), elm);
+    }
+    auto list() {
+      return *list_;
+    }
+    auto ptr() {
+      return list_;
+    }
+  };
+
 }
 
 %union {
@@ -57,8 +72,7 @@
   ast::node::Scope* scope;
   ast::symbol::Symbol* symbol;
 
-  ast::node::NodeList* nodeList;
-  ast::node::TypeList* typeList;
+  ASTListWrapper* nodeList;
 }
 
 %token FUNC VAR CLASS EXTERN FFI IF THEN ELSE FOR WHILE IN RETURN NIL REF OPERATOR NEW
@@ -93,9 +107,10 @@
 %type <funcPrototypeWrapper> function_prototype_base function_prototype_typebase function_prototype_ffi
 %type <scope> curly_statement_list
 %type <stmt> statement control_flow_statement statement_ if_statement while_statement for_statement return_statement
-%type <expr> expression number if_condition closure_definition def_expression def_expression_with_value
-%type <type> type_specifier type type_ref_ type_nilable_ type_base return_type array_type tuple_type callable_type callable_return_type class_type
-%type <typeList> type_list
+%type <expr> expression number if_condition def_expression def_expression_with_value
+  /* closure_definition */
+%type <type> type_specifier type type_ref_ type_nilable_ type_base return_type array_type class_type
+  /* tuple_type callable_type callable_return_type */
 %type <param> parameter
 %type <op> overloadable_op
 %type <lexeme> name
@@ -112,11 +127,15 @@
 %%
 
 file:
-  definition_list { context->ast = $1; }
+  definition_list {
+    for(auto def: $1->list()) {
+      context->ast->addChild(def);
+    }
+  }
   ;
 definition_list:
   definition {
-    $$ = new NodeList();
+    $$ = new ASTListWrapper();
     $$->addFront($1);
   }
   | definition definition_list {
@@ -160,16 +179,16 @@ function_prototype_typebase:
   ;
 function_prototype_base:
   name parameter_list return_type {
-    $$ = new FunctionPrototypeWrapper($1, $2, $3);
+    $$ = new FunctionPrototypeWrapper($1, $2->list(), $3);
   }
   ;
 parameter_list:
   LPAREN parameter_list_ RPAREN { $$ = $2; }
-  | LPAREN RPAREN               { $$ = new NodeList(); }
+  | LPAREN RPAREN               { $$ = new ASTListWrapper(); }
   ;
 parameter_list_:
   parameter {
-    $$ = new NodeList();
+    $$ = new ASTListWrapper();
     $$->addFront($1);
   }
   | parameter COMMA parameter_list_ {
@@ -198,16 +217,16 @@ type_specifier:
   }
   | COLON type { $$ = $2; }
   ;
-type_list:
-  type {
-    $$ = new TypeList();
-    if($1) $$->addFront($1);
-  }
-  | type COMMA type_list {
-    $$ = $3;
-    if($1) $$->addFront($1);
-  }
-  ;
+  /* type_list:
+    type {
+      $$ = new TypeList();
+      if($1) $$->addFront($1);
+    }
+    | type COMMA type_list {
+      $$ = $3;
+      if($1) $$->addFront($1);
+    }
+    ; */
 type:
   type_ref_ {
     $$ = $1;
@@ -240,31 +259,31 @@ type_base:
   | BYTE          { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::BYTE); }
   | ANY           { $$ = new PrimitiveType(line_num, PrimitiveTypeEnum::ANY); }
   | array_type    { $$ = $1; }
-  | tuple_type    { $$ = $1; }
-  | callable_type { $$ = $1; }
+  /* | tuple_type    { $$ = $1; } */
+  /* | callable_type { $$ = $1; } */
   | class_type    { $$ = $1; }
   ;
 array_type:
   LSQUARE type RSQUARE    { $$ = new ArrayType(line_num, $2); }
   ;
-tuple_type:
-  LPAREN type_list RPAREN { $$ = new TupleType(line_num, $2); }
-  ;
-callable_type:
-  LPAREN LPAREN type_list RPAREN ARROW callable_return_type RPAREN %dprec 1 {
-    $$ = new CallableType(line_num, $3, $6);
-  }
-  | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 {
-    $$ = new CallableType(line_num, new TypeList(), $5);
-  }
-  ;
-callable_return_type:
-  type  { $$ = $1; }
-  | NIL {
-    $$ = Type::getNilType();
-    $$->setLine(line_num);
-  }
-  ;
+  /* tuple_type:
+    LPAREN type_list RPAREN { $$ = new TupleType(line_num, $2); }
+    ; */
+  /* callable_type:
+    LPAREN LPAREN type_list RPAREN ARROW callable_return_type RPAREN %dprec 1 {
+      $$ = new CallableType(line_num, $3, $6);
+    }
+    | LPAREN LPAREN RPAREN ARROW callable_return_type RPAREN %dprec 2 {
+      $$ = new CallableType(line_num, new TypeList(), $5);
+    }
+    ; */
+  /* callable_return_type:
+    type  { $$ = $1; }
+    | NIL {
+      $$ = Type::getNilType();
+      $$->setLine(line_num);
+    }
+    ; */
 class_type:
   name { $$ = new ClassType(line_num, $1); }
   ;
@@ -272,7 +291,7 @@ class_type:
 
 statement_list:
   statement {
-    $$ = new NodeList();
+    $$ = new ASTListWrapper();
     if($1) $$->addFront($1);
   }
   | statement statement_list {
@@ -284,7 +303,7 @@ statement_list:
 statement:
   statement_  SEMICOLON    { $$ = $1; }
   | control_flow_statement { $$ = $1; }
-  | closure_definition        { $$ = toStatementNode($1); }
+  /* | closure_definition        { $$ = $1->toStatement(); } */
   ;
 
 control_flow_statement:
@@ -299,8 +318,8 @@ statement_:
   | expression                { $$ = new ExpressionStatement(line_num, $1); }
   ;
 curly_statement_list:
-  LCURLY statement_list RCURLY { $$ = new Scope(line_num, $2); }
-  | LCURLY RCURLY              { $$ = new Scope(line_num, new NodeList()); }
+  LCURLY statement_list RCURLY { $$ = new Scope(line_num, $2->list()); }
+  | LCURLY RCURLY              { $$ = new Scope(line_num); }
   ;
 
 
@@ -328,7 +347,7 @@ while_statement:
   ;
 for_statement:
   FOR def_expression IN expression curly_statement_list {
-    $$ = new ForStatement(line_num, toDefExpressionNode($2), $4, $5);
+    $$ = new ForStatement(line_num, $2->toDefExpression(), $4, $5);
   }
   ;
 return_statement:
@@ -348,25 +367,25 @@ def_expression:
 def_expression_with_value:
   def_expression EQUALS expression {
     $$ = $1;
-    auto v = toDefExpressionNode($$);
+    auto v = $$->toDefExpression();
     if(v) v->setInitialValue($3);
     else context->addError("  invalid def expression");
   }
   ;
 
-closure_definition:
-  FUNC symbol type_specifier EQUALS parameter_list return_type curly_statement_list {
-    auto closure_type = Closure::determineClosureType($3, *$5, $6);
-    if(closure_type != nullptr) {
-        auto closure = new Closure(line_num, closure_type, $5, $7);
-        $$ = new DefExpression(line_num, $2, closure);
-  }
-    else {
-        yyerror(context, "invalid closure type");
-        $$ = nullptr;
-  }
-  }
-  ;
+  /* closure_definition:
+    FUNC symbol type_specifier EQUALS parameter_list return_type curly_statement_list {
+      auto closure_type = Closure::determineClosureType($3, *$5, $6);
+      if(closure_type != nullptr) {
+          auto closure = new Closure(line_num, closure_type, $5, $7);
+          $$ = new DefExpression(line_num, $2, closure);
+    }
+      else {
+          yyerror(context, "invalid closure type");
+          $$ = nullptr;
+    }
+    }
+    ; */
 
 expression:
   symbol                     { $$ = new UseExpression(line_num, $1); }
@@ -458,27 +477,29 @@ expression:
     $$ = new CallExpression(line_num, OperatorType::GTEQ, $1, $3);
   }
   | expression LPAREN optional_expression_list RPAREN {
-    $$ = new CallExpression(line_num, OperatorType::FUNCTION, $1, $3);
+    auto ce = new CallExpression(line_num, OperatorType::FUNCTION, $1);
+    ce->addOperands($3->list());
+    $$ = ce;
   }
   | expression LSQUARE expression RSQUARE {
     $$ = new CallExpression(line_num, OperatorType::SUBSCRIPT, $1, $3);
   }
   | NEW class_type LPAREN optional_expression_list RPAREN {
-    $$ = new CallExpression(
-        line_num,
-        OperatorType::NEW_CLASS,
-        $2,
-        $4);
+    auto ce = new CallExpression(line_num, OperatorType::NEW_CLASS, $2);
+    ce->addOperands($4->list());
+    $$ = ce;
   }
   | NEW LSQUARE type_specifier COMMA expression RSQUARE {
     $$ = new CallExpression(line_num, OperatorType::NEW_ARRAY, $3, $5);
   }
   | NEW LCURLY expression_list RCURLY {
-    $$ = new CallExpression(line_num, OperatorType::NEW_ARRAY, $3);
+    auto ce = new CallExpression(line_num, OperatorType::NEW_ARRAY);
+    ce->addOperands($3->list());
+    $$ = ce;
   }
-  | NEW LPAREN expression_list RPAREN {
+  /* | NEW LPAREN expression_list RPAREN {
     $$ = new CallExpression(line_num, OperatorType::NEW_TUPLE, $3);
-  }
+  } */
   ;
 number:
   INTEGER_LITERAL {
@@ -503,11 +524,11 @@ number:
 
 optional_expression_list:
   expression_list { $$ = $1; }
-  | %empty { $$ = new NodeList(); }
+  | %empty { $$ = new ASTListWrapper(); }
   ;
 expression_list:
   expression {
-    $$ = new NodeList();
+    $$ = new ASTListWrapper();
     $$->addFront($1);
   }
   | expression COMMA expression_list {
@@ -525,13 +546,13 @@ extern_definition:
 
 class_definition:
   CLASS class_type LCURLY class_statement_list RCURLY {
-    $$ = ClassDefinition::buildClass(toClassTypeNode($2), $4);
+    $$ = ClassDefinition::buildClass($2->toClassType(), $4->list());
     $$->setLine(line_num);
   }
   ;
 class_statement_list:
   class_statement {
-    $$ = new NodeList();
+    $$ = new ASTListWrapper();
     $$->addFront($1);
   }
   | class_statement class_statement_list {
@@ -547,7 +568,7 @@ class_statement:
   ;
 init_definition:
   INIT parameter_list curly_statement_list {
-    $$ = new InitDefinition(line_num, $2, $3);
+    $$ = new InitDefinition(line_num, $2->list(), $3);
   }
   | DEINIT curly_statement_list {
     $$ = new InitDefinition(line_num, $2);
@@ -561,7 +582,7 @@ init_definition:
 
 operator_definition:
   OPERATOR overloadable_op parameter_list curly_statement_list {
-    $$ = new OperatorDefinition(line_num, $2, $3, $4);
+    $$ = new OperatorDefinition(line_num, $2, $3->list(), $4);
   }
   ;
 

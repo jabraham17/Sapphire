@@ -10,15 +10,14 @@ namespace visitor {
 #define VISIT(type)                                                            \
   void ASTDumpTree::visitImpl([[maybe_unused]] node::type* arg)
 
-VISIT(NodeList) {
-  strm << "<node-list>" << strm.nl();
+VISIT(ASTNode) {
+  strm << "<ast>" << strm.nl();
   strm.increaseIndent();
-  for(auto a : *arg) {
-    a->accept(this);
+  for(auto c : arg->children()) {
+    c->accept(this);
   }
   strm.decreaseIndent();
 }
-
 VISIT(Parameter) {
   strm << "<parameter:" << arg->symbol()->toString() << ">" << strm.nl();
 }
@@ -26,7 +25,12 @@ VISIT(FunctionPrototype) {
   strm << "<func-proto>" << strm.nl();
   strm.increaseIndent();
   strm << "<func:" << arg->name() << ">" << strm.nl();
-  arg->parameters()->accept(this);
+  strm.increaseIndent();
+  for(auto p : arg->parameters()) {
+    p->accept(this);
+    strm << strm.nl();
+  }
+  strm.decreaseIndent();
   arg->type()->accept(this);
   strm.decreaseIndent();
 }
@@ -50,7 +54,12 @@ VISIT(InitDefinition) {
     strm << "<deinit>" << strm.nl();
   } else {
     strm << "<init>" << strm.nl();
-    arg->parameters()->accept(this);
+    strm.increaseIndent();
+    for(auto p : arg->parameters()) {
+      p->accept(this);
+      strm << strm.nl();
+    }
+    strm.decreaseIndent();
   }
   arg->body()->accept(this);
   strm.decreaseIndent();
@@ -58,7 +67,8 @@ VISIT(InitDefinition) {
 VISIT(Scope) {
   strm << "<scope>" << strm.nl();
   strm.increaseIndent();
-  arg->statements()->accept(this);
+  for(auto s : arg->statements())
+    s->accept(this);
   strm.decreaseIndent();
 }
 VISIT(ExpressionStatement) {
@@ -88,13 +98,28 @@ VISIT(ClassDefinition) {
   strm.increaseIndent();
   arg->classType()->accept(this);
 
-  arg->variables()->accept(this);
+  strm << "<variables>" << strm.nl();
+  strm.increaseIndent();
+  for(auto v : arg->variables())
+    v->accept(this);
+  strm.decreaseIndent();
 
-  arg->initializers()->accept(this);
+  strm << "<initializers>" << strm.nl();
+  strm.increaseIndent();
+  for(auto v : arg->initializers())
+    v->accept(this);
+  strm.decreaseIndent();
 
+  strm << "<deinitializer>" << strm.nl();
+  strm.increaseIndent();
   arg->deinitializer()->accept(this);
+  strm.decreaseIndent();
 
-  arg->functions()->accept(this);
+  strm << "<functions>" << strm.nl();
+  strm.increaseIndent();
+  for(auto v : arg->functions())
+    v->accept(this);
+  strm.decreaseIndent();
 
   strm.decreaseIndent();
 }
@@ -103,7 +128,12 @@ VISIT(OperatorDefinition) {
   strm.increaseIndent();
   strm << "<op:" << node::getOperatorTypeString(arg->opType()) << ">"
        << strm.nl();
-  arg->parameters()->accept(this);
+  strm.increaseIndent();
+  for(auto p : arg->parameters()) {
+    p->accept(this);
+    strm << strm.nl();
+  }
+  strm.decreaseIndent();
   arg->body()->accept(this);
   strm.decreaseIndent();
 }
@@ -114,21 +144,14 @@ VISIT(PrimitiveType) {
 VISIT(ArrayType) {
   strm << "<array-type:" << arg->toString() << ">" << strm.nl();
 }
-VISIT(TupleType) {
-  strm << "<tuple-type:" << arg->toString() << ">" << strm.nl();
-}
+// VISIT(TupleType) {
+//   strm << "<tuple-type:" << arg->toString() << ">" << strm.nl();
+// }
 VISIT(CallableType) {
   strm << "<callable-type:" << arg->toString() << ">" << strm.nl();
 }
 VISIT(ClassType) {
   strm << "<class-type:" << arg->toString() << ">" << strm.nl();
-}
-VISIT(TypeList) {
-  strm << "<type-list>" << strm.nl();
-  strm.increaseIndent();
-  for(auto e : arg->elementTypes())
-    e->accept(this);
-  strm.decreaseIndent();
 }
 VISIT(IfStatement) {
   strm << "<if>" << strm.nl();
@@ -164,19 +187,24 @@ VISIT(ReturnStatement) {
   arg->expression()->accept(this);
   strm.decreaseIndent();
 }
-VISIT(Closure) {
-  strm << "<closure>" << strm.nl();
-  strm.increaseIndent();
-  arg->parameters()->accept(this);
-  arg->body()->accept(this);
-  strm.decreaseIndent();
-}
+// VISIT(Closure) {
+//   strm << "<closure>" << strm.nl();
+//   strm.increaseIndent();
+//   arg->parameters()->accept(this);
+//   arg->body()->accept(this);
+//   strm.decreaseIndent();
+// }
 VISIT(CallExpression) {
   strm << "<call-expr>" << strm.nl();
   strm.increaseIndent();
   strm << "<op:" << node::getOperatorTypeString(arg->opType()) << ">"
        << strm.nl();
-  arg->operands()->accept(this);
+  strm.increaseIndent();
+  for(auto o : arg->operands()) {
+    o->accept(this);
+    strm << strm.nl();
+  }
+  strm.decreaseIndent();
   strm.decreaseIndent();
 }
 VISIT(UseExpression) {

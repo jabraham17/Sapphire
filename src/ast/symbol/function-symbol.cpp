@@ -28,7 +28,7 @@ FunctionSymbol::FunctionSymbol(const std::string& symbolName, node::Type* type)
 FunctionSymbol::FunctionSymbol(const char* symbolName, node::Type* type)
     : FunctionSymbol(nullptr, symbolName, node::Type::getUntypedType(), type) {}
 
-std::string FunctionSymbol::name() const {
+std::string FunctionSymbol::name() {
   std::string s;
   if(prototype()->isMangled()) s += "spp_";
   if(!this->belongsTo()->isUntypedType() && !this->belongsTo()->isUnknownType())
@@ -47,19 +47,19 @@ std::string FunctionSymbol::toString(bool typed, bool showFlags) {
   return s;
 }
 
-node::FunctionPrototype* FunctionSymbol::prototype() const {
+node::FunctionPrototype* FunctionSymbol::prototype() {
   return this->prototype_;
 };
 void FunctionSymbol::setPrototype(node::FunctionPrototype* prototype) {
   this->prototype_ = prototype;
 }
 
-node::Type* FunctionSymbol::belongsTo() const { return this->belongsTo_; }
+node::Type* FunctionSymbol::belongsTo() { return this->belongsTo_; }
 void FunctionSymbol::setBelongsTo(node::Type* belongsTo) {
   this->belongsTo_ = belongsTo;
 }
 
-bool FunctionSymbol::operator==(const FunctionSymbol& other) {
+bool FunctionSymbol::operator==(FunctionSymbol& other) {
   return this->basename() == other.basename() &&
          node::Type::isSameType(this->type(), other.type()) &&
          node::Type::isSameType(this->belongsTo(), other.belongsTo());

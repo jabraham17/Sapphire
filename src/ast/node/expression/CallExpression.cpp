@@ -4,33 +4,31 @@
 namespace ast {
 namespace node {
 
-ASTNode* CallExpression::clone() {
-  assert(false && "call expr clone is unimplemented");
-  return nullptr;
-}
+// ASTNode* CallExpression::clone() {
+//   assert(false && "call expr clone is unimplemented");
+//   return nullptr;
+// }
 
-void CallExpression::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(operands_ == old) {
-    replacement->parent() = this;
-    operands_ =
-        toNodeType<std::remove_pointer_t<decltype(operands_)>>(replacement);
-    return;
-  }
-  if(type_ == old) {
-    replacement->parent() = this;
-    type_ = toNodeType<std::remove_pointer_t<decltype(type_)>>(replacement);
-    return;
-  }
-}
-
-Type* CallExpression::type() { return this->type_; }
+Type* CallExpression::type() { return child(this->typeIdx_)->toType(); }
 void CallExpression::setType(Type* type) {
-  this->type_ = type;
-  this->type_->parent() = this;
+  // auto old = this->child(this->typeIdx_);
+  this->setChild(this->typeIdx_, type);
+  // delete old;
+}
+
+void CallExpression::addOperand(ASTNode* node) {
+  this->operandsStopIdx_ = this->addChild(node);
+}
+void CallExpression::addOperands(const ASTList& nodes) {
+  for(auto n : nodes) {
+    this->addOperand(n);
+  }
 }
 
 OperatorType CallExpression::opType() { return this->op_; }
-NodeList* CallExpression::operands() { return this->operands_; }
+ASTListIteratorPair<ASTNode> CallExpression::operands() {
+  return children_slice(this->operandsStartIdx_, this->operandsStopIdx_ + 1);
+}
 
 } // namespace node
 } // namespace ast

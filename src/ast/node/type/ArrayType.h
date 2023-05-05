@@ -9,10 +9,7 @@ namespace node {
 
 class ArrayType : public Type {
 private:
-  Type* elementType_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t elementTypeIdx_;
 
 public:
   ArrayType(long line, Type* elementType);
@@ -26,7 +23,7 @@ public:
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual ASTNode* clone() override;
 
-  Type* elementType();
+  CONST_MEMBER_FUNC(Type*, elementType);
 };
 
 } // namespace node

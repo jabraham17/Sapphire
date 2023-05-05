@@ -43,11 +43,12 @@ protected:
   virtual void visitImpl(ast::node::CallExpression* call) override {
     auto& errors = this->returnValue_;
     // resolve the operands
-    call->operands()->accept(this);
+    for(auto o : call->operands())
+      o->accept(this);
 
     switch(call->opType()) {
       case ast::node::OperatorType::FUNCTION: {
-        auto func = ast::toUseExpressionNode(call->operands()->get(0));
+        auto func = call->operands().get(0)->toUseExpression();
         assert(func != nullptr);
         auto funcType = func->type()->toCallableType();
         assert(funcType != nullptr);
@@ -58,8 +59,8 @@ protected:
       case ast::node::OperatorType::PLUS: {
         // if num types, string types, or array types, OF THE SAME TYPE, return
         // the same type
-        auto op0 = ast::toExpressionNode(call->operands()->get(0));
-        auto op1 = ast::toExpressionNode(call->operands()->get(1));
+        auto op0 = call->operands().get(0)->toExpression();
+        auto op1 = call->operands().get(1)->toExpression();
         assert(op0 != nullptr && op1 != nullptr);
 
         if(ast::node::Type::isSameType(op0->type(), op1->type()) &&
@@ -77,8 +78,8 @@ protected:
       case ast::node::OperatorType::ASSIGNMENT: {
         // if op0's type is unknown, set to be op1 type
         // op0 must equal op1
-        auto op0 = ast::toExpressionNode(call->operands()->get(0));
-        auto op1 = ast::toExpressionNode(call->operands()->get(1));
+        auto op0 = call->operands().get(0)->toExpression();
+        auto op1 = call->operands().get(1)->toExpression();
         assert(op0 != nullptr && op1 != nullptr);
 
         if(op0->type()->isUnknownType()) {
@@ -99,8 +100,8 @@ protected:
 
         // op0 must be an array, op1 must be an int or a uint
         // then we can safely say the result of this is the array element type
-        auto op0 = ast::toExpressionNode(call->operands()->get(0));
-        auto op1 = ast::toExpressionNode(call->operands()->get(1));
+        auto op0 = call->operands().get(0)->toExpression();
+        auto op1 = call->operands().get(1)->toExpression();
         assert(op0 != nullptr && op1 != nullptr);
 
         if(op0->type()->isArrayType() && isIntegralType(op1->type())) {

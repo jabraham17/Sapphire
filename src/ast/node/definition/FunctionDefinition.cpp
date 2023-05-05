@@ -6,27 +6,12 @@
 namespace ast {
 namespace node {
 
-ASTNode* FunctionDefinition::clone() {
-  return new FunctionDefinition(
-      toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
-          functionPrototype_->clone()),
-      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
-}
-
-void FunctionDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(functionPrototype_ == old) {
-    replacement->parent() = this;
-    functionPrototype_ =
-        toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
-            replacement);
-    return;
-  }
-  if(body_ == old) {
-    replacement->parent() = this;
-    body_ = toNodeType<std::remove_pointer_t<decltype(body_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* FunctionDefinition::clone() {
+//   return new FunctionDefinition(
+//       toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
+//           functionPrototype_->clone()),
+//       toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+// }
 
 FunctionDefinition::FunctionDefinition(
     long line,
@@ -37,15 +22,14 @@ FunctionDefinition::FunctionDefinition(
 }
 FunctionDefinition::FunctionDefinition(
     FunctionPrototype* functionPrototype,
-    Scope* body)
-    : functionPrototype_(functionPrototype), body_(body) {
-  functionPrototype_->parent() = this;
-  body->parent() = this;
+    Scope* body) {
+  this->functionPrototypeIdx_ = this->addChild(functionPrototype);
+  this->bodyIdx_ = this->addChild(body);
 }
 
 FunctionPrototype* FunctionDefinition::functionPrototype() {
-  return functionPrototype_;
+  return child(this->functionPrototypeIdx_)->toFunctionPrototype();
 }
-Scope* FunctionDefinition::body() { return body_; }
+Scope* FunctionDefinition::body() { return child(this->bodyIdx_)->toScope(); }
 } // namespace node
 } // namespace ast

@@ -1,52 +1,45 @@
 #include "OperatorDefinition.h"
 
-#include "ast/node/NodeList.h"
 #include "ast/node/statement/Scope.h"
 namespace ast {
 namespace node {
 
-ASTNode* OperatorDefinition::clone() {
-  return new OperatorDefinition(
-      op_,
-      toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
-          parameters_->clone()),
-      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
-}
-
-void OperatorDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(parameters_ == old) {
-    replacement->parent() = this;
-    parameters_ =
-        toNodeType<std::remove_pointer_t<decltype(parameters_)>>(replacement);
-    return;
-  }
-  if(body_ == old) {
-    replacement->parent() = this;
-    body_ = toNodeType<std::remove_pointer_t<decltype(body_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* OperatorDefinition::clone() {
+//   return new OperatorDefinition(
+//       op_,
+//       toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
+//           parameters_->clone()),
+//       toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+// }
 
 OperatorDefinition::OperatorDefinition(
     long line,
     OperatorType op,
-    NodeList* parameters,
+    const ASTList& parameters,
     Scope* body)
     : OperatorDefinition(op, parameters, body) {
   setLine(line);
 }
 OperatorDefinition::OperatorDefinition(
     OperatorType op,
-    NodeList* parameters,
+    const ASTList& parameters,
     Scope* body)
-    : op_(op), parameters_(parameters), body_(body) {
-  parameters_->parent() = this;
-  body_->parent() = this;
+    : op_(op) {
+  this->bodyIdx_ = this->addChild(body);
+  this->parametersStartIdx_ = this->numChildren();
+  for(auto p : parameters) {
+    this->addChild(p);
+  }
+  this->parametersStopIdx_ = this->parametersStartIdx_ + parameters.size();
 }
 
 OperatorType OperatorDefinition::opType() { return op_; }
-NodeList* OperatorDefinition::parameters() { return parameters_; }
-Scope* OperatorDefinition::body() { return body_; }
+ASTListIteratorPair<Parameter> OperatorDefinition::parameters() {
+  return children_slice<Parameter>(
+      this->parametersStartIdx_,
+      this->parametersStopIdx_);
+}
+Scope* OperatorDefinition::body() { return child(this->bodyIdx_)->toScope(); }
 
 } // namespace node
 } // namespace ast

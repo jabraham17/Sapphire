@@ -9,23 +9,14 @@ namespace visitor {
 
 #define VISIT(type) void ASTDump::visitImpl([[maybe_unused]] node::type* arg)
 
-VISIT(NodeList) {
-  bool notFirstOne = false;
-  for(auto a : *arg) {
-    if(notFirstOne) strm << strm.nl();
-    notFirstOne = true;
-    a->accept(this);
-  }
+VISIT(ASTNode) {
+  acceptWithSep(arg->children_begin(), arg->children_end(), strm.nl());
 }
 VISIT(Parameter) { strm << arg->symbol()->toString(true); }
 VISIT(FunctionPrototype) {
   strm << arg->symbol()->basename() << "(";
-  std::string sep;
-  for(auto p : *arg->parameters()) {
-    strm << sep;
-    p->accept(this);
-    sep = ", ";
-  }
+  auto p = arg->parameters();
+  acceptWithSep(p.begin(), p.end(), ", ");
   strm << "): ";
   arg->type()->accept(this);
 }
@@ -46,12 +37,8 @@ VISIT(InitDefinition) {
     strm << "deinit";
   } else {
     strm << "init(";
-    std::string sep;
-    for(auto p : *arg->parameters()) {
-      strm << sep;
-      p->accept(this);
-      sep = ", ";
-    }
+    auto p = arg->parameters();
+    acceptWithSep(p.begin(), p.end(), ", ");
     strm << ")";
   }
   strm << " {" << std::endl;
@@ -60,7 +47,10 @@ VISIT(InitDefinition) {
   strm.decreaseIndent();
   strm << strm.nl() << "}";
 }
-VISIT(Scope) { arg->statements()->accept(this); }
+VISIT(Scope) {
+  auto s = arg->statements();
+  acceptWithSep(s.begin(), s.end(), strm.nl());
+}
 VISIT(ExpressionStatement) { arg->expression()->accept(this); }
 
 VISIT(DefExpression) {
@@ -76,13 +66,22 @@ VISIT(ClassDefinition) {
   strm << " {" << strm.nl();
   strm.increaseIndent();
 
-  arg->variables()->accept(this);
+  auto v = arg->variables();
+  acceptWithSep(v.begin(), v.end(), strm.nl());
+
   strm << strm.nl();
-  arg->initializers()->accept(this);
+
+  auto i = arg->initializers();
+  acceptWithSep(i.begin(), i.end(), strm.nl());
+
   strm << strm.nl();
+
   arg->deinitializer()->accept(this);
+
   strm << strm.nl();
-  arg->functions()->accept(this);
+
+  auto f = arg->functions();
+  acceptWithSep(f.begin(), f.end(), strm.nl());
 
   strm.decreaseIndent();
   strm << strm.nl() << "}";
@@ -90,17 +89,9 @@ VISIT(ClassDefinition) {
 VISIT(OperatorDefinition) { strm << "unimp op def"; }
 VISIT(PrimitiveType) { strm << arg->toString(); }
 VISIT(ArrayType) { strm << arg->toString(); }
-VISIT(TupleType) { strm << arg->toString(); }
+// VISIT(TupleType) { strm << arg->toString(); }
 VISIT(CallableType) { strm << arg->toString(); }
 VISIT(ClassType) { strm << arg->toString(); }
-VISIT(TypeList) {
-  std::string sep;
-  for(auto t : arg->elementTypes()) {
-    strm << sep;
-    t->accept(this);
-    sep = ", ";
-  }
-}
 VISIT(IfStatement) {
 
   strm << "if ";
@@ -146,11 +137,11 @@ VISIT(ReturnStatement) {
   strm << "return ";
   arg->expression()->accept(this);
 }
-VISIT(Closure) { strm << "unimp closure"; }
+// VISIT(Closure) { strm << "unimp closure"; }
 VISIT(CallExpression) {
   strm << "(";
   strm << node::getOperatorTypeString(arg->opType());
-  for(auto e : *arg->operands()) {
+  for(auto e : arg->operands()) {
     strm << ", ";
     e->accept(this);
   }

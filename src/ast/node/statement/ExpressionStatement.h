@@ -9,19 +9,16 @@ namespace node {
 // todo: move to cpp definition stuff
 
 class ExpressionStatement : public Statement {
-  Expression* expression_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t expressionIdx_;
 
 public:
   ExpressionStatement(long line, Expression* expr);
   ExpressionStatement(Expression* expr);
   virtual ~ExpressionStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  Expression* expression();
+  CONST_MEMBER_FUNC(Expression*, expression);
 };
 } // namespace node
 } // namespace ast

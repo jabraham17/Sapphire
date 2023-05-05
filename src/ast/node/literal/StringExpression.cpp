@@ -8,9 +8,9 @@
 namespace ast {
 namespace node {
 
-ASTNode* StringExpression::clone() {
-  return new StringExpression(std::string(value_));
-}
+// ASTNode* StringExpression::clone() {
+//   return new StringExpression(std::string(value_));
+// }
 
 StringExpression::StringExpression(long line, const value_type& value)
     : StringExpression(value) {

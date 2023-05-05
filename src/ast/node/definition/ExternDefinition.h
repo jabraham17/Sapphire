@@ -6,19 +6,16 @@ namespace ast {
 namespace node {
 class ExternDefinition : public ASTNode {
 private:
-  FunctionPrototype* functionPrototype_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t functionPrototypeIdx_;
 
 public:
   ExternDefinition(long line, FunctionPrototype* functionPrototype);
   ExternDefinition(FunctionPrototype* functionPrototype);
   virtual ~ExternDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  FunctionPrototype* functionPrototype();
+  CONST_MEMBER_FUNC(FunctionPrototype*, functionPrototype)
 };
 } // namespace node
 } // namespace ast

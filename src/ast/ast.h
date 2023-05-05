@@ -5,6 +5,25 @@
 #include "ast/node/ASTNode.h"
 
 #include <type_traits>
+#include <typeinfo>
+
+#define CONST_MEMBER_FUNC(retType, name) retType name();
+
+// #define CONST_MEMBER_FUNC(retType, name)                                       \
+//   retType name() const;                                                        \
+//   retType name() {                                                             \
+//     using ConstClassType = std::add_pointer_t<                                 \
+//         std::add_const_t<std::remove_pointer_t<decltype(this)>>>;              \
+//     return const_cast<ConstClassType>(this)->name();                           \
+//   }
+
+// #define CONST_MEMBER_FUNC_NO_RET(name)                                         \
+//   void name() const;                                                           \
+//   void name() {                                                                \
+//     using ConstClassType = std::add_pointer_t<                                 \
+//         std::add_const_t<std::remove_pointer_t<decltype(this)>>>;              \
+//     const_cast<ConstClassType>(this)->name();                                  \
+//   }
 
 namespace ast {
 
@@ -18,7 +37,6 @@ class FunctionSymbol;
 } // namespace symbol
 
 namespace node {
-class ASTNode;
 #define ast_node_def(type) class type;
 #include "ast-node.inc"
 } // namespace node
@@ -30,10 +48,6 @@ template <class T> T* toNodeType(node::ASTNode* a) {
 template <class T> bool isNodeType(node::ASTNode* a) {
   return toNodeType<T>(a) != nullptr;
 }
-#define ast_node_def(type)                                                     \
-  node::type* to##type##Node(node::ASTNode* a);                                \
-  bool is##type##Node(node::ASTNode* a);
-#include "ast-node.inc"
 
 } // namespace ast
 

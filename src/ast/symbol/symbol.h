@@ -24,13 +24,9 @@ public:
   Symbol(const char* symbolName, node::Type* type);
   virtual ~Symbol() = default;
 
-  virtual std::string basename() const;
-  virtual std::string name() const;
-  virtual node::Type* type() const;
-
-  std::string basename() { return const_cast<const Symbol*>(this)->basename(); }
-  std::string name() { return const_cast<const Symbol*>(this)->name(); }
-  node::Type* type() { return const_cast<const Symbol*>(this)->type(); }
+  virtual std::string basename();
+  virtual std::string name();
+  virtual node::Type* type();
 
   virtual void setName(const std::string& name);
   virtual void setType(node::Type* t);
@@ -41,7 +37,7 @@ public:
   bool getFlag(Flag flag);
   FlagSet flags();
 
-  bool operator==(const Symbol& other);
+  bool operator==(Symbol& other);
 };
 
 } // namespace symbol

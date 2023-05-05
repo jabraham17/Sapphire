@@ -8,37 +8,35 @@ namespace ast {
 namespace node {
 class FunctionPrototype : public ASTNode {
 private:
-  NodeList* parameters_;
+  std::size_t parametersStartIdx_;
+  std::size_t parametersStopIdx_;
   symbol::FunctionSymbol* funcSymbol_;
   bool isMangled_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
 
 public:
   FunctionPrototype(
       long line,
       const char* name,
-      NodeList* parameters,
+      const ASTList& parameters,
       Type* returnType,
       bool isMangled,
       Type* belongsTo);
   FunctionPrototype(
       const char* name,
-      NodeList* parameters,
+      const ASTList& parameters,
       Type* returnType,
       bool isMangled,
       Type* belongsTo);
 
   virtual ~FunctionPrototype() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  std::string name();
-  NodeList* parameters();
-  CallableType* type();
-  symbol::FunctionSymbol* symbol();
-  bool isMangled();
+  CONST_MEMBER_FUNC(std::string, name)
+  CONST_MEMBER_FUNC(ASTListIteratorPair<Parameter>, parameters)
+  CONST_MEMBER_FUNC(CallableType*, type)
+  CONST_MEMBER_FUNC(symbol::FunctionSymbol*, symbol)
+  CONST_MEMBER_FUNC(bool, isMangled)
 };
 } // namespace node
 } // namespace ast

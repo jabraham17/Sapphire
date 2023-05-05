@@ -6,24 +6,11 @@
 namespace ast {
 namespace node {
 
-ASTNode* WhileStatement::clone() {
-  return new WhileStatement(
-      toNodeType<std::remove_pointer_t<decltype(expr_)>>(expr_->clone()),
-      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
-}
-
-void WhileStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(expr_ == old) {
-    replacement->parent() = this;
-    expr_ = toNodeType<std::remove_pointer_t<decltype(expr_)>>(replacement);
-    return;
-  }
-  if(body_ == old) {
-    replacement->parent() = this;
-    body_ = toNodeType<std::remove_pointer_t<decltype(body_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* WhileStatement::clone() {
+//   return new WhileStatement(
+//       toNodeType<std::remove_pointer_t<decltype(expr_)>>(expr_->clone()),
+//       toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+// }
 
 WhileStatement::WhileStatement::WhileStatement(
     long line,
@@ -32,14 +19,15 @@ WhileStatement::WhileStatement::WhileStatement(
     : WhileStatement(expr, body) {
   setLine(line);
 }
-WhileStatement::WhileStatement(Expression* expr, Scope* body)
-    : expr_(expr), body_(body) {
-  expr_->parent() = this;
-  body_->parent() = this;
+WhileStatement::WhileStatement(Expression* expr, Scope* body) {
+  this->exprIdx_ = this->addChild(expr);
+  this->bodyIdx_ = this->addChild(body);
 }
 
-Expression* WhileStatement::expr() { return expr_; }
-Scope* WhileStatement::body() { return body_; }
+Expression* WhileStatement::expr() {
+  return child(this->exprIdx_)->toExpression();
+}
+Scope* WhileStatement::body() { return child(this->bodyIdx_)->toScope(); }
 
 } // namespace node
 } // namespace ast

@@ -1,7 +1,6 @@
 #ifndef SAPPHIRE_AST_NODE_NODES_H_
 #define SAPPHIRE_AST_NODE_NODES_H_
 #include "ASTNode.h"
-#include "NodeList.h"
 #include "OperatorType.h"
 
 #include "definition/nodes.h"

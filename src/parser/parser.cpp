@@ -2,7 +2,7 @@
 
 namespace parser {
 
-Context::Context() : errorMessage_() {}
+Context::Context() : errorMessage_(), ast(new ast::node::ASTNode()) {}
 void Context::addError(const char* s) { errorMessage_.push_back(s); }
 void Context::addError(const std::string& s) { errorMessage_.push_back(s); }
 bool Context::hasErrors() { return errorMessage_.size() > 0; }

@@ -1,7 +1,6 @@
 #ifndef SAPPHIRE_AST_NODE_TYPE_CALLABLETYPE_H_
 #define SAPPHIRE_AST_NODE_TYPE_CALLABLETYPE_H_
 #include "Type.h"
-#include "TypeList.h"
 
 #include "ast/ast.h"
 namespace ast {
@@ -11,23 +10,21 @@ namespace node {
 class CallableType : public Type {
 
 private:
-  TypeList* parameterTypes_;
-  Type* returnType_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t returnTypeIdx_;
+  std::size_t parameterTypesStartIdx_;
+  std::size_t parameterTypesStopIdx_;
 
 public:
-  CallableType(long line, TypeList* parameterTypes, Type* returnType);
-  CallableType(TypeList* parameterTypes, Type* returnType);
+  CallableType(long line, const ASTList& parameterTypes, Type* returnType);
+  CallableType(const ASTList& parameterTypes, Type* returnType);
   CallableType(
       long line,
-      TypeList* parameterTypes,
+      const ASTList& parameterTypes,
       Type* returnType,
       bool isRef,
       bool isNilable);
   CallableType(
-      TypeList* parameterTypes,
+      const ASTList& parameterTypes,
       Type* returnType,
       bool isRef,
       bool isNilable);
@@ -35,8 +32,8 @@ public:
   virtual void accept(visitor::ASTVisitor* ast) override;
   virtual ASTNode* clone() override;
 
-  TypeList* parameterTypes();
-  Type* returnType();
+  CONST_MEMBER_FUNC(ASTListIteratorPair<Type>, parameterTypes);
+  CONST_MEMBER_FUNC(Type*, returnType);
 };
 } // namespace node
 } // namespace ast

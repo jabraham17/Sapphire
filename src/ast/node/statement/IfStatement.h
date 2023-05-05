@@ -8,13 +8,9 @@ namespace node {
 // todo: move to cpp definition stuff
 
 class IfStatement : public Statement {
-  Expression* expr_;
-  Scope* ifBody_;
-  // can be nullptr
-  Statement* elseBody_; // either Scope or IfStatement
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t exprIdx_;
+  std::size_t ifBodyIdx_;
+  std::ptrdiff_t elseBodyIdx_; // either Scope or IfStatement
 
 public:
   IfStatement(long line, Expression* expr, Scope* ifBody, Statement* elseBody);
@@ -23,16 +19,17 @@ public:
   IfStatement(Expression* expr, Scope* ifBody);
   virtual ~IfStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  Expression* expr();
-  Scope* ifBody();
+  CONST_MEMBER_FUNC(Expression*, expr)
+  CONST_MEMBER_FUNC(Scope*, ifBody)
 
-  bool hasElseBody();
-  bool hasPlainElse();
-  bool hasElseIf();
-  Scope* plainElseBody();
-  IfStatement* elseIfBody();
+  CONST_MEMBER_FUNC(bool, hasElseBody)
+  CONST_MEMBER_FUNC(Statement*, elseBody)
+  CONST_MEMBER_FUNC(bool, hasPlainElse)
+  CONST_MEMBER_FUNC(Scope*, plainElseBody)
+  CONST_MEMBER_FUNC(bool, hasElseIf)
+  CONST_MEMBER_FUNC(IfStatement*, elseIfBody)
 };
 } // namespace node
 } // namespace ast

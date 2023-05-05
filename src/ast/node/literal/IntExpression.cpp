@@ -8,7 +8,7 @@
 namespace ast {
 namespace node {
 
-ASTNode* IntExpression::clone() { return new IntExpression(value_); }
+// ASTNode* IntExpression::clone() { return new IntExpression(value_); }
 IntExpression::IntExpression(long line, value_type value)
     : IntExpression(value) {
   setLine(line);

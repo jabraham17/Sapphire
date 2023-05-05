@@ -20,14 +20,14 @@ public:
   StringExpression(const value_type& value);
   virtual ~StringExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;
 
-  value_type value();
+  CONST_MEMBER_FUNC(value_type, value);
   //  return the string with all escapes resolved
-  value_type escapedValue();
+  CONST_MEMBER_FUNC(value_type, escapedValue);
 };
 
 } // namespace node

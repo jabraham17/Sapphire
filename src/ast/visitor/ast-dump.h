@@ -23,6 +23,20 @@ public:
 
 private:
 protected:
+  template <class FwIT, class SepType>
+  void acceptWithSep(FwIT begin, FwIT end, SepType sep) {
+    auto it = begin;
+    if(it != end) {
+      (*it)->accept(this);
+      it++;
+    }
+
+    for(; it != end; it++) {
+      strm << sep;
+      (*it)->accept(this);
+    }
+  }
+
 #define ast_node_def_exclude
 #define ast_node_def_exclude_Statement
 #define ast_node_def_exclude_Expression

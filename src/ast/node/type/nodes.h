@@ -5,8 +5,7 @@
 #include "CallableType.h"
 #include "ClassType.h"
 #include "PrimitiveType.h"
-#include "TupleType.h"
+// #include "TupleType.h"
 #include "Type.h"
-#include "TypeList.h"
 #include "nodes.h"
 #endif

@@ -2,9 +2,7 @@
 
 #include "Parameter.h"
 
-#include "ast/node/NodeList.h"
 #include "ast/node/type/CallableType.h"
-#include "ast/node/type/TypeList.h"
 #include "ast/symbol/function-symbol.h"
 #include "ast/symbol/symbol.h"
 
@@ -13,24 +11,15 @@
 namespace ast {
 namespace node {
 
-ASTNode* FunctionPrototype::clone() {
-  assert(false && "function prototype clone is unimplemented");
-  return nullptr;
-}
-
-void FunctionPrototype::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(parameters_ == old) {
-    replacement->parent() = this;
-    parameters_ =
-        toNodeType<std::remove_pointer_t<decltype(parameters_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* FunctionPrototype::clone() {
+//   assert(false && "function prototype clone is unimplemented");
+//   return nullptr;
+// }
 
 FunctionPrototype::FunctionPrototype(
     long line,
     const char* name,
-    NodeList* parameters,
+    const ASTList& parameters,
     Type* returnType,
     bool isMangled,
     Type* belongsTo)
@@ -39,22 +28,29 @@ FunctionPrototype::FunctionPrototype(
 }
 FunctionPrototype::FunctionPrototype(
     const char* name,
-    NodeList* parameters,
+    const ASTList& parameters,
     Type* returnType,
     bool isMangled,
     Type* belongsTo)
-    : parameters_(parameters), funcSymbol_(nullptr), isMangled_(isMangled) {
-  parameters_->parent() = this;
+    : funcSymbol_(nullptr), isMangled_(isMangled) {
+
+  this->parametersStartIdx_ = this->numChildren();
+  // add a this parameter
+  bool hasThisArg = false;
   if(!belongsTo->isUntypedType() && !belongsTo->isNilType() &&
      !belongsTo->isAnyType()) {
-    parameters_->addFront(new Parameter(new symbol::Symbol("this"), belongsTo));
+    this->addChild(new Parameter(new symbol::Symbol("this"), belongsTo));
+    hasThisArg = true;
   }
-  TypeList* parameterTypes = new TypeList();
-  // add a this parameter
-  for(auto p : *parameters_) {
-    auto pp = toParameterNode(p);
-    assert(pp != nullptr);
-    parameterTypes->addBack(pp->symbol()->type());
+  for(auto p : parameters) {
+    this->addChild(p);
+  }
+  this->parametersStopIdx_ =
+      this->parametersStartIdx_ + parameters.size() + int(hasThisArg);
+
+  ASTList parameterTypes;
+  for(auto p : this->parameters()) {
+    parameterTypes.push_back(p->symbol()->type()->clone());
   }
   Type* funcSymbolType = new CallableType(parameterTypes, returnType);
   funcSymbol_ =
@@ -62,9 +58,13 @@ FunctionPrototype::FunctionPrototype(
 }
 
 std::string FunctionPrototype::name() { return this->symbol()->name(); }
-NodeList* FunctionPrototype::parameters() { return this->parameters_; }
+ASTListIteratorPair<Parameter> FunctionPrototype::parameters() {
+  return children_slice<Parameter>(
+      this->parametersStartIdx_,
+      this->parametersStopIdx_);
+}
 CallableType* FunctionPrototype::type() {
-  auto type_ = ast::toCallableTypeNode(funcSymbol_->type());
+  auto type_ = funcSymbol_->type()->toCallableType();
   assert(type_ != nullptr && "functions must have callable types");
   return type_;
 }

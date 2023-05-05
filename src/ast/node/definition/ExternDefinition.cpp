@@ -4,21 +4,11 @@
 namespace ast {
 namespace node {
 
-ASTNode* ExternDefinition::clone() {
-  return new ExternDefinition(
-      toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
-          functionPrototype_->clone()));
-}
-
-void ExternDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(functionPrototype_ == old) {
-    replacement->parent() = this;
-    functionPrototype_ =
-        toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
-            replacement);
-    return;
-  }
-}
+// ASTNode* ExternDefinition::clone() {
+//   return new ExternDefinition(
+//       toNodeType<std::remove_pointer_t<decltype(functionPrototype_)>>(
+//           functionPrototype_->clone()));
+// }
 
 ExternDefinition::ExternDefinition(
     long line,
@@ -26,13 +16,12 @@ ExternDefinition::ExternDefinition(
     : ExternDefinition(functionPrototype) {
   setLine(line);
 }
-ExternDefinition::ExternDefinition(FunctionPrototype* functionPrototype)
-    : functionPrototype_(functionPrototype) {
-  functionPrototype_->parent() = this;
+ExternDefinition::ExternDefinition(FunctionPrototype* functionPrototype) {
+  this->functionPrototypeIdx_ = this->addChild(functionPrototype);
 }
 
 FunctionPrototype* ExternDefinition::functionPrototype() {
-  return functionPrototype_;
+  return child(this->functionPrototypeIdx_)->toFunctionPrototype();
 }
 } // namespace node
 } // namespace ast

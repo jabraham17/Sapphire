@@ -3,19 +3,9 @@ namespace ast {
 namespace node {
 
 ASTNode* ArrayType::clone() {
-  auto xElmType = toNodeType<std::remove_pointer_t<decltype(elementType_)>>(
-      elementType_->clone());
+  auto xElmType = this->elementType()->clone()->toType();
   auto x = new ArrayType(xElmType, this->isRef(), this->isNilable());
   return x;
-}
-
-void ArrayType::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(elementType_ == old) {
-    replacement->parent() = this;
-    elementType_ =
-        toNodeType<std::remove_pointer_t<decltype(elementType_)>>(replacement);
-    return;
-  }
 }
 
 ArrayType::ArrayType(long line, Type* elementType) : ArrayType(elementType) {
@@ -24,9 +14,13 @@ ArrayType::ArrayType(long line, Type* elementType) : ArrayType(elementType) {
 ArrayType::ArrayType(Type* elementType)
     : ArrayType(elementType, false, false) {}
 ArrayType::ArrayType(Type* elementType, bool isRef, bool isNilable)
-    : Type(isRef, isNilable), elementType_(elementType) {}
+    : Type(isRef, isNilable) {
+  this->elementTypeIdx_ = this->addChild(elementType);
+}
 
-Type* ArrayType::elementType() { return this->elementType_; }
+Type* ArrayType::elementType() {
+  return child(this->elementTypeIdx_)->toType();
+}
 
 } // namespace node
 } // namespace ast

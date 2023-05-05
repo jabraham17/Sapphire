@@ -6,6 +6,7 @@
 #include "ast/visitor/ast-visitor.h"
 
 #include <iostream>
+#include <queue>
 #include <unordered_map>
 
 namespace pass {
@@ -19,28 +20,18 @@ public:
   using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
 
 protected:
-  bool hasReturn(ast::node::IfStatement* ifStmt) {
-    bool hasReturns = false;
-    hasReturns |= hasReturn(ifStmt->ifBody());
-    if(ifStmt->hasPlainElse()) hasReturns |= hasReturn(ifStmt->plainElseBody());
-    else if(ifStmt->hasElseIf()) hasReturns |= hasReturn(ifStmt->elseIfBody());
-    return hasReturns;
-  }
-  // todo: this will be greatly improved by having a children iterator
-  bool hasReturn(ast::node::Scope* scope) {
-    bool hasReturns = false;
-    for(auto stmt : *scope->statements()) {
-      if(ast::isReturnStatementNode(stmt)) hasReturns = true;
-      else if(auto f = ast::toForStatementNode(stmt); f != nullptr)
-        hasReturns |= hasReturn(f->body());
-      else if(auto i = ast::toIfStatementNode(stmt); i != nullptr)
-        hasReturns |= hasReturn(i);
-      else if(auto i = ast::toWhileStatementNode(stmt); i != nullptr)
-        hasReturns |= hasReturn(i->body());
-      else if(auto i = ast::toScopeNode(stmt); i != nullptr)
-        hasReturns |= hasReturn(i);
+  bool hasReturn(ast::node::ASTNode* node) {
+    std::queue<ast::node::ASTNode*> q;
+    q.push(node);
+    while(!q.empty()) {
+      auto n = q.front();
+      q.pop();
+      for(auto stmt : n->children()) {
+        if(stmt->isReturnStatement()) return true;
+        q.push(stmt);
+      }
     }
-    return hasReturns;
+    return false;
   }
 
   virtual void visitImpl(ast::node::FunctionDefinition* func) override {

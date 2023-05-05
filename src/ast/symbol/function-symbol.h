@@ -30,24 +30,18 @@ public:
   FunctionSymbol(const char* symbolName, node::Type* type);
   virtual ~FunctionSymbol() = default;
 
-  virtual std::string name() const override;
+  virtual std::string name() override;
 
   virtual std::string
   toString(bool typed = false, bool showFlags = false) override;
 
-  node::FunctionPrototype* prototype() const;
-  node::FunctionPrototype* prototype() {
-    return const_cast<const FunctionSymbol*>(this)->prototype();
-  }
+  CONST_MEMBER_FUNC(node::FunctionPrototype*, prototype)
   void setPrototype(node::FunctionPrototype* prototype);
 
-  node::Type* belongsTo() const;
-  node::Type* belongsTo() {
-    return const_cast<const FunctionSymbol*>(this)->belongsTo();
-  }
+  CONST_MEMBER_FUNC(node::Type*, belongsTo)
   void setBelongsTo(node::Type* belongsTo);
 
-  bool operator==(const FunctionSymbol& other);
+  bool operator==(FunctionSymbol& other);
 };
 
 } // namespace symbol

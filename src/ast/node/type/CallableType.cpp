@@ -1,6 +1,4 @@
 #include "CallableType.h"
-// #include "TypeList.h"
-// #include "ast/node/NodeList.h"
 // #include "Type.h"
 // #include <cassert>
 
@@ -8,43 +6,32 @@ namespace ast {
 namespace node {
 
 ASTNode* CallableType::clone() {
+  auto params_ = this->parameterTypes();
+  ASTList params;
+  params.reserve(params_.size());
+  for(const Type* p : params_)
+    params.push_back((ASTNode*)p);
+  // ASTList params(params_.begin(), params_.end());
+
   return new CallableType(
-      toNodeType<std::remove_pointer_t<decltype(parameterTypes_)>>(
-          parameterTypes_->clone()),
-      toNodeType<std::remove_pointer_t<decltype(returnType_)>>(
-          returnType_->clone()),
+      params,
+      this->returnType()->clone()->toType(),
       this->isRef(),
       this->isNilable());
 }
 
-void CallableType::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(parameterTypes_ == old) {
-    replacement->parent() = this;
-    parameterTypes_ =
-        toNodeType<std::remove_pointer_t<decltype(parameterTypes_)>>(
-            replacement);
-    return;
-  }
-  if(returnType_ == old) {
-    replacement->parent() = this;
-    returnType_ =
-        toNodeType<std::remove_pointer_t<decltype(returnType_)>>(replacement);
-    return;
-  }
-}
-
 CallableType::CallableType(
     long line,
-    TypeList* parameterTypes,
+    const ASTList& parameterTypes,
     Type* returnType)
     : CallableType(parameterTypes, returnType) {
   setLine(line);
 }
-CallableType::CallableType(TypeList* parameterTypes, Type* returnType)
+CallableType::CallableType(const ASTList& parameterTypes, Type* returnType)
     : CallableType(parameterTypes, returnType, false, false) {}
 CallableType::CallableType(
     long line,
-    TypeList* parameterTypes,
+    const ASTList& parameterTypes,
     Type* returnType,
     bool isRef,
     bool isNilable)
@@ -52,18 +39,28 @@ CallableType::CallableType(
   setLine(line);
 }
 CallableType::CallableType(
-    TypeList* parameterTypes,
+    const ASTList& parameterTypes,
     Type* returnType,
     bool isRef,
     bool isNilable)
-    : Type(isRef, isNilable), parameterTypes_(parameterTypes),
-      returnType_(returnType) {
-  parameterTypes_->parent() = this;
-  returnType_->parent() = this;
+    : Type(isRef, isNilable) {
+  this->returnTypeIdx_ = addChild(returnType);
+  this->parameterTypesStartIdx_ = numChildren();
+  for(auto p : parameterTypes) {
+    addChild(p);
+  }
+  this->parameterTypesStopIdx_ =
+      this->parameterTypesStartIdx_ + parameterTypes.size();
 }
 
-TypeList* CallableType::parameterTypes() { return this->parameterTypes_; }
-Type* CallableType::returnType() { return this->returnType_; }
+ASTListIteratorPair<Type> CallableType::parameterTypes() {
+  return children_slice<Type>(
+      this->parameterTypesStartIdx_,
+      this->parameterTypesStopIdx_);
+}
+Type* CallableType::returnType() {
+  return child(this->returnTypeIdx_)->toType();
+}
 
 } // namespace node
 } // namespace ast

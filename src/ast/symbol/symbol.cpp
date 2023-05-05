@@ -20,9 +20,9 @@ Symbol::Symbol(const std::string& symbolName, node::Type* type)
 Symbol::Symbol(const char* symbolName, node::Type* type)
     : symbolName(symbolName), type_(type) {}
 
-std::string Symbol::basename() const { return symbolName; }
-std::string Symbol::name() const { return symbolName; }
-node::Type* Symbol::type() const { return type_; }
+std::string Symbol::basename() { return symbolName; }
+std::string Symbol::name() { return symbolName; }
+node::Type* Symbol::type() { return type_; }
 
 void Symbol::setName(const std::string& name) { this->symbolName = name; }
 void Symbol::setType(node::Type* t) { this->type_ = t; }
@@ -46,7 +46,7 @@ bool Symbol::getFlag(Flag flag) {
 }
 FlagSet Symbol::flags() { return this->flags_; }
 
-bool Symbol::operator==(const Symbol& other) {
+bool Symbol::operator==(Symbol& other) {
   return this->basename() == other.basename() &&
          node::Type::isSameType(this->type(), other.type());
 }

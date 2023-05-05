@@ -1,8 +1,6 @@
 #ifndef SAPPHIRE_AST_NODE_TYPE_TYPE_H_
 #define SAPPHIRE_AST_NODE_TYPE_TYPE_H_
 
-#include "TypeList.h"
-
 #include "ast/ast.h"
 
 #include <array>
@@ -38,7 +36,7 @@ public:
       : isRef_(isRef), isNilable_(isNilable), isUserSpecified_(false) {}
   virtual ~Type() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  virtual ASTNode* clone();
 
   bool isRef() { return isRef_; }
   bool isNilable() { return isNilable_; }
@@ -52,32 +50,20 @@ public:
     this->isUserSpecified_ = isUserSpecified;
   }
 
-  bool isNilType();
-  bool isUnknownType();
-  bool isUntypedType();
-  bool isAnyType();
-
-  bool isPrimitiveType();
-  bool isArrayType();
-  bool isTupleType();
-  bool isCallableType();
-  bool isClassType();
-
-  PrimitiveType* toPrimitiveType();
-  ArrayType* toArrayType();
-  TupleType* toTupleType();
-  CallableType* toCallableType();
-  ClassType* toClassType();
+  CONST_MEMBER_FUNC(bool, isNilType)
+  CONST_MEMBER_FUNC(bool, isUnknownType)
+  CONST_MEMBER_FUNC(bool, isUntypedType)
+  CONST_MEMBER_FUNC(bool, isAnyType)
 
   // get plain string using [a-zA-Z0-9_]
-  std::string toMangledString();
-  std::string toString();
+  CONST_MEMBER_FUNC(std::string, toMangledString)
+  CONST_MEMBER_FUNC(std::string, toString)
 
   // same type, just the base
   static bool isSameBaseType(Type* t1, Type* t2);
+
   // same type, including nilable and ref
   static bool isSameType(Type* t1, Type* t2);
-  static bool isSameType(TypeList* t1, TypeList* t2);
 
   static PrimitiveType* getNilType();
   static PrimitiveType* getAnyType();
@@ -87,35 +73,36 @@ public:
   static PrimitiveType* getType(PrimitiveTypeEnum);
   static ArrayType* getArrayType(Type* elementType);
 
-  template <typename... Ts> static TupleType* getTupleType(Ts&&... types) {
-    static_assert(
-        std::conjunction<std::bool_constant<(
-            (std::is_pointer_v<Ts> &&
-             std::is_base_of_v<Type, std::remove_pointer_t<Ts>>),
-            ...)>>::value,
-        "");
-    std::array<Type*, sizeof...(Ts)> arrayOfTypes;
-    std::size_t idx = 0;
-    (([&] {
-       arrayOfTypes[idx] = types;
-       idx++;
-     }()),
-     ...);
-    return getTupleType(arrayOfTypes.begin(), arrayOfTypes.end());
-  }
-  template <typename InputIt>
-  static TupleType* getTupleType(InputIt typesBegin, InputIt typesEnd) {
-    static_assert(
-        std::is_same_v<
-            typename std::iterator_traits<InputIt>::value_type,
-            Type*>,
-        "");
-    TypeList ty(typesBegin, typesEnd);
-    return getTupleType(&ty);
-  }
-  static TupleType* getTupleType(TypeList* types);
+  // template <typename... Ts> static TupleType* getTupleType(Ts&&... types) {
+  //   static_assert(
+  //       std::conjunction<std::bool_constant<(
+  //           (std::is_pointer_v<Ts> &&
+  //            std::is_base_of_v<Type, std::remove_pointer_t<Ts>>),
+  //           ...)>>::value,
+  //       "");
+  //   std::array<Type*, sizeof...(Ts)> arrayOfTypes;
+  //   std::size_t idx = 0;
+  //   (([&] {
+  //      arrayOfTypes[idx] = types;
+  //      idx++;
+  //    }()),
+  //    ...);
+  //   return getTupleType(arrayOfTypes.begin(), arrayOfTypes.end());
+  // }
+  // template <typename InputIt>
+  // static TupleType* getTupleType(InputIt typesBegin, InputIt typesEnd) {
+  //   static_assert(
+  //       std::is_same_v<
+  //           typename std::iterator_traits<InputIt>::value_type,
+  //           Type*>,
+  //       "");
+  //   TypeList ty(typesBegin, typesEnd);
+  //   return getTupleType(&ty);
+  // }
+  // static TupleType* getTupleType(TypeList* types);
+
   template <typename... Ts>
-  static TupleType* getCallableType(Type* returnType, Ts&&... types) {
+  static CallableType* getCallableType(Type* returnType, Ts&&... types) {
     static_assert(
         std::conjunction<std::bool_constant<(
             (std::is_pointer_v<Ts> &&
@@ -144,11 +131,11 @@ public:
             typename std::iterator_traits<InputIt>::value_type,
             Type*>,
         "");
-    TypeList ty(parameterTypesBegin, parameterTypesEnd);
+    ASTList ty(parameterTypesBegin, parameterTypesEnd);
     return getCallableType(returnType, &ty);
   }
   static CallableType*
-  getCallableType(Type* returnType, TypeList* parameterTypes);
+  getCallableType(Type* returnType, const ASTList& parameterTypes);
   static ClassType* getClassType(const char* className);
 };
 

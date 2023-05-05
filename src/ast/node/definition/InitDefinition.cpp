@@ -1,50 +1,48 @@
 #include "InitDefinition.h"
 
-#include "ast/node/NodeList.h"
 #include "ast/node/statement/Scope.h"
 namespace ast {
 namespace node {
 
-ASTNode* InitDefinition::clone() {
-  return new InitDefinition(
-      toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
-          parameters_->clone()),
-      toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
-}
-void InitDefinition::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(parameters_ == old) {
-    replacement->parent() = this;
-    parameters_ =
-        toNodeType<std::remove_pointer_t<decltype(parameters_)>>(replacement);
-    return;
-  }
-  if(body_ == old) {
-    replacement->parent() = this;
-    body_ = toNodeType<std::remove_pointer_t<decltype(body_)>>(replacement);
-    return;
-  }
-}
+// ASTNode* InitDefinition::clone() {
+//   return new InitDefinition(
+//       toNodeType<std::remove_pointer_t<decltype(parameters_)>>(
+//           parameters_->clone()),
+//       toNodeType<std::remove_pointer_t<decltype(body_)>>(body_->clone()));
+// }
 
-InitDefinition::InitDefinition(long line, NodeList* parameters, Scope* body)
+InitDefinition::InitDefinition(
+    long line,
+    const ASTList& parameters,
+    Scope* body)
     : InitDefinition(parameters, body) {
   setLine(line);
 }
 InitDefinition::InitDefinition(long line, Scope* body) : InitDefinition(body) {
   setLine(line);
 }
-InitDefinition::InitDefinition(NodeList* parameters, Scope* body)
-    : parameters_(parameters), body_(body), isInit_(true) {
-  parameters_->parent() = this;
-  body_->parent() = this;
+InitDefinition::InitDefinition(const ASTList& parameters, Scope* body)
+    : isInit_(true) {
+  this->bodyIdx_ = this->addChild(body);
+  this->parametersStartIdx_ = this->numChildren();
+  for(auto p : parameters) {
+    this->addChild(p);
+  }
+  this->parametersStopIdx_ = this->parametersStartIdx_ + parameters.size();
 }
-InitDefinition::InitDefinition(Scope* body)
-    : parameters_(nullptr), body_(body), isInit_(false) {
-  parameters_->parent() = this;
+InitDefinition::InitDefinition(Scope* body) : isInit_(false) {
+  this->bodyIdx_ = this->addChild(body);
+  this->parametersStartIdx_ = -1;
+  this->parametersStopIdx_ = -1;
 }
 
 bool InitDefinition::isDeinit() { return !isInit_; }
 bool InitDefinition::isInit() { return isInit_; }
-NodeList* InitDefinition::parameters() { return parameters_; }
-Scope* InitDefinition::body() { return body_; }
+ASTListIteratorPair<Parameter> InitDefinition::parameters() {
+  return children_slice<Parameter>(
+      this->parametersStartIdx_,
+      this->parametersStopIdx_);
+}
+Scope* InitDefinition::body() { return child(this->bodyIdx_)->toScope(); }
 } // namespace node
 } // namespace ast

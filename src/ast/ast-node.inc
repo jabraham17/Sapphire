@@ -15,9 +15,9 @@ in 'ast_node_def_include' mode, user can specify the handful to include
 
 #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
     (defined(ast_node_def_exclude) &&                                          \
-     !defined(ast_node_def_exclude_NodeList)) ||                               \
-    (defined(ast_node_def_include) && defined(ast_node_def_include_NodeList))
-ast_node_def(NodeList)
+     !defined(ast_node_def_exclude_ASTNode)) ||                              \
+    (defined(ast_node_def_include) && defined(ast_node_def_include_ASTNode))
+ast_node_def(ASTNode)
 #endif
 #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
     (defined(ast_node_def_exclude) &&                                          \
@@ -117,25 +117,18 @@ ast_node_def(PrimitiveType)
     (defined(ast_node_def_include) && defined(ast_node_def_include_ArrayType))
 ast_node_def(ArrayType)
 #endif
-#if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
-    (defined(ast_node_def_exclude) &&                                          \
-     !defined(ast_node_def_exclude_TupleType)) ||                              \
-    (defined(ast_node_def_include) && defined(ast_node_def_include_TupleType))
-ast_node_def(TupleType)
-#endif
+// #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
+//     (defined(ast_node_def_exclude) &&                                          \
+//      !defined(ast_node_def_exclude_TupleType)) ||                              \
+//     (defined(ast_node_def_include) && defined(ast_node_def_include_TupleType))
+// ast_node_def(TupleType)
+// #endif
 #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
     (defined(ast_node_def_exclude) &&                                          \
      !defined(ast_node_def_exclude_CallableType)) ||                           \
     (defined(ast_node_def_include) &&                                          \
      defined(ast_node_def_include_CallableType))
 ast_node_def(CallableType)
-#endif
-#if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
-    (defined(ast_node_def_exclude) &&                                          \
-     !defined(ast_node_def_exclude_TypeList)) ||                               \
-    (defined(ast_node_def_include) &&                                          \
-     defined(ast_node_def_include_TypeList))
-ast_node_def(TypeList)
 #endif
 #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
     (defined(ast_node_def_exclude) &&                                          \
@@ -171,12 +164,12 @@ ast_node_def(ForStatement)
      defined(ast_node_def_include_ReturnStatement))
 ast_node_def(ReturnStatement)
 #endif
-#if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
-    (defined(ast_node_def_exclude) &&                                          \
-     !defined(ast_node_def_exclude_Closure)) ||                                \
-    (defined(ast_node_def_include) && defined(ast_node_def_include_Closure))
-ast_node_def(Closure)
-#endif
+// #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
+//     (defined(ast_node_def_exclude) &&                                          \
+//      !defined(ast_node_def_exclude_Closure)) ||                                \
+//     (defined(ast_node_def_include) && defined(ast_node_def_include_Closure))
+// ast_node_def(Closure)
+// #endif
 #if(!defined(ast_node_def_exclude) && !defined(ast_node_def_include)) ||       \
     (defined(ast_node_def_exclude) &&                                          \
      !defined(ast_node_def_exclude_CallExpression)) ||                         \
@@ -229,8 +222,8 @@ ast_node_def(Nil)
 #undef ast_node_def_exclude
 #undef ast_node_def_include
 
-#undef ast_node_def_exclude_NodeList
-#undef ast_node_def_include_NodeList
+#undef ast_node_def_exclude_ASTNode
+#undef ast_node_def_include_ASTNode
 #undef ast_node_def_exclude_Parameter
 #undef ast_node_def_include_Parameter
 #undef ast_node_def_exclude_FunctionPrototype
@@ -261,14 +254,12 @@ ast_node_def(Nil)
 #undef ast_node_def_include_PrimitiveType
 #undef ast_node_def_exclude_ArrayType
 #undef ast_node_def_include_ArrayType
-#undef ast_node_def_exclude_TupleType
-#undef ast_node_def_include_TupleType
+// #undef ast_node_def_exclude_TupleType
+// #undef ast_node_def_include_TupleType
 #undef ast_node_def_exclude_CallableType
 #undef ast_node_def_include_CallableType
 #undef ast_node_def_exclude_ClassType
 #undef ast_node_def_include_ClassType
-#undef ast_node_def_exclude_TypeList
-#undef ast_node_def_include_TypeList
 #undef ast_node_def_exclude_IfStatement
 #undef ast_node_def_include_IfStatement
 #undef ast_node_def_exclude_WhileStatement
@@ -277,8 +268,8 @@ ast_node_def(Nil)
 #undef ast_node_def_include_ForStatement
 #undef ast_node_def_exclude_ReturnStatement
 #undef ast_node_def_include_ReturnStatement
-#undef ast_node_def_exclude_Closure
-#undef ast_node_def_include_Closure
+// #undef ast_node_def_exclude_Closure
+// #undef ast_node_def_include_Closure
 #undef ast_node_def_exclude_CallExpression
 #undef ast_node_def_include_CallExpression
 #undef ast_node_def_exclude_UseExpression

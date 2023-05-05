@@ -16,12 +16,12 @@ public:
   Nil(bool isUserSpecified);
   virtual ~Nil() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;
 
-  bool isUserSpecified();
+  CONST_MEMBER_FUNC(bool, isUserSpecified);
 };
 } // namespace node
 } // namespace ast

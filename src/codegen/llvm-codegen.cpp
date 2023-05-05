@@ -136,7 +136,7 @@ static llvm::Type* getLLVMType(llvm::LLVMContext* Context, ast::node::Type* t) {
 }
 
 ast::symbol::Symbol* getSymbol(ast::node::ASTNode* ast) {
-  if(auto a = ast::toUseExpressionNode(ast); a != nullptr) return a->symbol();
+  if(auto a = ast->toUseExpression(); a != nullptr) return a->symbol();
   return nullptr;
 }
 
@@ -243,8 +243,8 @@ protected:
 
     // get a local for the array
     auto astArrayType = arg->expr()->type();
-    assert(ast::toArrayTypeNode(astArrayType) != nullptr);
-    auto astElmType = ast::toArrayTypeNode(astArrayType)->elementType();
+    assert(astArrayType->toArrayType() != nullptr);
+    auto astElmType = astArrayType->toArrayType()->elementType();
     auto arrayType = getLLVMType(Context, astArrayType);
     auto elmType = getLLVMType(Context, astElmType);
 
@@ -353,7 +353,7 @@ protected:
         // first operand is function name
         // TODO: add proper resolution to a function with a visitor based on
         // type
-        auto astFuncToCall = ast::toUseExpressionNode(arg->operands()->get(0));
+        auto astFuncToCall = arg->operands().get(0)->toUseExpression();
         assert(astFuncToCall != nullptr);
         // auto astFuncToCall = arg->operands()->get(0);
         // astFuncToCall->accept(this);
@@ -362,10 +362,9 @@ protected:
         assert(funcToCall != nullptr);
         // funcToCall->print(llvm::errs());
 
-        for(auto it = arg->operands()->begin() + 1;
-            it != arg->operands()->end();
+        for(auto it = arg->operands().begin() + 1; it != arg->operands().end();
             it++) {
-          auto argExp = ast::toExpressionNode(*it);
+          auto argExp = (*it)->toExpression();
           assert(argExp != nullptr);
 
           argExp->accept(this);
@@ -393,8 +392,8 @@ protected:
         break;
       }
       case ast::node::OperatorType::ASSIGNMENT: {
-        auto astLHS = arg->operands()->get(0);
-        auto astRHS = ast::toExpressionNode(arg->operands()->get(1));
+        auto astLHS = arg->operands().get(0);
+        auto astRHS = arg->operands().get(1)->toExpression();
         assert(astRHS != nullptr);
 
         astLHS->accept(this);
@@ -416,8 +415,8 @@ protected:
         // TODO: but this probably has to be done during type resolution
         // TODO: probably want to do array bounds checking here
 
-        auto astArray = ast::toExpressionNode(arg->operands()->get(0));
-        auto astIndex = ast::toExpressionNode(arg->operands()->get(1));
+        auto astArray = arg->operands().get(0)->toExpression();
+        auto astIndex = arg->operands().get(1)->toExpression();
         assert(astArray != nullptr && astIndex != nullptr);
 
         astArray->accept(this);
@@ -468,7 +467,7 @@ protected:
     auto Builder = get<1>();
     auto Module = get<2>();
     auto variables = get<3>();
-    for(auto elm : *arg->statements()) {
+    for(auto elm : arg->statements()) {
       ExpressionBuilder ep(Context, Builder, Module, variables);
       elm->accept(&ep);
     }
@@ -492,18 +491,13 @@ protected:
     // function type
     std::vector<llvm::Type*> paramTypes;
     std::vector<std::string> paramNames;
-    for(auto elm : *arg->parameters()) {
-      if(auto param = ast::toParameterNode(elm); param != nullptr) {
+    for(auto param : arg->parameters()) {
 
-        auto tt = param->symbol()->type();
-        auto llvmType = getLLVMType(Context, tt);
-        paramTypes.push_back(llvmType);
+      auto tt = param->symbol()->type();
+      auto llvmType = getLLVMType(Context, tt);
+      paramTypes.push_back(llvmType);
 
-        paramNames.push_back(param->symbol()->name());
-      } else {
-        std::cerr << "error in codegen: type mismatch on param\n";
-        exit(1);
-      }
+      paramNames.push_back(param->symbol()->name());
     }
 
     auto retType = getLLVMType(Context, arg->type()->returnType());
@@ -567,22 +561,17 @@ protected:
     // the scope will build its own local args to this
     LLVMCodegen::SymbolMap variables;
     auto params = arg->functionPrototype()->parameters();
-    assert((F->arg_size()) == params->size());
-    for(std::size_t i = 0; i < params->size(); i++) {
-      if(auto param = ast::toParameterNode((*params).get(i));
-         param != nullptr) {
-        auto Arg = F->getArg(i);
-        auto Sym = param->symbol();
-        auto llvmType = Arg->getType();
-        auto local =
-            StackLocal(Context, Builder, llvmType, Arg, Sym->name() + "_local");
+    assert((F->arg_size()) == params.size());
+    for(auto it = params.begin(); it != params.end(); it++) {
+      auto param = *it;
+      std::size_t idx = std::distance(params.begin(), it);
+      auto Arg = F->getArg(idx);
+      auto Sym = param->symbol();
+      auto llvmType = Arg->getType();
+      auto local =
+          StackLocal(Context, Builder, llvmType, Arg, Sym->name() + "_local");
 
-        variables[Sym] = {llvmType, local};
-      } else {
-        this->returnValue_.push_back(
-            "error in codegen: type mismatch on param\n");
-        return;
-      }
+      variables[Sym] = {llvmType, local};
     }
 
     ScopeBuilder sb(Context, Builder, Module, &variables);

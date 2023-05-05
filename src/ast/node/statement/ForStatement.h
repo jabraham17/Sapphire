@@ -7,23 +7,20 @@ namespace ast {
 namespace node {
 
 class ForStatement : public Statement {
-  DefExpression* var_;
-  Expression* expr_;
-  Scope* body_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t varIdx_;
+  std::size_t exprIdx_;
+  std::size_t bodyIdx_;
 
 public:
   ForStatement(long line, DefExpression* var, Expression* expr, Scope* body);
   ForStatement(DefExpression* var, Expression* expr, Scope* body);
   virtual ~ForStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  DefExpression* variable();
-  Expression* expr();
-  Scope* body();
+  CONST_MEMBER_FUNC(DefExpression*, variable)
+  CONST_MEMBER_FUNC(Expression*, expr)
+  CONST_MEMBER_FUNC(Scope*, body)
 };
 } // namespace node
 } // namespace ast

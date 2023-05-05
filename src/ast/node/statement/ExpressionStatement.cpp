@@ -4,29 +4,23 @@
 namespace ast {
 namespace node {
 
-ASTNode* ExpressionStatement::clone() {
-  return new ExpressionStatement(
-      toNodeType<std::remove_pointer_t<decltype(expression_)>>(
-          expression_->clone()));
-}
+// ASTNode* ExpressionStatement::clone() {
+//   return new ExpressionStatement(
+//       toNodeType<std::remove_pointer_t<decltype(expression_)>>(
+//           expression_->clone()));
+// }
 
-void ExpressionStatement::replaceNode(ASTNode* old, ASTNode* replacement) {
-  if(expression_ == old) {
-    replacement->parent() = this;
-    expression_ =
-        toNodeType<std::remove_pointer_t<decltype(expression_)>>(replacement);
-    return;
-  }
-}
 ExpressionStatement::ExpressionStatement(long line, Expression* expr)
     : ExpressionStatement(expr) {
   setLine(line);
 }
-ExpressionStatement::ExpressionStatement(Expression* expr) : expression_(expr) {
-  expression_->parent() = this;
+ExpressionStatement::ExpressionStatement(Expression* expr) {
+  this->expressionIdx_ = this->addChild(expr);
 }
 
-Expression* ExpressionStatement::expression() { return expression_; }
+Expression* ExpressionStatement::expression() {
+  return child(this->expressionIdx_)->toExpression();
+}
 
 } // namespace node
 } // namespace ast

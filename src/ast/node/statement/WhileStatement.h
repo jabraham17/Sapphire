@@ -9,21 +9,18 @@ namespace node {
 // todo: move to cpp definition stuff
 
 class WhileStatement : public Statement {
-  Expression* expr_;
-  Scope* body_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t exprIdx_;
+  std::size_t bodyIdx_;
 
 public:
   WhileStatement(long line, Expression* expr, Scope* body);
   WhileStatement(Expression* expr, Scope* body);
   virtual ~WhileStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  Expression* expr();
-  Scope* body();
+  CONST_MEMBER_FUNC(Expression*, expr)
+  CONST_MEMBER_FUNC(Scope*, body)
 };
 } // namespace node
 } // namespace ast

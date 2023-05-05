@@ -8,10 +8,7 @@ namespace node {
 
 class DefExpression : public Expression {
   symbol::Symbol* symbol_;
-  Expression* initialValue_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::ptrdiff_t initialValueIdx_;
 
 public:
   DefExpression(
@@ -31,16 +28,16 @@ public:
 
   virtual ~DefExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  symbol::Symbol* symbol();
+  CONST_MEMBER_FUNC(symbol::Symbol*, symbol)
 
   virtual Type* type() override;
   virtual void setType(Type* type) override;
 
   void setInitialValue(Expression* value);
-  bool hasInitialValue();
-  Expression* initialValue();
+  CONST_MEMBER_FUNC(bool, hasInitialValue);
+  CONST_MEMBER_FUNC(Expression*, initialValue);
 };
 } // namespace node
 } // namespace ast

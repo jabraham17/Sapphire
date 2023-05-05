@@ -8,19 +8,16 @@ namespace node {
 // todo: move to cpp definition stuff
 
 class ReturnStatement : public Statement {
-  Expression* expr_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t exprIdx_;
 
 public:
   ReturnStatement(long line, Expression* expr);
   ReturnStatement(Expression* expr);
   virtual ~ReturnStatement() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  Expression* expression();
+  CONST_MEMBER_FUNC(Expression*, expression)
 };
 } // namespace node
 } // namespace ast

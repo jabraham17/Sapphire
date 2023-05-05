@@ -9,19 +9,19 @@ namespace node {
 // todo: move to cpp definition stuff
 
 class Scope : public Statement {
-  NodeList* statements_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t statementsStartIdx_;
+  std::size_t statementsStopIdx_;
 
 public:
-  Scope(long line, NodeList* statements);
-  Scope(NodeList* statements);
+  Scope(long line, const ASTList& statements);
+  Scope(const ASTList& statements);
+  Scope(long line);
+  Scope();
   virtual ~Scope() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  NodeList* statements();
+  CONST_MEMBER_FUNC(ASTListIteratorPair<Statement>, statements);
 };
 } // namespace node
 } // namespace ast

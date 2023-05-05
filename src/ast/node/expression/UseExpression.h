@@ -14,9 +14,10 @@ public:
   UseExpression(symbol::Symbol* symbol);
   virtual ~UseExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  symbol::Symbol* symbol();
+  CONST_MEMBER_FUNC(symbol::Symbol*, symbol)
+
   virtual Type* type() override;
 
   void setSymbol(symbol::Symbol* symbol);

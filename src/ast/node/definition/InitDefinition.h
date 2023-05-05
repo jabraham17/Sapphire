@@ -6,26 +6,24 @@ namespace ast {
 namespace node {
 class InitDefinition : public ASTNode {
 private:
-  NodeList* parameters_;
-  Scope* body_;
+  std::size_t bodyIdx_;
+  std::ptrdiff_t parametersStartIdx_;
+  std::ptrdiff_t parametersStopIdx_;
   bool isInit_;
 
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
-
 public:
-  InitDefinition(long line, NodeList* parameters, Scope* body);
-  InitDefinition(NodeList* parameters, Scope* body);
+  InitDefinition(long line, const ASTList& parameters, Scope* body);
+  InitDefinition(const ASTList& parameters, Scope* body);
   InitDefinition(long line, Scope* body);
   InitDefinition(Scope* body);
   virtual ~InitDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  bool isDeinit();
-  bool isInit();
-  NodeList* parameters();
-  Scope* body();
+  CONST_MEMBER_FUNC(bool, isDeinit)
+  CONST_MEMBER_FUNC(bool, isInit)
+  CONST_MEMBER_FUNC(ASTListIteratorPair<Parameter>, parameters)
+  CONST_MEMBER_FUNC(Scope*, body)
 };
 
 } // namespace node

@@ -114,29 +114,37 @@ protected:
       case ast::node::OperatorType::FUNCTION: {
         ast::node::UseExpression* callFuncExpr = nullptr;
         // if its a use, directly get it
-        if(ast::isUseExpressionNode(call->operands()->get(0))) {
-          callFuncExpr = ast::toUseExpressionNode(call->operands()->get(0));
+        if(call->operands().get(0)->isUseExpression()) {
+          callFuncExpr = call->operands().get(0)->toUseExpression();
         } else if(auto fieldAccess =
-                      ast::toCallExpressionNode(call->operands()->get(0));
+                      call->operands().get(0)->toCallExpression();
                   fieldAccess != nullptr &&
                   fieldAccess->opType() ==
                       ast::node::OperatorType::FIELD_ACCESS) {
           // if the "symbol" is actually a field access, we replace it with its
           // components resolve op0
-          auto op0 = ast::toExpressionNode(fieldAccess->operands()->get(0));
+          auto op0 = fieldAccess->operands().get(0)->toExpression();
           assert(op0 != nullptr);
           op0->accept(this);
           // resolve op1, it MUST be a useExpression
-          auto op1 = ast::toUseExpressionNode(fieldAccess->operands()->get(1));
+          auto op1 = fieldAccess->operands().get(1)->toUseExpression();
           assert(op1 != nullptr);
 
           // add 'op1, op0' to operands, do this by adding to the front and
           // replacing
-          call->operands()->get(0)->replaceWith(op0);
-          call->operands()->addFront(op1);
+          auto newCall = new ast::node::CallExpression(call->opType());
+          newCall->addOperand(op1);
+          newCall->addOperand(op0);
+          for(ast::node::ASTNode* op : call->operands()) {
+            newCall->addOperand(op);
+          }
+          call->replaceWith(newCall);
+          call = newCall;
+          // call->operands().get(0)->replaceWith(op0);
+          // call->operands().addFront(op1);
 
           // now we have a symbol that can be resolved
-          callFuncExpr = ast::toUseExpressionNode(call->operands()->get(0));
+          callFuncExpr = call->operands().get(0)->toUseExpression();
 
         } else {
           assert(false);
@@ -144,8 +152,8 @@ protected:
 
         // we need to resolve the other operands to make this work nicely
         // resolve remaining operands
-        for(auto it = call->operands()->begin() + 1;
-            it != call->operands()->end();
+        for(auto it = call->operands().begin() + 1;
+            it != call->operands().end();
             it++) {
           (*it)->accept(this);
         }
@@ -161,25 +169,25 @@ protected:
           // 2. the number and types of the call expression match the prototype
 
           if(funcSym->basename() == callFuncSym->basename()) {
-            // std::cerr << funcSym->basename() << "\n";
+            // std::cerr << funcSym->basename() << " basename\n";
             auto funcSig = funcSym->type()->toCallableType();
             auto funcParamTypes = funcSig->parameterTypes();
-            if(funcParamTypes->elementTypes().size() !=
-               (call->operands()->size() - 1))
-              continue;
+            // std::cerr << "nops" << call->operands().size() << std::endl;
+            if(funcParamTypes.size() != (call->operands().size() - 1)) continue;
             bool matched = true;
-            for(auto it = call->operands()->begin() + 1;
-                it != call->operands()->end();
+
+            for(auto it = call->operands().begin() + 1;
+                it != call->operands().end();
                 it++) {
-              auto idx = (it - call->operands()->begin()) - 1;
-              auto operand = ast::toExpressionNode(*it);
+              auto idx = (it - call->operands().begin()) - 1;
+              auto operand = (*it)->toExpression();
               assert(operand != nullptr);
               // std::cerr << "    cmp " <<
-              // funcParamTypes->elementTypes().at(idx)->toString() << " "
+              // funcParamTypes.get(idx)->toString() << " "
               // << operand->type()->toString() << "\n";
               if(!ast::node::Type::isSameType(
                      operand->type(),
-                     funcParamTypes->elementTypes().at(idx))) {
+                     *funcParamTypes.get(idx))) {
                 matched = false;
               }
             }
@@ -192,8 +200,8 @@ protected:
           }
         }
         if(found) {
-          assert(ast::isUseExpressionNode(callFuncExpr));
-          ast::toUseExpressionNode(callFuncExpr)->setSymbol(found);
+          assert(callFuncExpr->isUseExpression());
+          callFuncExpr->toUseExpression()->setSymbol(found);
         } else {
           this->returnValue_.push_back(
               "unable to resolve function call to '" + callFuncSym->toString() +
@@ -202,7 +210,10 @@ protected:
 
         break;
       }
-      default: call->operands()->accept(this); break;
+      default:
+        for(auto c : call->operands())
+          c->accept(this);
+        break;
     }
   }
 
@@ -212,7 +223,7 @@ protected:
     auto symbols = get<1>();
     //  no changes to our symbols should occur, this subSAcope gets a copy
     ResolveOneScope ros(function_symbols, symbols);
-    for(auto stmt : *subScope->statements())
+    for(auto stmt : subScope->statements())
       stmt->accept(&ros);
     auto subScopeErrors = ros.returnValueAndClear();
 
@@ -240,22 +251,15 @@ protected:
     SymbolMap symbols;
     auto funcName = func->functionPrototype()->symbol()->basename();
 
-    for(auto elm : *func->functionPrototype()->parameters()) {
-      if(auto param = ast::toParameterNode(elm); param != nullptr) {
-        auto name = param->symbol()->name();
-        if(auto existing = symbols.find(name); existing == symbols.end()) {
-          // does not exist already, no error add it
-          symbols.insert({name, param->symbol()});
-        } else {
-          this->returnValue_.push_back(
-              "duplicate parameter '" + name + "' in function '" + funcName +
-              "' on line " + std::to_string(param->line()));
-          return;
-        }
+    for(auto param : func->functionPrototype()->parameters()) {
+      auto name = param->symbol()->name();
+      if(auto existing = symbols.find(name); existing == symbols.end()) {
+        // does not exist already, no error add it
+        symbols.insert({name, param->symbol()});
       } else {
         this->returnValue_.push_back(
-            "invalid parameter in function '" + funcName + "' on line " +
-            std::to_string(func->line()));
+            "duplicate parameter '" + name + "' in function '" + funcName +
+            "' on line " + std::to_string(param->line()));
         return;
       }
     }

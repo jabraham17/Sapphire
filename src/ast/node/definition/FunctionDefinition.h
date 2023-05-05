@@ -6,11 +6,8 @@ namespace ast {
 namespace node {
 class FunctionDefinition : public ASTNode {
 private:
-  FunctionPrototype* functionPrototype_;
-  Scope* body_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t functionPrototypeIdx_;
+  std::size_t bodyIdx_;
 
 public:
   FunctionDefinition(
@@ -21,10 +18,10 @@ public:
 
   virtual ~FunctionDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  FunctionPrototype* functionPrototype();
-  Scope* body();
+  CONST_MEMBER_FUNC(FunctionPrototype*, functionPrototype)
+  CONST_MEMBER_FUNC(Scope*, body)
 };
 } // namespace node
 } // namespace ast

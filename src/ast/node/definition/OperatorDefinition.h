@@ -7,28 +7,26 @@ namespace ast {
 namespace node {
 class OperatorDefinition : public ASTNode {
   OperatorType op_;
-  NodeList* parameters_;
-  Scope* body_;
-
-protected:
-  virtual void replaceNode(ASTNode* old, ASTNode* replacement) override;
+  std::size_t parametersStartIdx_;
+  std::size_t parametersStopIdx_;
+  std::size_t bodyIdx_;
 
 public:
   OperatorDefinition(
       long line,
       OperatorType op,
-      NodeList* parameters,
+      const ASTList& parameters,
       Scope* body);
 
-  OperatorDefinition(OperatorType op, NodeList* parameters, Scope* body);
+  OperatorDefinition(OperatorType op, const ASTList& parameters, Scope* body);
 
   virtual ~OperatorDefinition() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;
-  virtual ASTNode* clone() override;
+  // virtual ASTNode* clone() override;
 
-  OperatorType opType();
-  NodeList* parameters();
-  Scope* body();
+  CONST_MEMBER_FUNC(OperatorType, opType);
+  CONST_MEMBER_FUNC(ASTListIteratorPair<Parameter>, parameters);
+  CONST_MEMBER_FUNC(Scope*, body);
 };
 } // namespace node
 } // namespace ast

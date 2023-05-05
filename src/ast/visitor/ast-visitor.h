@@ -29,35 +29,7 @@ public:
   virtual ~VisitAll() = default;
 
 protected:
-#define ast_node_def_exclude
-#define ast_node_def_exclude_Parameter
-#define ast_node_def_exclude_Statement
-#define ast_node_def_exclude_Type
-#define ast_node_def_exclude_PrimitiveType
-#define ast_node_def_exclude_ClassType
-#define ast_node_def_exclude_UseExpression
-#define ast_node_def_exclude_IntExpression
-#define ast_node_def_exclude_UIntExpression
-#define ast_node_def_exclude_RealExpression
-#define ast_node_def_exclude_StringExpression
-#define ast_node_def_exclude_Nil
 #define ast_node_def(type) virtual void visitImpl(node::type*) override;
-#include "ast/ast-node.inc"
-
-// these all do nothing, as they have no children to search through
-#define ast_node_def_include
-#define ast_node_def_include_Parameter
-#define ast_node_def_include_Statement
-#define ast_node_def_include_Type
-#define ast_node_def_include_PrimitiveType
-#define ast_node_def_include_ClassType
-#define ast_node_def_include_UseExpression
-#define ast_node_def_include_IntExpression
-#define ast_node_def_include_UIntExpression
-#define ast_node_def_include_RealExpression
-#define ast_node_def_include_StringExpression
-#define ast_node_def_include_Nil
-#define ast_node_def(type) virtual void visitImpl(node::type*) override{};
 #include "ast/ast-node.inc"
 };
 

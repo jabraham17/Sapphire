@@ -4,8 +4,7 @@
 #include "CallableType.h"
 #include "ClassType.h"
 #include "PrimitiveType.h"
-#include "TupleType.h"
-#include "TypeList.h"
+// #include "TupleType.h"
 
 #include <array>
 #include <cassert>
@@ -37,21 +36,6 @@ bool Type::isUntypedType() {
   return pt != nullptr && pt->primitiveType() == PrimitiveTypeEnum::UNTYPED;
 }
 
-bool Type::isPrimitiveType() { return this->toPrimitiveType() != nullptr; }
-bool Type::isArrayType() { return this->toArrayType() != nullptr; }
-bool Type::isTupleType() { return this->toTupleType() != nullptr; }
-bool Type::isCallableType() { return this->toCallableType() != nullptr; }
-
-PrimitiveType* Type::toPrimitiveType() {
-  return dynamic_cast<PrimitiveType*>(this);
-}
-ArrayType* Type::toArrayType() { return dynamic_cast<ArrayType*>(this); }
-TupleType* Type::toTupleType() { return dynamic_cast<TupleType*>(this); }
-CallableType* Type::toCallableType() {
-  return dynamic_cast<CallableType*>(this);
-}
-ClassType* Type::toClassType() { return dynamic_cast<ClassType*>(this); }
-
 std::string Type::toMangledString() {
   std::string s;
   s += (this->isRef() ? "ref_" : "");
@@ -70,17 +54,19 @@ std::string Type::toMangledString() {
     }
   } else if(auto at = this->toArrayType(); at != nullptr) {
     s += "arr_" + at->elementType()->toString();
-  } else if(auto tt = this->toTupleType(); tt != nullptr) {
-    s += "tup_";
-    std::string sep;
-    for(auto e : tt->elementTypes()->elementTypes()) {
-      s += sep + toTypeNode(e)->toString();
-      sep = "_";
-    }
-  } else if(auto ct = this->toCallableType(); ct != nullptr) {
+  }
+  // else if(auto tt = this->toTupleType(); tt != nullptr) {
+  //   s += "tup_";
+  //   std::string sep;
+  //   for(auto e : tt->elementTypes()->elementTypes()) {
+  //     s += sep + e->toType()->toString();
+  //     sep = "_";
+  //   }
+  // }
+  else if(auto ct = this->toCallableType(); ct != nullptr) {
     s += "func_";
     std::string sep;
-    for(auto e : ct->parameterTypes()->elementTypes()) {
+    for(auto e : ct->parameterTypes()) {
       s += sep + e->toString();
       sep = "_";
     }
@@ -114,19 +100,21 @@ std::string Type::toString() {
     }
   } else if(auto at = this->toArrayType(); at != nullptr) {
     s += "[" + at->elementType()->toString() + "]";
-  } else if(auto tt = this->toTupleType(); tt != nullptr) {
-    s += "(";
-    std::string sep;
-    for(auto e : tt->elementTypes()->elementTypes()) {
-      s += sep + e->toString();
-      sep = ", ";
-    }
-    s += ")";
-  } else if(auto ct = this->toCallableType(); ct != nullptr) {
+  }
+  // else if(auto tt = this->toTupleType(); tt != nullptr) {
+  //   s += "(";
+  //   std::string sep;
+  //   for(auto e : tt->elementTypes()->elementTypes()) {
+  //     s += sep + e->toString();
+  //     sep = ", ";
+  //   }
+  //   s += ")";
+  // }
+  else if(auto ct = this->toCallableType(); ct != nullptr) {
     s += "((";
     std::string sep;
-    for(auto e : ct->parameterTypes()->elementTypes()) {
-      s += sep + toTypeNode(e)->toString();
+    for(auto e : ct->parameterTypes()) {
+      s += sep + e->toString();
       sep = ", ";
     }
     s += ") -> " + ct->returnType()->toString() + ")";
@@ -139,6 +127,17 @@ std::string Type::toString() {
   return s;
 
   return s;
+}
+
+bool isSameType(ASTListIteratorPair<Type> t1, ASTListIteratorPair<Type> t2) {
+  return t1.size() == t2.size() &&
+         std::equal(
+             t1.begin(),
+             t2.end(),
+             t1.begin(),
+             [](auto t1_elm, auto t2_elm) {
+               return Type::isSameType(t1_elm, t2_elm);
+             });
 }
 
 // same type, just the base
@@ -156,18 +155,20 @@ bool Type::isSameBaseType(Type* t1, Type* t2) {
     if(pt1 != nullptr && pt2 != nullptr)
       return isSameType(pt1->elementType(), pt2->elementType());
   }
-  {
-    TupleType* pt1 = t1->toTupleType();
-    TupleType* pt2 = t2->toTupleType();
-    if(pt1 != nullptr && pt2 != nullptr)
-      return isSameType(pt1->elementTypes(), pt2->elementTypes());
-  }
+  // {
+  //   TupleType* pt1 = t1->toTupleType();
+  //   TupleType* pt2 = t2->toTupleType();
+  //   if(pt1 != nullptr && pt2 != nullptr)
+  //     return isSameType(pt1->elementTypes(), pt2->elementTypes());
+  // }
   {
     CallableType* pt1 = t1->toCallableType();
     CallableType* pt2 = t2->toCallableType();
     if(pt1 != nullptr && pt2 != nullptr)
       return isSameType(pt1->returnType(), pt2->returnType()) &&
-             isSameType(pt1->parameterTypes(), pt2->parameterTypes());
+             ast::node::isSameType(
+                 pt1->parameterTypes(),
+                 pt2->parameterTypes());
   }
   {
     ClassType* pt1 = t1->toClassType();
@@ -181,18 +182,6 @@ bool Type::isSameBaseType(Type* t1, Type* t2) {
 bool Type::isSameType(Type* t1, Type* t2) {
   return Type::isSameBaseType(t1, t2) && t1->isRef_ == t2->isRef_ &&
          t1->isNilable_ == t2->isNilable_;
-}
-
-bool Type::isSameType(TypeList* t1, TypeList* t2) {
-  if(t1->elementTypes().size() == t2->elementTypes().size()) {
-    for(std::size_t i = 0; i < t1->elementTypes().size(); i++) {
-      if(!isSameType(t1->elementTypes()[i], t2->elementTypes()[i]))
-        return false;
-    }
-    // all types are the same
-    return true;
-  }
-  return false;
 }
 
 std::array<PrimitiveType, 10> primitiveTypes = {
@@ -249,14 +238,14 @@ ArrayType* Type::getArrayType(Type* elementType) {
     return &(it->second);
   }
 }
-TupleType* Type::getTupleType(TypeList* types) {
-  //  TODO: implement mapping
-  return new TupleType(
-      types->elementTypes().begin(),
-      types->elementTypes().end());
-}
+// TupleType* Type::getTupleType(TypeList* types) {
+//   //  TODO: implement mapping
+//   return new TupleType(
+//       types->elementTypes().begin(),
+//       types->elementTypes().end());
+// }
 CallableType*
-Type::getCallableType(Type* returnType, TypeList* parameterTypes) {
+Type::getCallableType(Type* returnType, const ASTList& parameterTypes) {
   //  TODO: implement mapping
   return new CallableType(parameterTypes, returnType);
 }
