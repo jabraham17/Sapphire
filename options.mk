@@ -68,6 +68,7 @@ COMPILE_FLAGS_+= -Wno-comment
 COMPILE_FLAGS_+= -flto
 LINK_FLAGS_+= -flto
 
+DEBUG=0
 ifeq ($(DEBUG),1)
 COMPILE_FLAGS_+= -DDEBUG=1 -g -O0 -fstandalone-debug
 LINK_FLAGS_+= -g
