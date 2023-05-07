@@ -96,7 +96,7 @@ int main(int argc, const char** argv, [[maybe_unused]] const char** envp) {
   std::cout << ir << std::endl;
 
   // write ir to file
-  std::ofstream test("test.ll");
+  std::ofstream test(outfile + ".ll");
   test << ir << std::endl;
 #endif
 
