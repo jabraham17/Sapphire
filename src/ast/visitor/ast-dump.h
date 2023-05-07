@@ -17,8 +17,11 @@ private:
   common::IndentedOStream strm;
 
 public:
-  ASTDump(std::ostream& rawStrm, std::size_t indentLevel = 2)
-      : strm(rawStrm, indentLevel) {}
+  ASTDump(
+      std::ostream& rawStrm,
+      std::size_t initialIndent = 0,
+      std::size_t indentLevel = 2)
+      : strm(rawStrm, indentLevel, initialIndent) {}
   virtual ~ASTDump() = default;
 
 private:

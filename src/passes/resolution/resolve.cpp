@@ -15,8 +15,11 @@ namespace resolution {
 bool Resolve::run() {
 
 #if defined(DEBUG) && DEBUG == 1
-  std::cerr << "Initial AST\n";
-  ast->accept(new ast::visitor::ASTDump(std::cerr));
+  std::cerr << "DEBUG: Initial AST\n";
+  {
+    ast::visitor::ASTDump dump(std::cerr, 4);
+    ast->accept(&dump);
+  }
   std::cerr << std::endl;
   std::cerr << std::string(80, '=') << std::endl;
 #endif
@@ -35,8 +38,11 @@ bool Resolve::run() {
         addErrors(sr.errors().begin(), sr.errors().end());
 
 #if defined(DEBUG) && DEBUG == 1
-        std::cerr << "Failed to scope resolve at this point...\n";
-        ast->accept(new ast::visitor::ASTDump(std::cerr));
+        std::cerr << "DEBUG: Failed to scope resolve at this point...\n";
+        {
+          ast::visitor::ASTDump dump(std::cerr, 4);
+          ast->accept(&dump);
+        }
         std::cerr << std::endl;
         std::cerr << std::string(80, '=') << std::endl;
 #endif
@@ -53,8 +59,11 @@ bool Resolve::run() {
         addErrors(tr.errors().begin(), tr.errors().end());
 
 #if defined(DEBUG) && DEBUG == 1
-        std::cerr << "Failed to type resolve at this point...\n";
-        ast->accept(new ast::visitor::ASTDump(std::cerr));
+        std::cerr << "DEBUG: Failed to type resolve at this point...\n";
+        {
+          ast::visitor::ASTDump dump(std::cerr, 4);
+          ast->accept(&dump);
+        }
         std::cerr << std::endl;
         std::cerr << std::string(80, '=') << std::endl;
 #endif
@@ -65,8 +74,11 @@ bool Resolve::run() {
   }
 // resolved code
 #if defined(DEBUG) && DEBUG == 1
-  std::cerr << "Resolved ast\n";
-  ast->accept(new ast::visitor::ASTDump(std::cerr));
+  std::cerr << "DEBUG: Resolved ast\n";
+  {
+    ast::visitor::ASTDump dump(std::cerr, 4);
+    ast->accept(&dump);
+  }
   std::cerr << std::endl;
   std::cerr << std::string(80, '=') << std::endl;
 #endif

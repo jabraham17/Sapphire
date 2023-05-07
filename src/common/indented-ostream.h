@@ -19,8 +19,12 @@ public:
   std::string getIndent() { return std::string(currentIndent, ' '); }
 
 public:
-  IndentedOStream(std::ostream& os, std::size_t indentLevel = 2)
-      : os(os), indentLevel(indentLevel), currentIndent(0), atLineStart(true) {}
+  IndentedOStream(
+      std::ostream& os,
+      std::size_t indentLevel = 2,
+      std::size_t initialIndent = 0)
+      : os(os), indentLevel(indentLevel), currentIndent(initialIndent),
+        atLineStart(true) {}
   ~IndentedOStream() = default;
   IndentedOStream(const IndentedOStream& other) = delete;
   IndentedOStream(IndentedOStream&& other) noexcept = default;

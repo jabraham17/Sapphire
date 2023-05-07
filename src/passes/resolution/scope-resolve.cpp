@@ -132,16 +132,17 @@ protected:
 
           // add 'op1, op0' to operands, do this by adding to the front and
           // replacing
-          auto newCall = new ast::node::CallExpression(call->opType());
+          auto newCall =
+              new ast::node::CallExpression(call->line(), call->opType());
           newCall->addOperand(op1);
           newCall->addOperand(op0);
-          for(ast::node::ASTNode* op : call->operands()) {
-            newCall->addOperand(op);
+          // skip the old first op
+          auto ops = call->operands();
+          for(auto it = ops.begin() + 1; it != ops.end(); it++) {
+            newCall->addOperand(*it);
           }
           call->replaceWith(newCall);
           call = newCall;
-          // call->operands().get(0)->replaceWith(op0);
-          // call->operands().addFront(op1);
 
           // now we have a symbol that can be resolved
           callFuncExpr = call->operands().get(0)->toUseExpression();
