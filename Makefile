@@ -22,7 +22,7 @@ VARS_TO_PRINT=CC_1 CXX_1 LD_1 AR_1 RANLIB_1 LEX_1 YACC_1 PYTHON3_1 BUILD BUILD_D
 
 .PHONY: check_env
 check_env:
-	@$(PYTHON3_1) scripts/check-env.py $(BUILD_DIRECTORY).sapphire-env "$(MFLAGS)" $(foreach v,$(VARS_TO_PRINT),'$(v)=$($(v))') || (echo "Failed to build: ENV for build folder different"; exit 1;)
+	@$(PYTHON3_1) scripts/check-build-env.py $(BUILD_DIRECTORY).sapphire-env "$(MFLAGS)" $(foreach v,$(VARS_TO_PRINT),'$(v)=$($(v))') || (echo "Failed to build: ENV for build folder different"; exit 1;)
 
 .PHONY: cache_makefile
 cache_makefile:
