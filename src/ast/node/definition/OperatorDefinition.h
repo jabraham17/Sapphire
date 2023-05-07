@@ -8,7 +8,7 @@ namespace node {
 class OperatorDefinition : public ASTNode {
   OperatorType op_;
   std::size_t parametersStartIdx_;
-  std::size_t parametersStopIdx_;
+  std::size_t numParameters_;
   std::size_t bodyIdx_;
 
 public:

@@ -16,18 +16,18 @@ Scope::Scope(const ASTList& statements) {
   for(auto p : statements) {
     this->addChild(p);
   }
-  this->statementsStopIdx_ = this->statementsStartIdx_ + statements.size();
+  this->numStatements_ = statements.size();
 };
 Scope::Scope(long line) : Scope() { setLine(line); }
 Scope::Scope() {
   this->statementsStartIdx_ = this->numChildren();
-  this->statementsStopIdx_ = this->statementsStartIdx_;
+  this->numStatements_ = 0;
 }
 
 ASTListIteratorPair<Statement> Scope::statements() {
   return children_slice<Statement>(
       this->statementsStartIdx_,
-      this->statementsStopIdx_);
+      this->numStatements_);
 }
 
 } // namespace node

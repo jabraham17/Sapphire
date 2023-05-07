@@ -17,7 +17,8 @@ void CallExpression::setType(Type* type) {
 }
 
 void CallExpression::addOperand(ASTNode* node) {
-  this->operandsStopIdx_ = this->addChild(node);
+  this->addChild(node);
+  this->numOperands++;
 }
 void CallExpression::addOperands(const ASTList& nodes) {
   for(auto n : nodes) {
@@ -27,7 +28,7 @@ void CallExpression::addOperands(const ASTList& nodes) {
 
 OperatorType CallExpression::opType() { return this->op_; }
 ASTListIteratorPair<ASTNode> CallExpression::operands() {
-  return children_slice(this->operandsStartIdx_, this->operandsStopIdx_ + 1);
+  return children_slice(this->operandsStartIdx_, this->numOperands);
 }
 
 } // namespace node

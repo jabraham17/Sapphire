@@ -10,7 +10,7 @@ namespace node {
 
 class Scope : public Statement {
   std::size_t statementsStartIdx_;
-  std::size_t statementsStopIdx_;
+  std::size_t numStatements_;
 
 public:
   Scope(long line, const ASTList& statements);

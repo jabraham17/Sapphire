@@ -8,7 +8,7 @@ class InitDefinition : public ASTNode {
 private:
   std::size_t bodyIdx_;
   std::ptrdiff_t parametersStartIdx_;
-  std::ptrdiff_t parametersStopIdx_;
+  std::size_t numParameters_;
   bool isInit_;
 
 public:

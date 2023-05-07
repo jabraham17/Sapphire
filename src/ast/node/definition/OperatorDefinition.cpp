@@ -30,14 +30,14 @@ OperatorDefinition::OperatorDefinition(
   for(auto p : parameters) {
     this->addChild(p);
   }
-  this->parametersStopIdx_ = this->parametersStartIdx_ + parameters.size();
+  this->numParameters_ = parameters.size();
 }
 
 OperatorType OperatorDefinition::opType() { return op_; }
 ASTListIteratorPair<Parameter> OperatorDefinition::parameters() {
   return children_slice<Parameter>(
       this->parametersStartIdx_,
-      this->parametersStopIdx_);
+      this->numParameters_);
 }
 Scope* OperatorDefinition::body() { return child(this->bodyIdx_)->toScope(); }
 

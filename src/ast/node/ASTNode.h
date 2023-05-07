@@ -126,6 +126,7 @@ template <class T = ASTNode> struct ASTListIteratorPair {
   ASTListIterator<T> begin() const { return begin_; }
   ASTListIterator<T> end() const { return end_; }
   ASTListIterator<T> get(std::size_t idx) const { return begin_ + idx; }
+  T* operator[](std::size_t rhs) { return *get(rhs); }
   std::size_t size() const { return std::distance(begin_, end_); }
 };
 
@@ -205,6 +206,7 @@ public:
   index_list_type indicies() { return this->indicies_; }
   index_type backingIdx(index_type idx) { return this->indicies().at(idx); }
   T* get(index_type idx) { return (T*)this->backing().at(backingIdx(idx)); }
+  T* operator[](index_type rhs) { return get(rhs); }
 
   ASTSliceIterator<T> begin() { return ASTSliceIterator<T>(this, 0); }
   ASTSliceIterator<T> end() {
@@ -246,6 +248,7 @@ public:
 
   T* operator*() const { return (T*)this->slice_->get(this->currentIndex_); }
   T* operator->() const { return (T*)this->slice_->get(this->currentIndex_); }
+  T* operator[](index_type rhs) { return (T*)this->slice_->get(rhs); }
 
   ASTSliceIterator<T>& operator++() {
     ++this->currentIndex_;
@@ -325,22 +328,17 @@ public:
   const ASTList& children() { return this->children_; }
 
   template <class T = ASTNode> auto children_begin(std::size_t offset = 0) {
-    assert(offset <= numChildren());
     return ASTListIterator<T>(this->children_.begin() + offset);
   }
 
-  template <class T = ASTNode> auto children_end(std::size_t offset = 0) {
-    assert(offset <= numChildren());
-    return ASTListIterator<T>(this->children_.end() - offset);
+  template <class T = ASTNode> auto children_end() {
+    return ASTListIterator<T>(this->children_.end());
   }
 
   template <class T = ASTNode>
-  auto children_slice(std::size_t start, std::size_t end) {
-    assert(
-        start <= numChildren() && end <= numChildren() &&
-        start <= std::size_t(end));
+  auto children_slice(std::size_t start, std::size_t num) {
     auto beginIT = children_begin<T>(start);
-    auto endIT = children_begin<T>(end);
+    auto endIT = beginIT + num;
     return ASTListIteratorPair<T>(beginIT, endIT);
   }
 

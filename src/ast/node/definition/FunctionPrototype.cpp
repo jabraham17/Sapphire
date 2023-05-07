@@ -45,8 +45,7 @@ FunctionPrototype::FunctionPrototype(
   for(auto p : parameters) {
     this->addChild(p);
   }
-  this->parametersStopIdx_ =
-      this->parametersStartIdx_ + parameters.size() + int(hasThisArg);
+  this->numParameters_ = parameters.size() + int(hasThisArg);
 
   ASTList parameterTypes;
   for(auto p : this->parameters()) {
@@ -61,7 +60,7 @@ std::string FunctionPrototype::name() { return this->symbol()->name(); }
 ASTListIteratorPair<Parameter> FunctionPrototype::parameters() {
   return children_slice<Parameter>(
       this->parametersStartIdx_,
-      this->parametersStopIdx_);
+      this->numParameters_);
 }
 CallableType* FunctionPrototype::type() {
   auto type_ = funcSymbol_->type()->toCallableType();

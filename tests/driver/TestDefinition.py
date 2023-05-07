@@ -508,7 +508,7 @@ class TestInstance:
 
     def _check_testcase(self, output: TestFile) -> Tuple[bool, TestFile]:
         exp = self.config.expected_file
-        cmd = ["diff", "-y", exp, output]
+        cmd = ["diff", exp, output]
         self._verbose_print_cmd("Checking", cmd)
         diff_file = TestFile.create(self.config.expected_file.getPath() + ".diff")
         ret = TestInstance._execute(cmd, diff_file)

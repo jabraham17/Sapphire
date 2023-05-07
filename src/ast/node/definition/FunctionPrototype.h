@@ -9,7 +9,7 @@ namespace node {
 class FunctionPrototype : public ASTNode {
 private:
   std::size_t parametersStartIdx_;
-  std::size_t parametersStopIdx_;
+  std::size_t numParameters_;
   symbol::FunctionSymbol* funcSymbol_;
   bool isMangled_;
 

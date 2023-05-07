@@ -49,14 +49,13 @@ CallableType::CallableType(
   for(auto p : parameterTypes) {
     addChild(p);
   }
-  this->parameterTypesStopIdx_ =
-      this->parameterTypesStartIdx_ + parameterTypes.size();
+  this->numParameterTypes_ = parameterTypes.size();
 }
 
 ASTListIteratorPair<Type> CallableType::parameterTypes() {
   return children_slice<Type>(
       this->parameterTypesStartIdx_,
-      this->parameterTypesStopIdx_);
+      this->numParameterTypes_);
 }
 Type* CallableType::returnType() {
   return child(this->returnTypeIdx_)->toType();

@@ -19,7 +19,7 @@ namespace node {
 class CallExpression : public Expression {
   OperatorType op_;
   std::size_t operandsStartIdx_;
-  std::size_t operandsStopIdx_;
+  std::size_t numOperands;
   std::size_t typeIdx_;
 
 public:
@@ -51,13 +51,13 @@ public:
      }()),
      ...);
     // operands should be the list children in list
-    this->operandsStopIdx_ = this->operandsStartIdx_ + nOperands;
+    this->numOperands = nOperands;
   }
   DIAGNOSTIC_POP
   CallExpression(OperatorType opType) : op_(opType) {
     this->typeIdx_ = this->addChild(Type::getUnknownType());
     this->operandsStartIdx_ = this->numChildren();
-    this->operandsStopIdx_ = this->operandsStartIdx_;
+    this->numOperands = 0;
   }
   virtual ~CallExpression() = default;
   virtual void accept(visitor::ASTVisitor* ast) override;

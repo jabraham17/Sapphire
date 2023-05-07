@@ -12,7 +12,7 @@ class CallableType : public Type {
 private:
   std::size_t returnTypeIdx_;
   std::size_t parameterTypesStartIdx_;
-  std::size_t parameterTypesStopIdx_;
+  std::size_t numParameterTypes_;
 
 public:
   CallableType(long line, const ASTList& parameterTypes, Type* returnType);
