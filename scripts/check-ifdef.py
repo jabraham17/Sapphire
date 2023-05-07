@@ -3,10 +3,12 @@ import os
 import argparse as ap
 from typing import List
 
+
 def normpath(path: str, root: str):
     local_path = os.path.relpath(path, os.path.commonpath([root, path]))
     local_path = os.path.normpath(local_path)
     return local_path
+
 
 def allHeaders(path: str, skips: List[str]):
     for dirpath, dirnames, filenames in os.walk(path):
