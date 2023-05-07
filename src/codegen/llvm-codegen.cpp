@@ -34,7 +34,7 @@ static llvm::StructType* StringType(llvm::LLVMContext* Context) {
 // {ptr, i64} = {elmType*, i64}
 static llvm::StructType* ArrayType(
     llvm::LLVMContext* Context,
-    llvm::Type* elmType,
+    [[maybe_unused]] llvm::Type* elmType,
     const std::string& elmTypeName = "") {
   auto name = "spp_array_" + elmTypeName;
   auto tt = llvm::StructType::getTypeByName(*Context, name);
@@ -48,7 +48,6 @@ static llvm::StructType* ArrayType(
 }
 
 static llvm::Value* StackLocal(
-    llvm::LLVMContext* Context,
     llvm::IRBuilder<>* Builder,
     llvm::Type* Type,
     llvm::Value* Initial = nullptr,
@@ -161,7 +160,7 @@ protected:
 
     // allocate enough stack space for the string
     // TODO: should probably use an allocator here not stack memory
-    auto stringStructPtr = StackLocal(Context, Builder, stringType);
+    auto stringStructPtr = StackLocal(Builder, stringType);
 
     // store size into string
     auto sizeGEP = Builder->CreateStructGEP(stringType, stringStructPtr, 1);
@@ -188,7 +187,7 @@ protected:
     auto numConstant =
         llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), literal);
     auto numConstantPtr = StackLocal(
-        Context,
+
         Builder,
         llvm::Type::getInt64Ty(*Context),
         numConstant);
@@ -215,8 +214,8 @@ protected:
   virtual void visitImpl(ast::node::ForStatement* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
-    auto Module = get<2>();
-    auto variables = get<3>();
+    // auto Module = get<2>();
+    // auto variables = get<3>();
 
     llvm::BasicBlock* BB = Builder->GetInsertBlock();
     llvm::Function* F = BB->getParent();
@@ -235,7 +234,7 @@ protected:
     // now in BB0, init loopCount to 0
     Builder->SetInsertPoint(BB0);
     auto loopCountPtr = StackLocal(
-        Context,
+
         Builder,
         llvm::Type::getInt64Ty(*Context),
         llvm::ConstantInt::get(llvm::Type::getInt64Ty(*Context), 0),
@@ -250,7 +249,7 @@ protected:
 
     arg->expr()->accept(this);
     auto arrayPtr = this->returnValueAndClear();
-    // auto arrayPtr = StackLocal(Context, Builder, arrayType, array, "array");
+    // auto arrayPtr = StackLocal(Builder, arrayType, array, "array");
 
     // init array size
     auto arraySizeGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
@@ -276,7 +275,7 @@ protected:
 
     Builder->SetInsertPoint(BB2);
     // copy new array elm into defVar
-    auto aGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
+    // auto aGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
 
     auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
     auto rawArray = Builder->CreateLoad(PointerType(Context), rawArrayGEP);
@@ -302,8 +301,8 @@ protected:
   }
 
   virtual void visitImpl(ast::node::UseExpression* arg) override {
-    auto Context = get<0>();
-    auto Builder = get<1>();
+    // auto Context = get<0>();
+    // auto Builder = get<1>();
     auto Module = get<2>();
     auto variables = get<3>();
     // TODO: if symbol a func, get a func. if symbol a var, get a var
@@ -325,13 +324,12 @@ protected:
   virtual void visitImpl(ast::node::DefExpression* arg) override {
     auto Context = get<0>();
     auto Builder = get<1>();
-    auto Module = get<2>();
+    // auto Module = get<2>();
     auto& variables = get<3>();
 
     auto astSym = arg->symbol();
     auto llvmType = getLLVMType(Context, astSym->type());
-    auto valPtr =
-        StackLocal(Context, Builder, llvmType, nullptr, astSym->name());
+    auto valPtr = StackLocal(Builder, llvmType, nullptr, astSym->name());
 
     variables->insert_or_assign(astSym, std::make_pair(llvmType, valPtr));
 
@@ -380,7 +378,7 @@ protected:
         // store result to the stack if not void
         if(!funcToCall->getReturnType()->isVoidTy()) {
           auto resultPtr = StackLocal(
-              Context,
+
               Builder,
               funcToCall->getReturnType(),
               funcCallRes);
@@ -568,8 +566,7 @@ protected:
       auto Arg = F->getArg(idx);
       auto Sym = param->symbol();
       auto llvmType = Arg->getType();
-      auto local =
-          StackLocal(Context, Builder, llvmType, Arg, Sym->name() + "_local");
+      auto local = StackLocal(Builder, llvmType, Arg, Sym->name() + "_local");
 
       variables[Sym] = {llvmType, local};
     }
