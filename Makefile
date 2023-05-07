@@ -3,17 +3,26 @@ MKFILE_PATH=$(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR=$(dir $(MKFILE_PATH))
 export ROOT_PROJECT_DIRECTORY=$(MKFILE_DIR)
 
-TOPTARGETS=all cppcheck
+TOPTARGETS=all
 SUBDIRS=src
 .PHONY: $(TOPTARGETS)
 
 -include $(ROOT_PROJECT_DIRECTORY)options.mk
 
-all: $(BUILD_DIRECTORY) $(BIN_DIRECTORY) $(LIB_DIRECTORY) $(OBJ_DIRECTORY) $(GEN_DIRECTORY)
+.WAIT:
+
+$(TOPTARGETS): $(BUILD_DIRECTORY) check_env .WAIT $(BIN_DIRECTORY) $(LIB_DIRECTORY) $(OBJ_DIRECTORY) $(GEN_DIRECTORY) $(SUBDIRS)
 	@:
 
 $(BUILD_DIRECTORY) $(BIN_DIRECTORY) $(LIB_DIRECTORY) $(OBJ_DIRECTORY) $(GEN_DIRECTORY):
 	$(AT)mkdir -p $@
+
+
+VARS_TO_PRINT=CC_1 CXX_1 LD_1 AR_1 RANLIB_1 LEX_1 YACC_1 PYTHON3_1 BUILD BUILD_DIRECTORY BIN_DIRECTORY OBJ_DIRECTORY LIB_DIRECTORY GEN_DIRECTORY DEBUG LLVM_INSTALL LLVM CFLAGS CXXFLAGS ASFLAGS LDFLAGS INCLUDE YFLAGS LFLAGS
+
+.PHONY: check_env
+check_env:
+	@$(PYTHON3_1) scripts/check-env.py $(BUILD_DIRECTORY).sapphire-env $(foreach v,$(VARS_TO_PRINT),'$(v)=$($(v))') || (echo "Failed to build: ENV for build folder different"; exit 1;)
 
 .PHONY: cache_makefile
 cache_makefile:
@@ -21,8 +30,6 @@ cache_makefile:
 
 clean:
 	$(RM) -r $(BUILD_DIRECTORY)
-
-$(TOPTARGETS): $(SUBDIRS)
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS):
@@ -59,6 +66,5 @@ dump_paths:
 	$(info INCLUDE=$(INCLUDE))
 	$(info YFLAGS=$(YFLAGS))
 	$(info LFLAGS=$(LFLAGS))
-
 	@:
 
