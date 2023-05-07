@@ -23,6 +23,8 @@ REAL_LITERAL {DIGIT}*"."{DIGIT}+
 
 %option noyywrap
 %option nomain
+%option nounput
+%option noinput
 
 %x COMMENTS
 
