@@ -1,5 +1,5 @@
-#ifndef HHH
-#define HHH
+#ifndef SAPPHIRE_PASSES_ERROR_CHECKING_CHECK_RETURN_H_
+#define SAPPHIRE_PASSES_ERROR_CHECKING_CHECK_RETURN_H_
 
 #include "ast/ast.h"
 #include "ast/node/nodes.h"
