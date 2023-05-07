@@ -1,5 +1,6 @@
 #ifndef SAPPHIRE_AST_NODE_NODES_H_
 #define SAPPHIRE_AST_NODE_NODES_H_
+#include "ASTList.hpp"
 #include "ASTNode.h"
 #include "OperatorType.h"
 
