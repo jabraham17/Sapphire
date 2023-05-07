@@ -1,7 +1,12 @@
 
 -include $(ROOT_PROJECT_DIRECTORY)color.mk
 
+DEBUG=0
+ifeq ($(DEBUG),1)
+BUILD=debug
+else
 BUILD=build
+endif
 BUILD_DIRECTORY=$(ROOT_PROJECT_DIRECTORY)$(BUILD)/
 
 BIN_DIRECTORY=$(BUILD_DIRECTORY)bin/
@@ -68,7 +73,6 @@ COMPILE_FLAGS_+= -Wno-comment
 COMPILE_FLAGS_+= -flto
 LINK_FLAGS_+= -flto
 
-DEBUG=0
 ifeq ($(DEBUG),1)
 COMPILE_FLAGS_+= -DDEBUG=1 -g -O0 -fstandalone-debug
 LINK_FLAGS_+= -g
