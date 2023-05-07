@@ -25,7 +25,20 @@ export PATH=${PATH}:${SAPPHIRE_SCRIPTS}
 export _SPP_OLD_PS1="${PS1:-}"
 export PS1='(spp-env)'${PS1}
 
+build_release() {
+  (cd $SAPPHIRE_HOME && set -x && make -j`nproc` $@)
+}
+export -f build_release
+build_debug() {
+  (cd $SAPPHIRE_HOME && set -x && make -j`nproc` DEBUG=1 $@)
+}
+export -f build_debug
+
 deactivate() {
+  export -n build_release
+  export -n build_debug
+
+
   export -n SAPPHIRE_HOME
   export -n SAPPHIRE_SCRIPTS
   export -n SAPPHIRE_TEST
