@@ -5,6 +5,7 @@
 #include "ast/symbol/function-symbol.h"
 #include "ast/symbol/symbol.h"
 #include "ast/visitor/ast-visitor.h"
+#include "types/cg-types.h"
 
 #include <iostream>
 #include <llvm/IR/Constants.h>
@@ -13,39 +14,6 @@
 #include <unordered_map>
 
 namespace codegen {
-
-// ptr
-static llvm::PointerType* PointerType(llvm::LLVMContext* Context) {
-  return llvm::PointerType::getUnqual(*Context);
-}
-
-// {ptr, i64}
-static llvm::StructType* StringType(llvm::LLVMContext* Context) {
-  auto tt = llvm::StructType::getTypeByName(*Context, "spp_string");
-  // if cannot find, create it
-  if(tt == nullptr)
-    tt = llvm::StructType::create(
-        *Context,
-        {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
-        "spp_string");
-  return tt;
-}
-
-// {ptr, i64} = {elmType*, i64}
-static llvm::StructType* ArrayType(
-    llvm::LLVMContext* Context,
-    [[maybe_unused]] llvm::Type* elmType,
-    const std::string& elmTypeName = "") {
-  auto name = "spp_array_" + elmTypeName;
-  auto tt = llvm::StructType::getTypeByName(*Context, name);
-  // if cannot find, create it
-  if(tt == nullptr)
-    tt = llvm::StructType::create(
-        *Context,
-        {PointerType(Context), llvm::Type::getInt64Ty(*Context)},
-        name);
-  return tt;
-}
 
 static llvm::Value* StackLocal(
     llvm::IRBuilder<>* Builder,
@@ -70,70 +38,6 @@ static llvm::Value* StackLocal(
   return local;
 }
 
-class TypeBuilder final : public ast::visitor::VisitorWithArgsAndReturn<
-                              TypeBuilder,
-                              ast::visitor::ASTVisitor,
-                              llvm::Type*,
-                              llvm::LLVMContext*> {
-public:
-  using VisitorWithArgsAndReturn::VisitorWithArgsAndReturn;
-
-protected:
-  virtual void visitImpl(ast::node::Type* arg) override {
-    std::cerr << "type not yet handled " << arg->toString() << "\n";
-    exit(1);
-    set(nullptr);
-  }
-  virtual void visitImpl(ast::node::PrimitiveType* arg) override {
-    auto Context = get<0>();
-    switch(arg->primitiveType()) {
-      case ast::node::PrimitiveTypeEnum::INT:
-      case ast::node::PrimitiveTypeEnum::UINT:
-        set(llvm::Type::getInt64Ty(*Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::REAL:
-        set(llvm::Type::getDoubleTy(*Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::STRING:
-        set(StringType(Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::BOOL:
-        set(llvm::Type::getInt8Ty(*Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::BYTE:
-        set(llvm::Type::getInt8Ty(*Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::NIL:
-        set(llvm::Type::getVoidTy(*Context));
-        break;
-      case ast::node::PrimitiveTypeEnum::UNTYPED:
-        std::cerr << "cannot convert UNTYPED type to LLVM\n";
-        exit(1);
-      case ast::node::PrimitiveTypeEnum::ANY:
-        std::cerr << "cannot convert ANY type to LLVM\n";
-        exit(1);
-      case ast::node::PrimitiveTypeEnum::UNKNOWN:
-        std::cerr << "cannot convert UNKNOWN type to LLVM\n";
-        exit(1);
-    }
-  }
-  virtual void visitImpl(ast::node::ArrayType* arg) override {
-    auto Context = get<0>();
-
-    // get element types LLVM type
-    arg->elementType()->accept(this);
-    auto elementType = this->returnValueAndClear();
-
-    set(ArrayType(Context, elementType, arg->elementType()->toString()));
-  }
-};
-
-static llvm::Type* getLLVMType(llvm::LLVMContext* Context, ast::node::Type* t) {
-  TypeBuilder ltc(Context);
-  t->accept(&ltc);
-  return ltc.returnValue();
-}
-
 ast::symbol::Symbol* getSymbol(ast::node::ASTNode* ast) {
   if(auto a = ast->toUseExpression(); a != nullptr) return a->symbol();
   return nullptr;
@@ -156,7 +60,7 @@ protected:
     auto Builder = get<1>();
 
     auto literal = arg->escapedValue();
-    auto stringType = StringType(Context);
+    auto stringType = types::StringType(Context);
 
     // allocate enough stack space for the string
     // TODO: should probably use an allocator here not stack memory
@@ -278,7 +182,8 @@ protected:
     // auto aGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 1);
 
     auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
-    auto rawArray = Builder->CreateLoad(PointerType(Context), rawArrayGEP);
+    auto rawArray =
+        Builder->CreateLoad(types::PointerType(Context), rawArrayGEP);
 
     // get elm from rawArray
     auto elmGEP = Builder->CreateGEP(elmType, rawArray, loopCount);
@@ -434,7 +339,8 @@ protected:
 
         // extract raw array, which is just a pointer
         auto rawArrayGEP = Builder->CreateStructGEP(arrayType, arrayPtr, 0);
-        auto rawArray = Builder->CreateLoad(PointerType(Context), rawArrayGEP);
+        auto rawArray =
+            Builder->CreateLoad(types::PointerType(Context), rawArrayGEP);
 
         // get elm from rawArray
         auto elmGEP = Builder->CreateGEP(elmType, rawArray, index);
